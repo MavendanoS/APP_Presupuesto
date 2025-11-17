@@ -1,0 +1,139 @@
+<div class="register-container">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-12 col-md-8 col-lg-5">
+        <div class="card-responsive register-card">
+          <!-- Header -->
+          <div class="text-center mb-4">
+            <h1 class="h3 mb-2">Crear Cuenta</h1>
+            <p class="text-muted">Regístrate para comenzar a gestionar tus gastos</p>
+          </div>
+
+          <!-- Error Alert -->
+          @if (errorMessage()) {
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+              {{ errorMessage() }}
+              <button type="button" class="btn-close" (click)="errorMessage.set(null)"></button>
+            </div>
+          }
+
+          <!-- Register Form -->
+          <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+            <!-- Name -->
+            <div class="mb-3">
+              <label for="name" class="form-label">Nombre Completo</label>
+              <input
+                type="text"
+                class="form-control"
+                id="name"
+                formControlName="name"
+                [class.is-invalid]="name?.invalid && name?.touched"
+                placeholder="Juan Pérez"
+                autocomplete="name"
+              />
+              @if (name?.invalid && name?.touched) {
+                <div class="invalid-feedback">
+                  @if (name?.errors?.['required']) {
+                    El nombre es requerido
+                  }
+                  @if (name?.errors?.['minlength']) {
+                    Mínimo 3 caracteres
+                  }
+                </div>
+              }
+            </div>
+
+            <!-- Email -->
+            <div class="mb-3">
+              <label for="email" class="form-label">Email</label>
+              <input
+                type="email"
+                class="form-control"
+                id="email"
+                formControlName="email"
+                [class.is-invalid]="email?.invalid && email?.touched"
+                placeholder="tu@email.com"
+                autocomplete="email"
+              />
+              @if (email?.invalid && email?.touched) {
+                <div class="invalid-feedback">
+                  @if (email?.errors?.['required']) {
+                    El email es requerido
+                  }
+                  @if (email?.errors?.['email']) {
+                    Ingresa un email válido
+                  }
+                </div>
+              }
+            </div>
+
+            <!-- Password -->
+            <div class="mb-3">
+              <label for="password" class="form-label">Contraseña</label>
+              <input
+                type="password"
+                class="form-control"
+                id="password"
+                formControlName="password"
+                [class.is-invalid]="password?.invalid && password?.touched"
+                placeholder="••••••••"
+                autocomplete="new-password"
+              />
+              @if (password?.invalid && password?.touched) {
+                <div class="invalid-feedback">
+                  @if (password?.errors?.['required']) {
+                    La contraseña es requerida
+                  }
+                  @if (password?.errors?.['minlength']) {
+                    Mínimo 6 caracteres
+                  }
+                </div>
+              }
+            </div>
+
+            <!-- Confirm Password -->
+            <div class="mb-3">
+              <label for="confirmPassword" class="form-label">Confirmar Contraseña</label>
+              <input
+                type="password"
+                class="form-control"
+                id="confirmPassword"
+                formControlName="confirmPassword"
+                [class.is-invalid]="passwordMismatch"
+                placeholder="••••••••"
+                autocomplete="new-password"
+              />
+              @if (passwordMismatch) {
+                <div class="invalid-feedback">
+                  Las contraseñas no coinciden
+                </div>
+              }
+            </div>
+
+            <!-- Submit Button -->
+            <button
+              type="submit"
+              class="btn btn-primary w-100 mb-3"
+              [disabled]="registerForm.invalid || loading()"
+            >
+              @if (loading()) {
+                <span class="spinner-border spinner-border-sm me-2"></span>
+                Registrando...
+              } @else {
+                Crear Cuenta
+              }
+            </button>
+
+            <!-- Login Link -->
+            <div class="text-center">
+              <p class="mb-0">
+                ¿Ya tienes cuenta?
+                <a routerLink="/auth/login" class="text-decoration-none">Inicia sesión</a>
+              </p>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

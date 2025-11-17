@@ -1,0 +1,54 @@
+@import '../../scss/variables';
+@import '../../scss/mixins';
+
+.dashboard-container {
+  min-height: 100vh;
+  background-color: $light-color;
+}
+
+.metric-card {
+  position: relative;
+  padding-left: 80px;
+
+  .metric-icon {
+    position: absolute;
+    left: $spacing-md;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    @include flex-center;
+    color: white;
+    font-size: 1.5rem;
+  }
+
+  h3 {
+    font-weight: 700;
+    color: $dark-color;
+  }
+
+  h6 {
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-transform: uppercase;
+  }
+
+  small {
+    font-size: 0.75rem;
+  }
+}
+
+// Responsive adjustments
+@include respond-to('xs') {
+  .metric-card {
+    padding-left: $spacing-md;
+    padding-top: 60px;
+
+    .metric-icon {
+      left: 50%;
+      top: $spacing-md;
+      transform: translateX(-50%);
+    }
+  }
+}

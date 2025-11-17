@@ -1,0 +1,64 @@
+@import '../../../scss/variables';
+@import '../../../scss/mixins';
+
+.login-container {
+  min-height: 100vh;
+  @include flex-center;
+  background: linear-gradient(135deg, $primary-color 0%, $secondary-color 100%);
+  padding: $spacing-md;
+
+  @include respond-to('md') {
+    padding: $spacing-lg;
+  }
+}
+
+.login-card {
+  width: 100%;
+  animation: fadeIn 0.5s ease-in-out;
+
+  h1 {
+    color: $primary-color;
+    font-weight: 700;
+  }
+
+  .form-label {
+    font-weight: 500;
+    color: $dark-color;
+  }
+
+  .btn-primary {
+    padding: $spacing-sm $spacing-md;
+    font-weight: 500;
+    @include transition(all);
+
+    &:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: $box-shadow-lg;
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+  }
+
+  a {
+    color: $primary-color;
+    font-weight: 500;
+
+    &:hover {
+      color: darken($primary-color, 15%);
+    }
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

@@ -343,9 +343,117 @@ backend/tests/api/
 
 ---
 
+## ✅ Fase 5: Angular - Core Setup (Completada)
+**Fecha**: 2025-11-17
+**Duración**: ~2 horas
+
+### Tareas Completadas
+- [x] Proyecto Angular 20.3 creado
+- [x] Bootstrap 5 + ng-bootstrap instalados
+- [x] SCSS configurado con variables y mixins
+- [x] Breakpoints responsivos (576px, 768px, 992px, 1200px)
+- [x] Modelos TypeScript (User, Expense, Income, Category, Analytics)
+- [x] AuthService con signals reactivos
+- [x] ApiService genérico para HTTP
+- [x] HTTP Interceptors (JWT + Error handling)
+- [x] AuthGuard y PublicGuard
+- [x] Pipes personalizados (ClpCurrency, ExpenseType, IncomeFrequency)
+
+### Archivos Creados
+```
+frontend/src/
+├── app/
+│   ├── core/
+│   │   ├── models/           # 6 archivos de modelos
+│   │   ├── services/         # AuthService, ApiService
+│   │   ├── interceptors/     # auth, error
+│   │   └── guards/           # authGuard, publicGuard
+│   └── shared/
+│       └── pipes/            # 3 pipes personalizados
+├── scss/
+│   ├── _variables.scss       # Variables globales
+│   └── _mixins.scss          # Mixins responsivos
+└── styles.scss               # Estilos globales
+```
+
+### Características Implementadas
+
+**Autenticación:**
+- Signals reactivos para estado de usuario
+- Token JWT en localStorage
+- Auto-verificación al iniciar app
+- Interceptor automático de token
+
+**Responsive Design:**
+- Mixins: respond-to('sm'|'md'|'lg'|'xl')
+- Utilities: from(), until(), between()
+- Grid responsivo con @include grid(1, 2, 3)
+- Card helpers con sombras
+
+**Formato Chileno:**
+- ClpCurrencyPipe: $1.234.567 (sin decimales)
+- Colores por tipo de gasto
+- Badges personalizados
+
+---
+
+## ✅ Fase 6: Angular - Auth Module (Completada)
+**Fecha**: 2025-11-17
+**Duración**: ~1.5 horas
+
+### Tareas Completadas
+- [x] LoginComponent standalone con validación
+- [x] RegisterComponent con confirmación de password
+- [x] Rutas con lazy loading
+- [x] Guards aplicados (publicGuard)
+- [x] Estilos responsivos con animaciones
+- [x] Manejo de errores en formularios
+- [x] Dashboard placeholder
+
+### Componentes Creados
+```
+frontend/src/app/
+├── auth/
+│   ├── login/
+│   │   ├── login.component.ts
+│   │   ├── login.component.html
+│   │   └── login.component.scss
+│   └── register/
+│       ├── register.component.ts
+│       ├── register.component.html
+│       └── register.component.scss
+└── dashboard/
+    ├── dashboard.component.ts
+    ├── dashboard.component.html
+    └── dashboard.component.scss
+```
+
+### Características
+
+**Login:**
+- Validación de email y password
+- Estados de loading con spinner
+- Mensajes de error dinámicos
+- Redirección automática a dashboard
+
+**Register:**
+- Validación de nombre (min 3 caracteres)
+- Validación de confirmación de password
+- Creación automática de 12 categorías en backend
+- Animación fadeIn
+
+**Dashboard:**
+- Navbar responsivo con Bootstrap
+- Cards de métricas (Ingresos, Gastos, Balance, Categorías)
+- Botones de acción rápida por tipo
+- Uso del pipe ClpCurrency
+- Logout funcional
+
+---
+
 ## 📋 Fases Pendientes
 
-### Fase 5: Angular - Core Setup
+### Fase 7: Angular - Shared Components
 - [ ] Crear proyecto Angular
 - [ ] Configurar Bootstrap
 - [ ] AuthService
@@ -416,7 +524,9 @@ backend/tests/api/
 - **Total**: 11.5 horas
 
 ### Commits en Git
-- Pendiente: Commit de Fases 2-4
+- Commit 1: Estructura inicial
+- Commit 2: Backend Fases 2-4 completo
+- Pendiente: Frontend Fases 5-6
 - Rama activa: `dev`
 
 ---

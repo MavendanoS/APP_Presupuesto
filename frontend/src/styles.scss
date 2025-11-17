@@ -1,0 +1,122 @@
+/* Estilos Globales - APP Presupuesto */
+
+// Variables y Mixins
+@import 'scss/variables';
+@import 'scss/mixins';
+
+// Reset y Base
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  font-family: $font-family;
+  font-size: $font-size-base;
+  color: $dark-color;
+  background-color: $light-color;
+}
+
+// Links
+a {
+  color: $primary-color;
+  text-decoration: none;
+  @include transition(color);
+
+  &:hover {
+    color: darken($primary-color, 10%);
+    text-decoration: underline;
+  }
+}
+
+// Botones personalizados
+.btn-payment {
+  background-color: $payment-color;
+  border-color: $payment-color;
+  color: white;
+
+  &:hover {
+    background-color: darken($payment-color, 10%);
+    border-color: darken($payment-color, 10%);
+  }
+}
+
+.btn-purchase {
+  background-color: $purchase-color;
+  border-color: $purchase-color;
+  color: white;
+
+  &:hover {
+    background-color: darken($purchase-color, 10%);
+    border-color: darken($purchase-color, 10%);
+  }
+}
+
+.btn-small-expense {
+  background-color: $small-expense-color;
+  border-color: $small-expense-color;
+  color: white;
+
+  &:hover {
+    background-color: darken($small-expense-color, 10%);
+    border-color: darken($small-expense-color, 10%);
+  }
+}
+
+// Utilidades responsivas
+.card-responsive {
+  @include card;
+}
+
+.grid-responsive {
+  @include grid(1, 2, 3);
+}
+
+// Formato de moneda chilena
+.clp-amount {
+  font-weight: 600;
+
+  &.positive {
+    color: $success-color;
+  }
+
+  &.negative {
+    color: $danger-color;
+  }
+}
+
+// Badges por tipo de gasto
+.badge-payment {
+  background-color: $payment-color;
+}
+
+.badge-purchase {
+  background-color: $purchase-color;
+}
+
+.badge-small-expense {
+  background-color: $small-expense-color;
+}
+
+// Mobile adjustments
+@include respond-to('xs') {
+  .hide-on-mobile {
+    display: none !important;
+  }
+}
+
+@include from($breakpoint-md) {
+  .show-only-mobile {
+    display: none !important;
+  }
+}
+
+// Print styles
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}

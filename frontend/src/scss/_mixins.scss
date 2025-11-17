@@ -1,0 +1,111 @@
+// Mixins Globales - Responsividad y Utilidades
+
+@import 'variables';
+
+// Responsive Breakpoints
+@mixin respond-to($breakpoint) {
+  @if $breakpoint == 'xs' {
+    @media (max-width: #{$breakpoint-sm - 1px}) {
+      @content;
+    }
+  } @else if $breakpoint == 'sm' {
+    @media (min-width: $breakpoint-sm) {
+      @content;
+    }
+  } @else if $breakpoint == 'md' {
+    @media (min-width: $breakpoint-md) {
+      @content;
+    }
+  } @else if $breakpoint == 'lg' {
+    @media (min-width: $breakpoint-lg) {
+      @content;
+    }
+  } @else if $breakpoint == 'xl' {
+    @media (min-width: $breakpoint-xl) {
+      @content;
+    }
+  } @else if $breakpoint == 'xxl' {
+    @media (min-width: $breakpoint-xxl) {
+      @content;
+    }
+  }
+}
+
+// Uso: @include respond-to('md') { ... }
+
+// Mobile First (desde X hacia arriba)
+@mixin from($breakpoint) {
+  @media (min-width: $breakpoint) {
+    @content;
+  }
+}
+
+// Desktop First (desde X hacia abajo)
+@mixin until($breakpoint) {
+  @media (max-width: #{$breakpoint - 1px}) {
+    @content;
+  }
+}
+
+// Entre dos breakpoints
+@mixin between($min-breakpoint, $max-breakpoint) {
+  @media (min-width: $min-breakpoint) and (max-width: #{$max-breakpoint - 1px}) {
+    @content;
+  }
+}
+
+// Card con sombra
+@mixin card {
+  background: white;
+  border-radius: $border-radius;
+  box-shadow: $box-shadow;
+  padding: $spacing-md;
+
+  @include respond-to('sm') {
+    padding: $spacing-lg;
+  }
+}
+
+// Flexbox centrado
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+// Grid responsivo
+@mixin grid($cols-mobile: 1, $cols-tablet: 2, $cols-desktop: 3, $gap: $spacing-md) {
+  display: grid;
+  gap: $gap;
+  grid-template-columns: repeat($cols-mobile, 1fr);
+
+  @include respond-to('md') {
+    grid-template-columns: repeat($cols-tablet, 1fr);
+  }
+
+  @include respond-to('lg') {
+    grid-template-columns: repeat($cols-desktop, 1fr);
+  }
+}
+
+// Transición suave
+@mixin transition($properties...) {
+  transition: #{$properties} $transition-speed $transition-ease;
+}
+
+// Truncar texto
+@mixin text-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// Ocultar scrollbar pero mantener funcionalidad
+@mixin hide-scrollbar {
+  scrollbar-width: none; // Firefox
+  -ms-overflow-style: none; // IE 10+
+
+  &::-webkit-scrollbar {
+    display: none; // Chrome, Safari, Opera
+  }
+}
