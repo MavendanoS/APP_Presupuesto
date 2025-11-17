@@ -1,0 +1,28 @@
+{
+  "name": "app-presupuesto-backend",
+  "version": "1.0.0",
+  "description": "API Backend para gestión de gastos personales - Cloudflare Worker",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:create": "wrangler d1 create gastos-db",
+    "db:migrate": "wrangler d1 execute gastos-db --file=../database/schema.sql"
+  },
+  "keywords": [
+    "cloudflare",
+    "workers",
+    "d1",
+    "api",
+    "gastos"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "itty-router": "^4.0.0"
+  },
+  "devDependencies": {
+    "wrangler": "^3.20.0"
+  }
+}

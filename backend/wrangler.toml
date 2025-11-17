@@ -1,0 +1,18 @@
+name = "app-presupuesto-api"
+main = "src/index.js"
+compatibility_date = "2024-01-01"
+
+# Variables de entorno
+[vars]
+JWT_SECRET = "CHANGE_THIS_IN_PRODUCTION"
+FRONTEND_URL = "http://localhost:4200"
+
+# Base de datos D1
+[[d1_databases]]
+binding = "DB"
+database_name = "gastos-db"
+database_id = "80c6f652-11b8-4a8e-a8ca-672b0008e6c0"
+
+# CORS headers
+[env.production.vars]
+FRONTEND_URL = "https://tu-dominio.pages.dev"
