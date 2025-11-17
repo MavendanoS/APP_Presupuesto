@@ -1,0 +1,88 @@
+### Variables
+@baseUrl = http://localhost:8787
+@email = test@example.com
+@password = Test123456!
+@name = Usuario Test
+
+###
+# Health Check
+GET {{baseUrl}}/api/health
+
+###
+# Register - Crear nuevo usuario
+# @name register
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "{{password}}",
+  "name": "{{name}}"
+}
+
+###
+# Login - Obtener JWT token
+# @name login
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "{{password}}"
+}
+
+###
+# Extraer token del response
+@token = {{login.response.body.data.token}}
+
+###
+# Me - Obtener usuario actual (requiere autenticación)
+GET {{baseUrl}}/api/auth/me
+Authorization: Bearer {{token}}
+
+###
+# Me - Sin token (debe retornar 401)
+GET {{baseUrl}}/api/auth/me
+
+###
+# Login - Credenciales incorrectas (debe fallar)
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "wrongpassword"
+}
+
+###
+# Register - Email duplicado (debe fallar)
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "{{password}}",
+  "name": "Otro Usuario"
+}
+
+###
+# Register - Email inválido (debe fallar)
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "invalid-email",
+  "password": "{{password}}",
+  "name": "{{name}}"
+}
+
+###
+# Register - Password muy corto (debe fallar)
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "nuevo@example.com",
+  "password": "123",
+  "name": "{{name}}"
+}

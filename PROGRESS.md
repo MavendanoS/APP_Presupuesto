@@ -248,16 +248,102 @@ backend/src/
 
 ---
 
-## 📋 Fases Pendientes
+## ✅ Fase 4: Backend - Analytics y Exportación (Completada)
+**Fecha**: 2025-11-17
+**Duración**: ~3 horas
 
-### Fase 4: Backend - Analytics y Exportación
-- [ ] Queries de agregación
-- [ ] Algoritmo de predicciones
-- [ ] Endpoint de dashboard
-- [ ] Endpoint de gráficos
-- [ ] Endpoint de comparación
-- [ ] Exportación CSV
-- [ ] Exportación Excel
+### Tareas Completadas
+- [x] Queries de agregación y analytics
+  - `backend/src/db/analytics.js` (7 funciones principales)
+  - Métricas de dashboard con totales y balances
+  - Datos para gráficos con series temporales
+  - Análisis de tendencias y patrones
+  - Detección de anomalías (gastos > 2x promedio)
+- [x] Algoritmo de predicciones simple
+  - Basado en promedio móvil de 3 meses
+  - Predicción hasta 6 meses adelante
+  - Cálculo de balance futuro
+- [x] Servicio de analytics
+  - `backend/src/services/analyticsService.js`
+  - Validación de rangos de fechas
+  - Exportación CSV y Excel
+- [x] Rutas de analytics implementadas
+  - `backend/src/routes/analytics.js`
+  - 7 nuevos endpoints protegidos con JWT
+- [x] Integración al router principal
+  - Actualizado `backend/src/index.js`
+  - Total de endpoints: 29 (22 anteriores + 7 nuevos)
+- [x] Tests de analytics
+  - `backend/tests/api/analytics.test.http`
+  - Cobertura completa de funcionalidades
+
+### Endpoints Implementados (7 nuevos)
+
+#### Analytics
+- `GET /api/analytics/dashboard` - Métricas generales (ingresos, gastos, balance, top categorías)
+- `GET /api/analytics/charts` - Datos para gráficos (series temporales, distribución)
+- `GET /api/analytics/trends` - Tendencias y patrones (promedios, anomalías)
+- `GET /api/analytics/predictions` - Predicciones de gastos futuros
+- `GET /api/analytics/compare` - Comparación entre dos períodos
+
+#### Exportación
+- `GET /api/exports/csv` - Exportar datos a CSV
+- `GET /api/exports/excel` - Exportar datos a Excel
+
+### Funcionalidades Destacadas
+
+**Dashboard:**
+- Total de ingresos con separación de recurrentes
+- Total de gastos por tipo (payment, purchase, small_expense)
+- Cálculo de balance automático
+- Top 5 categorías con más gastos
+
+**Gráficos:**
+- Series temporales agrupadas por día/semana/mes
+- Distribución de gastos por categoría
+- Comparación ingresos vs gastos
+
+**Tendencias:**
+- Análisis de últimos N meses (1-12)
+- Promedios, máximos y mínimos por tipo
+- Detección de anomalías (gastos atípicos)
+
+**Predicciones:**
+- Predicción simple basada en histórico
+- Hasta 6 meses adelante
+- Balance futuro proyectado
+
+**Comparación:**
+- Comparar cualquier par de períodos
+- Diferencias absolutas y porcentuales
+- Análisis de cambios en comportamiento
+
+**Exportación:**
+- CSV con formato chileno
+- Separación por gastos e ingresos
+- Resumen de totales incluido
+
+### Archivos Creados
+```
+backend/src/
+├── db/
+│   └── analytics.js          # 7 queries de analytics (420 líneas)
+├── services/
+│   └── analyticsService.js   # Lógica de negocio (180 líneas)
+└── routes/
+    └── analytics.js          # 7 endpoints (260 líneas)
+backend/tests/api/
+└── analytics.test.http       # Tests completos
+```
+
+### Próximos Pasos
+- Fase 5: Crear proyecto Angular con Bootstrap
+- Fase 6: Implementar autenticación en Angular
+- Fase 7-9: Módulos de gestión y dashboard
+
+---
+
+## 📋 Fases Pendientes
 
 ### Fase 5: Angular - Core Setup
 - [ ] Crear proyecto Angular
@@ -309,24 +395,28 @@ backend/src/
 ## 📊 Estadísticas del Proyecto
 
 ### Archivos Creados
-- Backend: 13 archivos
+- Backend: 19 archivos
 - Database: 2 archivos
-- Documentación: 3 archivos
-- **Total**: 18 archivos
+- Tests: 5 archivos
+- Documentación: 4 archivos
+- **Total**: 30 archivos
 
 ### Líneas de Código
-- Backend JS: ~800 líneas
+- Backend JS: ~2700 líneas
 - SQL: ~100 líneas
-- Documentación: ~200 líneas
-- **Total**: ~1100 líneas
+- Tests HTTP: ~400 líneas
+- Documentación: ~450 líneas
+- **Total**: ~3650 líneas
 
 ### Tiempo Invertido
 - Fase 1: 1.5 horas
-- Fase 2: 3 horas (en progreso)
-- **Total**: 4.5 horas
+- Fase 2: 3 horas
+- Fase 3: 4 horas
+- Fase 4: 3 horas
+- **Total**: 11.5 horas
 
 ### Commits en Git
-- Total: 1 commit (inicial)
+- Pendiente: Commit de Fases 2-4
 - Rama activa: `dev`
 
 ---

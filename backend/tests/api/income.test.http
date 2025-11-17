@@ -1,0 +1,164 @@
+### Variables
+@baseUrl = http://localhost:8787
+@token = YOUR_JWT_TOKEN_HERE
+
+###
+# Crear ingreso recurrente mensual (sueldo)
+# @name createSalary
+POST {{baseUrl}}/api/income
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "source": "Sueldo Empresa XYZ",
+  "amount": 1200000,
+  "date": "2025-01-05",
+  "is_recurring": true,
+  "frequency": "monthly",
+  "notes": "Pago mensual de sueldo"
+}
+
+###
+@salaryId = {{createSalary.response.body.data.income.id}}
+
+###
+# Crear ingreso único
+# @name createBonus
+POST {{baseUrl}}/api/income
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "source": "Bono de desempeño",
+  "amount": 300000,
+  "date": "2025-01-20",
+  "is_recurring": false,
+  "frequency": "once",
+  "notes": "Bono trimestral"
+}
+
+###
+@bonusId = {{createBonus.response.body.data.income.id}}
+
+###
+# Crear ingreso recurrente semanal
+POST {{baseUrl}}/api/income
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "source": "Trabajo freelance",
+  "amount": 150000,
+  "date": "2025-01-10",
+  "is_recurring": true,
+  "frequency": "weekly",
+  "notes": "Proyecto paralelo"
+}
+
+###
+# Obtener todos los ingresos
+GET {{baseUrl}}/api/income
+Authorization: Bearer {{token}}
+
+###
+# Filtrar solo ingresos recurrentes
+GET {{baseUrl}}/api/income?is_recurring=true
+Authorization: Bearer {{token}}
+
+###
+# Filtrar solo ingresos únicos
+GET {{baseUrl}}/api/income?is_recurring=false
+Authorization: Bearer {{token}}
+
+###
+# Filtrar por rango de fechas
+GET {{baseUrl}}/api/income?start_date=2025-01-01&end_date=2025-01-31
+Authorization: Bearer {{token}}
+
+###
+# Ingresos con paginación
+GET {{baseUrl}}/api/income?limit=5&offset=0
+Authorization: Bearer {{token}}
+
+###
+# Obtener ingreso específico
+GET {{baseUrl}}/api/income/{{salaryId}}
+Authorization: Bearer {{token}}
+
+###
+# Actualizar ingreso
+PUT {{baseUrl}}/api/income/{{salaryId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "amount": 1250000,
+  "notes": "Pago mensual con aumento"
+}
+
+###
+# Resumen de ingresos
+GET {{baseUrl}}/api/income/summary
+Authorization: Bearer {{token}}
+
+###
+# Resumen con rango de fechas
+GET {{baseUrl}}/api/income/summary?start_date=2025-01-01&end_date=2025-01-31
+Authorization: Bearer {{token}}
+
+###
+# Obtener solo ingresos recurrentes
+GET {{baseUrl}}/api/income/recurring
+Authorization: Bearer {{token}}
+
+###
+# Eliminar ingreso
+DELETE {{baseUrl}}/api/income/{{bonusId}}
+Authorization: Bearer {{token}}
+
+###
+# Crear ingreso con frecuencia inválida (debe fallar)
+POST {{baseUrl}}/api/income
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "source": "Test",
+  "amount": 100000,
+  "date": "2025-01-16",
+  "is_recurring": true,
+  "frequency": "invalid_frequency"
+}
+
+###
+# Crear ingreso con monto negativo (debe fallar)
+POST {{baseUrl}}/api/income
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "source": "Test",
+  "amount": -100000,
+  "date": "2025-01-16",
+  "is_recurring": false,
+  "frequency": "once"
+}
+
+###
+# Crear ingreso con fecha inválida (debe fallar)
+POST {{baseUrl}}/api/income
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "source": "Test",
+  "amount": 100000,
+  "date": "invalid-date",
+  "is_recurring": false,
+  "frequency": "once"
+}
+
+###
+# Obtener ingreso inexistente (debe retornar 404)
+GET {{baseUrl}}/api/income/99999
+Authorization: Bearer {{token}}

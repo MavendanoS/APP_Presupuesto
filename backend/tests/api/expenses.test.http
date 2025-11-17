@@ -1,0 +1,166 @@
+### Variables
+@baseUrl = http://localhost:8787
+@token = YOUR_JWT_TOKEN_HERE
+@categoryId = 1
+
+###
+# Crear gasto tipo payment
+# @name createPayment
+POST {{baseUrl}}/api/expenses
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "type": "payment",
+  "category_id": {{categoryId}},
+  "amount": 350000,
+  "description": "Arriendo Enero",
+  "date": "2025-01-15",
+  "notes": "Pago mensual"
+}
+
+###
+@paymentId = {{createPayment.response.body.data.expense.id}}
+
+###
+# Crear gasto tipo purchase
+# @name createPurchase
+POST {{baseUrl}}/api/expenses
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "type": "purchase",
+  "category_id": 5,
+  "amount": 45000,
+  "description": "Supermercado semanal",
+  "date": "2025-01-16",
+  "notes": "Compras de la semana"
+}
+
+###
+@purchaseId = {{createPurchase.response.body.data.expense.id}}
+
+###
+# Crear gasto tipo small_expense
+# @name createSmallExpense
+POST {{baseUrl}}/api/expenses
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "type": "small_expense",
+  "category_id": 9,
+  "amount": 2500,
+  "description": "Café del día",
+  "date": "2025-01-16"
+}
+
+###
+@smallExpenseId = {{createSmallExpense.response.body.data.expense.id}}
+
+###
+# Obtener todos los gastos
+GET {{baseUrl}}/api/expenses
+Authorization: Bearer {{token}}
+
+###
+# Filtrar gastos por tipo
+GET {{baseUrl}}/api/expenses?type=payment
+Authorization: Bearer {{token}}
+
+###
+# Filtrar gastos por categoría
+GET {{baseUrl}}/api/expenses?category_id={{categoryId}}
+Authorization: Bearer {{token}}
+
+###
+# Filtrar gastos por rango de fechas
+GET {{baseUrl}}/api/expenses?start_date=2025-01-01&end_date=2025-01-31
+Authorization: Bearer {{token}}
+
+###
+# Filtros combinados con paginación
+GET {{baseUrl}}/api/expenses?type=purchase&start_date=2025-01-01&limit=10&offset=0
+Authorization: Bearer {{token}}
+
+###
+# Obtener gasto específico
+GET {{baseUrl}}/api/expenses/{{paymentId}}
+Authorization: Bearer {{token}}
+
+###
+# Actualizar gasto
+PUT {{baseUrl}}/api/expenses/{{paymentId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "amount": 360000,
+  "description": "Arriendo Enero (actualizado)",
+  "notes": "Incluye gastos comunes"
+}
+
+###
+# Resumen de gastos
+GET {{baseUrl}}/api/expenses/summary
+Authorization: Bearer {{token}}
+
+###
+# Resumen por tipo
+GET {{baseUrl}}/api/expenses/summary?type=payment
+Authorization: Bearer {{token}}
+
+###
+# Resumen con rango de fechas
+GET {{baseUrl}}/api/expenses/summary?start_date=2025-01-01&end_date=2025-01-31
+Authorization: Bearer {{token}}
+
+###
+# Eliminar gasto
+DELETE {{baseUrl}}/api/expenses/{{smallExpenseId}}
+Authorization: Bearer {{token}}
+
+###
+# Crear gasto con tipo inválido (debe fallar)
+POST {{baseUrl}}/api/expenses
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "type": "invalid_type",
+  "amount": 1000,
+  "description": "Test",
+  "date": "2025-01-16"
+}
+
+###
+# Crear gasto con monto negativo (debe fallar)
+POST {{baseUrl}}/api/expenses
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "type": "payment",
+  "amount": -1000,
+  "description": "Test",
+  "date": "2025-01-16"
+}
+
+###
+# Crear gasto con fecha inválida (debe fallar)
+POST {{baseUrl}}/api/expenses
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "type": "payment",
+  "amount": 1000,
+  "description": "Test",
+  "date": "2025-13-45"
+}
+
+###
+# Obtener gasto inexistente (debe retornar 404)
+GET {{baseUrl}}/api/expenses/99999
+Authorization: Bearer {{token}}

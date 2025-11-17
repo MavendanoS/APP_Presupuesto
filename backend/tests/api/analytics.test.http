@@ -1,0 +1,103 @@
+### Variables
+@baseUrl = http://localhost:8787
+@token = YOUR_JWT_TOKEN_HERE
+
+###
+# Dashboard - Métricas del mes actual
+GET {{baseUrl}}/api/analytics/dashboard
+Authorization: Bearer {{token}}
+
+###
+# Dashboard - Métricas de un período específico
+GET {{baseUrl}}/api/analytics/dashboard?start_date=2025-01-01&end_date=2025-01-31
+Authorization: Bearer {{token}}
+
+###
+# Charts - Datos agrupados por día
+GET {{baseUrl}}/api/analytics/charts?start_date=2025-01-01&end_date=2025-01-31&group_by=day
+Authorization: Bearer {{token}}
+
+###
+# Charts - Datos agrupados por semana
+GET {{baseUrl}}/api/analytics/charts?start_date=2025-01-01&end_date=2025-03-31&group_by=week
+Authorization: Bearer {{token}}
+
+###
+# Charts - Datos agrupados por mes
+GET {{baseUrl}}/api/analytics/charts?start_date=2024-01-01&end_date=2025-01-31&group_by=month
+Authorization: Bearer {{token}}
+
+###
+# Tendencias - Últimos 6 meses (default)
+GET {{baseUrl}}/api/analytics/trends
+Authorization: Bearer {{token}}
+
+###
+# Tendencias - Últimos 12 meses
+GET {{baseUrl}}/api/analytics/trends?periods=12
+Authorization: Bearer {{token}}
+
+###
+# Tendencias - Últimos 3 meses
+GET {{baseUrl}}/api/analytics/trends?periods=3
+Authorization: Bearer {{token}}
+
+###
+# Predicciones - Próximos 3 meses (default)
+GET {{baseUrl}}/api/analytics/predictions
+Authorization: Bearer {{token}}
+
+###
+# Predicciones - Próximos 6 meses
+GET {{baseUrl}}/api/analytics/predictions?months_ahead=6
+Authorization: Bearer {{token}}
+
+###
+# Comparar períodos - Enero vs Febrero 2025
+GET {{baseUrl}}/api/analytics/compare?period1_start=2025-01-01&period1_end=2025-01-31&period2_start=2025-02-01&period2_end=2025-02-28
+Authorization: Bearer {{token}}
+
+###
+# Comparar períodos - Q1 2024 vs Q1 2025
+GET {{baseUrl}}/api/analytics/compare?period1_start=2024-01-01&period1_end=2024-03-31&period2_start=2025-01-01&period2_end=2025-03-31
+Authorization: Bearer {{token}}
+
+###
+# Exportar CSV - Todos los datos del mes
+GET {{baseUrl}}/api/exports/csv?start_date=2025-01-01&end_date=2025-01-31&type=all
+Authorization: Bearer {{token}}
+
+###
+# Exportar CSV - Solo gastos
+GET {{baseUrl}}/api/exports/csv?start_date=2025-01-01&end_date=2025-01-31&type=expenses
+Authorization: Bearer {{token}}
+
+###
+# Exportar CSV - Solo ingresos
+GET {{baseUrl}}/api/exports/csv?start_date=2025-01-01&end_date=2025-01-31&type=income
+Authorization: Bearer {{token}}
+
+###
+# Exportar Excel - Todos los datos
+GET {{baseUrl}}/api/exports/excel?start_date=2025-01-01&end_date=2025-01-31&type=all
+Authorization: Bearer {{token}}
+
+###
+# Dashboard sin fechas (debe usar mes actual)
+GET {{baseUrl}}/api/analytics/dashboard
+Authorization: Bearer {{token}}
+
+###
+# Charts sin group_by (debe usar 'day' por defecto)
+GET {{baseUrl}}/api/analytics/charts
+Authorization: Bearer {{token}}
+
+###
+# Comparar con fechas inválidas (debe fallar)
+GET {{baseUrl}}/api/analytics/compare?period1_start=2025-01-01&period1_end=2025-01-31
+Authorization: Bearer {{token}}
+
+###
+# Dashboard con rango de fechas inválido (debe fallar)
+GET {{baseUrl}}/api/analytics/dashboard?start_date=2025-02-01&end_date=2025-01-01
+Authorization: Bearer {{token}}

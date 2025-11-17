@@ -1,0 +1,98 @@
+### Variables
+@baseUrl = http://localhost:8787
+@token = YOUR_JWT_TOKEN_HERE
+
+###
+# Obtener todas las categorías
+GET {{baseUrl}}/api/categories
+Authorization: Bearer {{token}}
+
+###
+# Obtener categorías filtradas por tipo
+GET {{baseUrl}}/api/categories?type=payment
+Authorization: Bearer {{token}}
+
+###
+# Crear nueva categoría
+# @name createCategory
+POST {{baseUrl}}/api/categories
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Categoría Test",
+  "type": "purchase",
+  "color": "#FF5733",
+  "icon": "test-icon"
+}
+
+###
+# Extraer ID de la categoría creada
+@categoryId = {{createCategory.response.body.data.category.id}}
+
+###
+# Obtener categoría específica
+GET {{baseUrl}}/api/categories/{{categoryId}}
+Authorization: Bearer {{token}}
+
+###
+# Actualizar categoría
+PUT {{baseUrl}}/api/categories/{{categoryId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Categoría Actualizada",
+  "color": "#00FF00"
+}
+
+###
+# Obtener categorías con estadísticas
+GET {{baseUrl}}/api/categories/stats
+Authorization: Bearer {{token}}
+
+###
+# Obtener estadísticas filtradas por tipo
+GET {{baseUrl}}/api/categories/stats?type=payment
+Authorization: Bearer {{token}}
+
+###
+# Obtener estadísticas con rango de fechas
+GET {{baseUrl}}/api/categories/stats?start_date=2025-01-01&end_date=2025-12-31
+Authorization: Bearer {{token}}
+
+###
+# Eliminar categoría (debe fallar si hay gastos asociados)
+DELETE {{baseUrl}}/api/categories/{{categoryId}}
+Authorization: Bearer {{token}}
+
+###
+# Crear categoría con color inválido (debe fallar)
+POST {{baseUrl}}/api/categories
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Color Inválido",
+  "type": "payment",
+  "color": "rojo",
+  "icon": "test"
+}
+
+###
+# Crear categoría con tipo inválido (debe fallar)
+POST {{baseUrl}}/api/categories
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Tipo Inválido",
+  "type": "invalid_type",
+  "color": "#FF0000",
+  "icon": "test"
+}
+
+###
+# Obtener categoría inexistente (debe retornar 404)
+GET {{baseUrl}}/api/categories/99999
+Authorization: Bearer {{token}}

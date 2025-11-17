@@ -8,6 +8,7 @@ import authRouter from './routes/auth.js';
 import expensesRouter from './routes/expenses.js';
 import incomeRouter from './routes/income.js';
 import categoriesRouter from './routes/categories.js';
+import analyticsRouter from './routes/analytics.js';
 
 const router = Router();
 
@@ -59,6 +60,10 @@ router.all('/api/income/*', incomeRouter.handle);
 // Rutas de categorías
 router.all('/api/categories/*', categoriesRouter.handle);
 
+// Rutas de analytics y exportación
+router.all('/api/analytics/*', analyticsRouter.handle);
+router.all('/api/exports/*', analyticsRouter.handle);
+
 // Ruta por defecto
 router.all('*', () => {
   return new Response(JSON.stringify({
@@ -86,7 +91,14 @@ router.all('*', () => {
       'GET /api/categories/stats',
       'GET /api/categories/:id',
       'PUT /api/categories/:id',
-      'DELETE /api/categories/:id'
+      'DELETE /api/categories/:id',
+      'GET /api/analytics/dashboard',
+      'GET /api/analytics/charts',
+      'GET /api/analytics/trends',
+      'GET /api/analytics/predictions',
+      'GET /api/analytics/compare',
+      'GET /api/exports/csv',
+      'GET /api/exports/excel'
     ]
   }), {
     status: 404,
