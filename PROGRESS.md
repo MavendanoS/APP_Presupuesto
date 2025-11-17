@@ -137,18 +137,118 @@ backend/src/
 
 ---
 
-## 📋 Fases Pendientes
+## ✅ Fase 3: Backend - CRUD de Gastos, Ingresos y Categorías (Completada)
+**Fecha**: 2025-11-17
+**Duración**: ~4 horas
 
-### Fase 3: Backend - CRUD de Gastos e Ingresos
-- [ ] Queries de gastos a D1
-- [ ] Queries de ingresos a D1
-- [ ] Queries de categorías a D1
-- [ ] Servicios de gastos
-- [ ] Servicios de ingresos
-- [ ] Rutas de gastos (CRUD)
-- [ ] Rutas de ingresos (CRUD)
-- [ ] Rutas de categorías (CRUD)
-- [ ] Filtros y paginación
+### Tareas Completadas
+- [x] Queries de gastos a D1 con filtros y paginación
+- [x] Queries de ingresos a D1
+- [x] Queries de categorías a D1
+- [x] Servicios de gastos con validaciones
+- [x] Servicios de ingresos
+- [x] Servicios de categorías
+- [x] Rutas de gastos (CRUD completo)
+- [x] Rutas de ingresos (CRUD completo)
+- [x] Rutas de categorías (CRUD completo)
+- [x] Filtros por tipo, categoría, fecha
+- [x] Paginación (limit/offset)
+- [x] Resúmenes y estadísticas
+- [x] Integración al router principal
+
+### Archivos Creados
+```
+backend/src/
+├── db/
+│   ├── expenses.js       # Queries de gastos (9 funciones)
+│   ├── income.js         # Queries de ingresos (7 funciones)
+│   └── categories.js     # Queries de categorías (6 funciones)
+├── services/
+│   ├── expenseService.js   # Lógica de negocio gastos
+│   ├── incomeService.js    # Lógica de negocio ingresos
+│   └── categoryService.js  # Lógica de negocio categorías
+└── routes/
+    ├── expenses.js       # 6 endpoints de gastos
+    ├── income.js         # 7 endpoints de ingresos
+    └── categories.js     # 6 endpoints de categorías
+```
+
+### Endpoints Implementados
+
+#### Gastos (19 endpoints totales)
+- `GET /api/expenses` - Listar con filtros (type, category_id, start_date, end_date, limit, offset)
+- `POST /api/expenses` - Crear gasto
+- `GET /api/expenses/summary` - Resumen por tipo y categoría
+- `GET /api/expenses/:id` - Obtener gasto específico
+- `PUT /api/expenses/:id` - Actualizar gasto
+- `DELETE /api/expenses/:id` - Eliminar gasto
+
+#### Ingresos
+- `GET /api/income` - Listar con filtros (is_recurring, start_date, end_date, limit, offset)
+- `POST /api/income` - Crear ingreso
+- `GET /api/income/summary` - Resumen total
+- `GET /api/income/recurring` - Ingresos recurrentes
+- `GET /api/income/:id` - Obtener ingreso específico
+- `PUT /api/income/:id` - Actualizar ingreso
+- `DELETE /api/income/:id` - Eliminar ingreso
+
+#### Categorías
+- `GET /api/categories` - Listar con filtros (type)
+- `POST /api/categories` - Crear categoría
+- `GET /api/categories/stats` - Categorías con estadísticas
+- `GET /api/categories/:id` - Obtener categoría específica
+- `PUT /api/categories/:id` - Actualizar categoría
+- `DELETE /api/categories/:id` - Eliminar categoría (valida gastos asociados)
+
+### Funcionalidades Destacadas
+
+**Gastos:**
+- 3 tipos: payment, purchase, small_expense
+- Filtrado por tipo, categoría, rango de fechas
+- Paginación configurable (max 100 por página)
+- Resumen por tipo (count, total, avg, min, max)
+- Resumen por categoría con información visual (color, icon)
+- Validación de formato de fecha (YYYY-MM-DD)
+- Validación de montos (>0)
+
+**Ingresos:**
+- Ingresos únicos y recurrentes
+- Frecuencias: monthly, weekly, biweekly, annual, once
+- Endpoint dedicado para ingresos recurrentes
+- Resumen con totales por tipo (recurrentes vs únicos)
+
+**Categorías:**
+- Categorías personalizables por usuario
+- 12 categorías predeterminadas al registrarse
+- Validación de color hexadecimal
+- Estadísticas con conteo y total de gastos
+- Protección contra eliminación si hay gastos asociados
+
+**Validaciones:**
+- Sanitización de inputs de texto
+- Validación de tipos (payment, purchase, small_expense)
+- Validación de fechas (formato YYYY-MM-DD)
+- Validación de montos (números positivos)
+- Validación de ownership (user_id)
+
+### Testing Pendiente
+- [ ] Crear gasto de cada tipo
+- [ ] Filtrar gastos por categoría y fecha
+- [ ] Obtener resumen de gastos
+- [ ] Crear ingreso recurrente
+- [ ] Listar ingresos recurrentes
+- [ ] Crear categoría personalizada
+- [ ] Intentar eliminar categoría con gastos (debe fallar)
+- [ ] Obtener categorías con estadísticas
+
+### Próximos Pasos
+- Fase 4: Analytics y exportación de datos
+- Testing manual de todos los endpoints
+- Documentación de API con ejemplos
+
+---
+
+## 📋 Fases Pendientes
 
 ### Fase 4: Backend - Analytics y Exportación
 - [ ] Queries de agregación

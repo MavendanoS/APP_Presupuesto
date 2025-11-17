@@ -5,6 +5,9 @@
 
 import { Router } from 'itty-router';
 import authRouter from './routes/auth.js';
+import expensesRouter from './routes/expenses.js';
+import incomeRouter from './routes/income.js';
+import categoriesRouter from './routes/categories.js';
 
 const router = Router();
 
@@ -47,6 +50,15 @@ router.get('/api/health', () => {
 // Rutas de autenticación
 router.all('/api/auth/*', authRouter.handle);
 
+// Rutas de gastos
+router.all('/api/expenses/*', expensesRouter.handle);
+
+// Rutas de ingresos
+router.all('/api/income/*', incomeRouter.handle);
+
+// Rutas de categorías
+router.all('/api/categories/*', categoriesRouter.handle);
+
 // Ruta por defecto
 router.all('*', () => {
   return new Response(JSON.stringify({
@@ -55,7 +67,26 @@ router.all('*', () => {
       'GET /api/health',
       'POST /api/auth/register',
       'POST /api/auth/login',
-      'GET /api/auth/me'
+      'GET /api/auth/me',
+      'GET /api/expenses',
+      'POST /api/expenses',
+      'GET /api/expenses/summary',
+      'GET /api/expenses/:id',
+      'PUT /api/expenses/:id',
+      'DELETE /api/expenses/:id',
+      'GET /api/income',
+      'POST /api/income',
+      'GET /api/income/summary',
+      'GET /api/income/recurring',
+      'GET /api/income/:id',
+      'PUT /api/income/:id',
+      'DELETE /api/income/:id',
+      'GET /api/categories',
+      'POST /api/categories',
+      'GET /api/categories/stats',
+      'GET /api/categories/:id',
+      'PUT /api/categories/:id',
+      'DELETE /api/categories/:id'
     ]
   }), {
     status: 404,
