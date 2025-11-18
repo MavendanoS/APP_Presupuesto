@@ -16,7 +16,7 @@ export class ExpenseChartComponent implements OnChanges {
   @Input() chartType: 'pie' | 'doughnut' | 'bar' = 'doughnut';
   @ViewChild(BaseChartDirective) chart?: BaseChartDirective;
 
-  public chartData: ChartData<'doughnut' | 'pie' | 'bar'> = {
+  public chartData: ChartData = {
     labels: [],
     datasets: [{
       data: [],
@@ -31,10 +31,10 @@ export class ExpenseChartComponent implements OnChanges {
         '#F97316', // Orange-red
         '#6366F1', // Indigo
         '#84CC16', // Lime
-      ],
+      ] as any,
       borderWidth: 2,
       borderColor: '#fff'
-    }]
+    }] as any
   };
 
   public chartOptions: ChartConfiguration['options'] = {
@@ -79,10 +79,10 @@ export class ExpenseChartComponent implements OnChanges {
       labels: sortedCategories.map(c => c.category_name),
       datasets: [{
         data: sortedCategories.map(c => c.total),
-        backgroundColor: this.chartData.datasets[0].backgroundColor,
+        backgroundColor: this.chartData.datasets[0].backgroundColor as any,
         borderWidth: 2,
         borderColor: '#fff'
-      }]
+      }] as any
     };
 
     this.chart?.update();

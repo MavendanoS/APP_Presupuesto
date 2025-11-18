@@ -52,18 +52,18 @@
             </div>
             <h6 class="text-muted mb-1">Gastos Totales</h6>
             <h3 class="mb-0">{{ metrics()!.expenses.total | clpCurrency }}</h3>
-            <small class="text-muted">{{ metrics()!.expenses.count }} registros</small>
+            <small class="text-muted">{{ getTotalExpenseCount() }} registros</small>
           </div>
         </div>
 
         <!-- Balance -->
         <div class="col-12 col-md-6 col-lg-3">
           <div class="card-responsive metric-card">
-            <div class="metric-icon" [ngClass]="metrics()!.balance.amount >= 0 ? 'bg-info' : 'bg-warning'">
+            <div class="metric-icon" [ngClass]="metrics()!.balance >= 0 ? 'bg-info' : 'bg-warning'">
               <i class="bi" [ngClass]="getBalanceIcon()"></i>
             </div>
             <h6 class="text-muted mb-1">Balance</h6>
-            <h3 class="mb-0" [ngClass]="getBalanceClass()">{{ metrics()!.balance.amount | clpCurrency }}</h3>
+            <h3 class="mb-0" [ngClass]="getBalanceClass()">{{ metrics()!.balance | clpCurrency }}</h3>
             <small [ngClass]="getBalanceClass()">{{ getBalanceText() }}</small>
           </div>
         </div>
@@ -88,7 +88,7 @@
             <div class="d-flex justify-content-between align-items-center">
               <div>
                 <h6 class="text-muted mb-1">Pagos</h6>
-                <h4 class="mb-0 text-payment">{{ metrics()!.expenses.by_type.payment | clpCurrency }}</h4>
+                <h4 class="mb-0 text-payment">{{ getExpensesByType('payment') | clpCurrency }}</h4>
               </div>
               <i class="bi bi-calendar-check display-6 text-payment opacity-50"></i>
             </div>
@@ -99,7 +99,7 @@
             <div class="d-flex justify-content-between align-items-center">
               <div>
                 <h6 class="text-muted mb-1">Compras</h6>
-                <h4 class="mb-0 text-purchase">{{ metrics()!.expenses.by_type.purchase | clpCurrency }}</h4>
+                <h4 class="mb-0 text-purchase">{{ getExpensesByType('purchase') | clpCurrency }}</h4>
               </div>
               <i class="bi bi-cart display-6 text-purchase opacity-50"></i>
             </div>
@@ -110,7 +110,7 @@
             <div class="d-flex justify-content-between align-items-center">
               <div>
                 <h6 class="text-muted mb-1">Gastos Hormiga</h6>
-                <h4 class="mb-0 text-small-expense">{{ metrics()!.expenses.by_type.small_expense | clpCurrency }}</h4>
+                <h4 class="mb-0 text-small-expense">{{ getExpensesByType('small_expense') | clpCurrency }}</h4>
               </div>
               <i class="bi bi-cup-hot display-6 text-small-expense opacity-50"></i>
             </div>
@@ -126,7 +126,7 @@
             <div class="card-responsive">
               <h5 class="mb-3">Distribución de Gastos por Categoría</h5>
               <app-expense-chart
-                [categories]="metrics()!.top_categories"
+                [categories]="getTopCategoriesAsChartData()"
                 [chartType]="'doughnut'"
               />
             </div>
@@ -141,25 +141,19 @@
                   <thead>
                     <tr>
                       <th>Categoría</th>
-                      <th>Tipo</th>
                       <th class="text-end">Total</th>
                       <th class="text-end">Cant.</th>
                     </tr>
                   </thead>
                   <tbody>
-                    @for (category of metrics()!.top_categories; track category.category_id) {
+                    @for (category of metrics()!.top_categories; track category.id) {
                       <tr>
-                        <td><strong>{{ category.category_name }}</strong></td>
                         <td>
-                          <span class="badge badge-sm"
-                                [class.badge-payment]="category.type === 'payment'"
-                                [class.badge-purchase]="category.type === 'purchase'"
-                                [class.badge-small-expense]="category.type === 'small_expense'">
-                            {{ category.type === 'payment' ? 'Pago' : category.type === 'purchase' ? 'Compra' : 'Gasto Hormiga' }}
-                          </span>
+                          <i [class]="'bi ' + category.icon" [style.color]="category.color"></i>
+                          <strong class="ms-2">{{ category.name }}</strong>
                         </td>
-                        <td class="text-end"><strong>{{ category.total | clpCurrency }}</strong></td>
-                        <td class="text-end">{{ category.count }}</td>
+                        <td class="text-end"><strong>{{ category.total_amount | clpCurrency }}</strong></td>
+                        <td class="text-end">{{ category.expense_count }}</td>
                       </tr>
                     }
                   </tbody>

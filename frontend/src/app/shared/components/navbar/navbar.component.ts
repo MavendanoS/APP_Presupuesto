@@ -11,7 +11,6 @@ import { AuthService } from '../../../core/services/auth.service';
   styleUrls: ['./navbar.component.scss']
 })
 export class NavbarComponent {
-  user = this.authService.currentUser;
   isMenuOpen = false;
 
   navLinks = [
@@ -23,6 +22,10 @@ export class NavbarComponent {
   ];
 
   constructor(private authService: AuthService) {}
+
+  get user() {
+    return this.authService.currentUser;
+  }
 
   toggleMenu(): void {
     this.isMenuOpen = !this.isMenuOpen;

@@ -1,6 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, tap, BehaviorSubject } from 'rxjs';
+import { Observable, tap, map, BehaviorSubject } from 'rxjs';
 import { Router } from '@angular/router';
 import { User, LoginRequest, RegisterRequest, AuthResponse } from '../models';
 
@@ -83,7 +83,7 @@ export class AuthService {
         }
       }),
       // Extraer solo el usuario
-      tap(response => response.data.user as any)
+      map(response => response.data.user)
     );
   }
 

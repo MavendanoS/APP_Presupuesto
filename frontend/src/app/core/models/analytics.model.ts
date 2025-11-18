@@ -1,5 +1,13 @@
 import { ExpenseType } from './expense.model';
 
+export interface CategoryExpense {
+  category_id: number;
+  category_name: string;
+  type: ExpenseType;
+  count: number;
+  total: number;
+}
+
 export interface DashboardMetrics {
   period: {
     start_date: string;

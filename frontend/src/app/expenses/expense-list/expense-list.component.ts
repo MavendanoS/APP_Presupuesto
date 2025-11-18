@@ -8,8 +8,8 @@ import { Expense, Category, ExpenseType, ExpenseFilters } from '../../core/model
 import { ResponsiveTableComponent, TableColumn } from '../../shared/components/responsive-table/responsive-table.component';
 import { LoadingComponent } from '../../shared/components/loading/loading.component';
 import { ErrorMessageComponent } from '../../shared/components/error-message/error-message.component';
-import { ClpCurrencyPipe } from '../../core/pipes/clp-currency.pipe';
-import { ExpenseTypePipe } from '../../core/pipes/expense-type.pipe';
+import { ClpCurrencyPipe } from '../../shared/pipes/clp-currency.pipe';
+import { ExpenseTypePipe } from '../../shared/pipes/expense-type.pipe';
 
 @Component({
   selector: 'app-expense-list',
@@ -38,6 +38,9 @@ export class ExpenseListComponent implements OnInit {
   itemsPerPage = 10;
   totalItems = signal(0);
   totalPages = signal(0);
+
+  // Math para template
+  Math = Math;
 
   // Formulario de filtros
   filterForm: FormGroup;

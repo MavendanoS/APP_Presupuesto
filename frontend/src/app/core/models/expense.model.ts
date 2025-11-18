@@ -49,6 +49,7 @@ export interface ExpenseFilters {
   category_id?: number;
   start_date?: string;
   end_date?: string;
+  search?: string;
   limit?: number;
   offset?: number;
 }

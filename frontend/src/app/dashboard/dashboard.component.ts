@@ -8,7 +8,7 @@ import { NavbarComponent } from '../shared/components/navbar/navbar.component';
 import { LoadingComponent } from '../shared/components/loading/loading.component';
 import { ErrorMessageComponent } from '../shared/components/error-message/error-message.component';
 import { ExpenseChartComponent } from '../shared/components/expense-chart/expense-chart.component';
-import { ClpCurrencyPipe } from '../core/pipes/clp-currency.pipe';
+import { ClpCurrencyPipe } from '../shared/pipes/clp-currency.pipe';
 
 @Component({
   selector: 'app-dashboard',
@@ -26,7 +26,6 @@ import { ClpCurrencyPipe } from '../core/pipes/clp-currency.pipe';
   styleUrls: ['./dashboard.component.scss']
 })
 export class DashboardComponent implements OnInit {
-  user = this.authService.currentUser;
   loading = signal(true);
   errorMessage = signal<string | null>(null);
   metrics = signal<DashboardMetrics | null>(null);
@@ -36,6 +35,10 @@ export class DashboardComponent implements OnInit {
     private analyticsService: AnalyticsService,
     private router: Router
   ) {}
+
+  get user() {
+    return this.authService.currentUser;
+  }
 
   ngOnInit(): void {
     this.loadMetrics();
@@ -71,21 +74,42 @@ export class DashboardComponent implements OnInit {
   }
 
   getBalanceClass(): string {
-    const balance = this.metrics()?.balance.amount || 0;
+    const balance = this.metrics()?.balance || 0;
     return balance >= 0 ? 'text-success' : 'text-danger';
   }
 
   getBalanceIcon(): string {
-    const balance = this.metrics()?.balance.amount || 0;
+    const balance = this.metrics()?.balance || 0;
     return balance >= 0 ? 'bi-arrow-up-circle' : 'bi-arrow-down-circle';
   }
 
   getBalanceText(): string {
-    const balance = this.metrics()?.balance.amount || 0;
+    const balance = this.metrics()?.balance || 0;
     return balance >= 0 ? 'Positivo' : 'Negativo';
   }
 
   getTotalCategories(): number {
     return this.metrics()?.top_categories.length || 0;
+  }
+
+  getExpensesByType(type: 'payment' | 'purchase' | 'small_expense'): number {
+    const byType = this.metrics()?.expenses.by_type.find(t => t.type === type);
+    return byType?.total || 0;
+  }
+
+  getTotalExpenseCount(): number {
+    const byType = this.metrics()?.expenses.by_type || [];
+    return byType.reduce((sum, t) => sum + t.count, 0);
+  }
+
+  getTopCategoriesAsChartData() {
+    const categories = this.metrics()?.top_categories || [];
+    return categories.map(cat => ({
+      category_id: cat.id,
+      category_name: cat.name,
+      type: 'payment' as const, // Tipo por defecto, ya que top_categories no tiene type
+      count: cat.expense_count,
+      total: cat.total_amount
+    }));
   }
 }
