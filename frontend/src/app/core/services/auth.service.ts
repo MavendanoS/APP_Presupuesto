@@ -3,12 +3,13 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, tap, map, BehaviorSubject } from 'rxjs';
 import { Router } from '@angular/router';
 import { User, LoginRequest, RegisterRequest, AuthResponse } from '../models';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private readonly API_URL = 'http://localhost:8787/api/auth';
+  private readonly API_URL = `${environment.apiUrl}/auth`;
   private readonly TOKEN_KEY = 'auth_token';
 
   // Signals para estado reactivo
