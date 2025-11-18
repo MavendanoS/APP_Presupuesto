@@ -684,11 +684,130 @@ frontend/src/app/
 
 ---
 
+## ✅ Fase 10: PWA Configuration (Completada)
+**Fecha**: 2025-11-17
+**Duración**: ~1 hora
+
+### Tareas Completadas
+- [x] @angular/pwa instalado (v20.3.10)
+- [x] Service Worker configurado con estrategias de caché
+- [x] manifest.webmanifest personalizado
+- [x] Meta tags PWA en index.html
+- [x] Iconos PWA generados (8 tamaños)
+- [x] Configuración de caché para API
+- [x] Soporte offline para datos
+
+### Archivos Creados/Modificados
+```
+frontend/
+├── ngsw-config.json              # Configuración del service worker
+├── public/
+│   ├── manifest.webmanifest      # Manifest de la PWA
+│   └── icons/                    # 8 iconos PWA (72px - 512px)
+├── src/
+│   ├── index.html                # Meta tags PWA agregados
+│   └── app/app.config.ts         # provideServiceWorker
+└── angular.json                  # Configuración de build PWA
+```
+
+### Configuración del Service Worker
+
+**Asset Groups:**
+- `app`: Prefetch de archivos core (index.html, CSS, JS, manifest)
+- `assets`: Lazy loading de imágenes y fuentes
+
+**Data Groups (API Caching):**
+1. **api-dashboard**:
+   - URLs: `/api/analytics/dashboard`, `/api/expenses/summary`
+   - Estrategia: `freshness` (red primero, fallback a caché)
+   - Max age: 5 minutos
+   - Timeout: 10 segundos
+
+2. **api-data**:
+   - URLs: `/api/expenses`, `/api/categories`, `/api/income`, `/api/analytics/**`
+   - Estrategia: `performance` (caché primero, actualiza en background)
+   - Max age: 1 hora
+   - Max size: 100 entries
+
+3. **api-auth**:
+   - URLs: `/api/auth/me`
+   - Estrategia: `freshness`
+   - Max age: 30 minutos
+   - Timeout: 5 segundos
+
+### Manifest.webmanifest
+
+**Configuración:**
+- **Nombre**: APP Presupuesto - Gestión de Gastos Personales
+- **Nombre corto**: Presupuesto
+- **Display**: standalone (modo app nativa)
+- **Orientación**: portrait-primary
+- **Theme color**: #0d6efd (azul Bootstrap)
+- **Background**: #ffffff
+- **Categorías**: finance, productivity, utilities
+- **Idioma**: es-CL
+
+**Iconos:**
+- 8 tamaños: 72x72, 96x96, 128x128, 144x144, 152x152, 192x192, 384x384, 512x512
+- Formato: PNG
+- Purpose: maskable any (compatibilidad iOS/Android)
+
+### Meta Tags PWA
+
+**SEO y PWA:**
+- Title: APP Presupuesto - Gestión de Gastos Personales
+- Description: Aplicación PWA para gestión de gastos...
+- Lang: es-CL
+- Theme-color: #0d6efd
+
+**Apple Specific:**
+- apple-mobile-web-app-capable: yes
+- apple-mobile-web-app-status-bar-style: default
+- apple-mobile-web-app-title: Presupuesto
+- apple-touch-icon: 192x192 icon
+
+**Viewport:**
+- Responsive con max-scale=5
+- User-scalable=yes para accesibilidad
+
+### Service Worker Registration
+
+**Estrategia:** `registerWhenStable:30000`
+- Registra el SW 30 segundos después de que la app esté estable
+- Solo en producción (`!isDevMode()`)
+- No interfiere con el desarrollo local
+
+### Características PWA
+
+**Instalable:**
+- Puede instalarse como app en home screen (iOS/Android)
+- Funciona en modo standalone sin barra del navegador
+- Icono personalizado en launcher
+
+**Offline Capability:**
+- App shell cacheada para carga instantánea
+- API responses cacheadas según estrategia
+- Dashboard funciona offline con datos cacheados
+- Lista de gastos accesible offline
+
+**Performance:**
+- Precarga de archivos críticos
+- Lazy loading de assets pesados
+- Cache-first para datos no críticos
+- Network-first para datos en tiempo real
+
+**Update Strategy:**
+- Actualizaciones automáticas en background
+- Usuario notificado de nuevas versiones
+- Actualización no bloquea uso actual
+
+---
+
 ## 📋 Fases Pendientes
 
-### Fase 10: PWA + Testing
-- [ ] ng add @angular/pwa
-- [ ] Configurar manifest.json
+### Fase 11: Deploy Cloudflare
+- [ ] Build de producción Angular
+- [ ] Deploy backend Worker
 - [ ] Service worker
 - [ ] Testing responsive
 

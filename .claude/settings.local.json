@@ -14,7 +14,9 @@
       "Bash(git remote add:*)",
       "Bash(git push:*)",
       "Bash(npx -p @angular/cli@latest ng new frontend --routing --style=scss --skip-git --package-manager=npm)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(ng add:*)",
+      "Bash(npx @angular/cli add:*)"
     ],
     "deny": [],
     "ask": []
