@@ -1,0 +1,21 @@
+@import '../../../scss/variables';
+@import '../../../scss/mixins';
+
+// Estilos para los botones de tipo de gasto
+.btn-payment {
+  background-color: rgba($payment-color, 0.1) !important;
+  border-color: $payment-color !important;
+  color: $payment-color !important;
+}
+
+.btn-purchase {
+  background-color: rgba($purchase-color, 0.1) !important;
+  border-color: $purchase-color !important;
+  color: $purchase-color !important;
+}
+
+.btn-small-expense {
+  background-color: rgba($small-expense-color, 0.1) !important;
+  border-color: $small-expense-color !important;
+  color: $small-expense-color !important;
+}

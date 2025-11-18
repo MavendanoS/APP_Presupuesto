@@ -1,0 +1,48 @@
+@import '../../../../scss/variables';
+@import '../../../../scss/mixins';
+
+.navbar {
+  box-shadow: $box-shadow;
+
+  .navbar-brand {
+    font-size: 1.25rem;
+    font-weight: 700;
+    @include transition(transform);
+
+    &:hover {
+      transform: scale(1.05);
+    }
+  }
+
+  .nav-link {
+    @include transition(all);
+    border-radius: $border-radius-sm;
+    margin: 0 $spacing-xs;
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    &.active {
+      background-color: rgba(255, 255, 255, 0.2);
+      font-weight: 600;
+    }
+  }
+
+  .dropdown-menu {
+    border: none;
+    box-shadow: $box-shadow-lg;
+  }
+}
+
+// Mobile adjustments
+@include respond-to('xs') {
+  .navbar-collapse {
+    margin-top: $spacing-sm;
+
+    .nav-link {
+      padding: $spacing-sm;
+      margin: $spacing-xs 0;
+    }
+  }
+}

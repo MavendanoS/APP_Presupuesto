@@ -32,6 +32,24 @@ export const routes: Routes = [
     loadComponent: () => import('./dashboard/dashboard.component').then(m => m.DashboardComponent)
   },
   {
+    path: 'expenses',
+    canActivate: [authGuard],
+    children: [
+      {
+        path: '',
+        loadComponent: () => import('./expenses/expense-list/expense-list.component').then(m => m.ExpenseListComponent)
+      },
+      {
+        path: 'new',
+        loadComponent: () => import('./expenses/expense-form/expense-form.component').then(m => m.ExpenseFormComponent)
+      },
+      {
+        path: 'edit/:id',
+        loadComponent: () => import('./expenses/expense-edit/expense-edit.component').then(m => m.ExpenseEditComponent)
+      }
+    ]
+  },
+  {
     path: '**',
     redirectTo: '/dashboard'
   }

@@ -1,0 +1,220 @@
+<div class="container-fluid p-4">
+  <div class="row justify-content-center">
+    <div class="col-12">
+      <!-- Header -->
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="h4 mb-0">Mis Gastos</h2>
+        <button type="button" class="btn btn-primary" routerLink="/expenses/new">
+          <i class="bi bi-plus-lg me-2"></i> Nuevo Gasto
+        </button>
+      </div>
+
+      <!-- Error Message -->
+      @if (errorMessage()) {
+        <app-error-message
+          [message]="errorMessage()!"
+          (dismissed)="errorMessage.set(null)"
+        />
+      }
+
+      <!-- Filtros -->
+      <div class="card-responsive mb-4">
+        <form [formGroup]="filterForm">
+          <div class="row g-3">
+            <!-- Tipo -->
+            <div class="col-12 col-md-6 col-lg-3">
+              <label for="type" class="form-label">Tipo</label>
+              <select id="type" class="form-select" formControlName="type">
+                @for (type of expenseTypes; track type.value) {
+                  <option [value]="type.value">{{ type.label }}</option>
+                }
+              </select>
+            </div>
+
+            <!-- Categoría -->
+            <div class="col-12 col-md-6 col-lg-3">
+              <label for="category" class="form-label">Categoría</label>
+              <select id="category" class="form-select" formControlName="category_id">
+                <option [value]="null">Todas</option>
+                @for (category of categories(); track category.id) {
+                  <option [value]="category.id">{{ category.name }}</option>
+                }
+              </select>
+            </div>
+
+            <!-- Fecha Inicio -->
+            <div class="col-12 col-md-6 col-lg-2">
+              <label for="start_date" class="form-label">Desde</label>
+              <input
+                type="date"
+                id="start_date"
+                class="form-control"
+                formControlName="start_date"
+              />
+            </div>
+
+            <!-- Fecha Fin -->
+            <div class="col-12 col-md-6 col-lg-2">
+              <label for="end_date" class="form-label">Hasta</label>
+              <input
+                type="date"
+                id="end_date"
+                class="form-control"
+                formControlName="end_date"
+              />
+            </div>
+
+            <!-- Búsqueda -->
+            <div class="col-12 col-lg-2">
+              <label for="search" class="form-label">Buscar</label>
+              <input
+                type="text"
+                id="search"
+                class="form-control"
+                formControlName="search"
+                placeholder="Descripción..."
+              />
+            </div>
+          </div>
+
+          <div class="mt-3">
+            <button
+              type="button"
+              class="btn btn-outline-secondary btn-sm"
+              (click)="resetFilters()"
+            >
+              <i class="bi bi-x-circle me-1"></i> Limpiar Filtros
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Loading -->
+      @if (loading()) {
+        <app-loading message="Cargando gastos..." />
+      }
+
+      <!-- Lista de Gastos -->
+      @if (!loading() && expenses().length > 0) {
+        <div class="card-responsive">
+          <app-responsive-table
+            [columns]="columns"
+            [data]="expenses()"
+            (sort)="onSort($event)"
+          >
+            <!-- Template para las celdas personalizadas -->
+            <ng-template #cellTemplate let-row="row" let-column="column">
+              @switch (column.key) {
+                @case ('date') {
+                  {{ row.date }}
+                }
+                @case ('type') {
+                  <span
+                    class="badge"
+                    [class.badge-payment]="row.type === 'payment'"
+                    [class.badge-purchase]="row.type === 'purchase'"
+                    [class.badge-small-expense]="row.type === 'small_expense'"
+                  >
+                    {{ row.type | expenseType }}
+                  </span>
+                }
+                @case ('description') {
+                  <div>
+                    <strong>{{ row.description }}</strong>
+                    @if (row.notes) {
+                      <br><small class="text-muted">{{ row.notes }}</small>
+                    }
+                  </div>
+                }
+                @case ('category_name') {
+                  {{ row.category_name || 'Sin categoría' }}
+                }
+                @case ('amount') {
+                  <strong class="text-primary">{{ row.amount | clpCurrency }}</strong>
+                }
+                @case ('actions') {
+                  <div class="btn-group btn-group-sm">
+                    <button
+                      type="button"
+                      class="btn btn-outline-primary"
+                      [routerLink]="['/expenses/edit', row.id]"
+                      title="Editar"
+                    >
+                      <i class="bi bi-pencil"></i>
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-outline-danger"
+                      (click)="deleteExpense(row.id)"
+                      title="Eliminar"
+                    >
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </div>
+                }
+              }
+            </ng-template>
+          </app-responsive-table>
+
+          <!-- Paginación -->
+          @if (totalPages() > 1) {
+            <nav class="mt-4" aria-label="Paginación">
+              <ul class="pagination justify-content-center flex-wrap">
+                <li class="page-item" [class.disabled]="currentPage() === 1">
+                  <a
+                    class="page-link"
+                    (click)="onPageChange(currentPage() - 1)"
+                    tabindex="-1"
+                  >
+                    <i class="bi bi-chevron-left"></i>
+                  </a>
+                </li>
+
+                @for (page of getPageNumbers(); track page) {
+                  @if (page === -1) {
+                    <li class="page-item disabled">
+                      <span class="page-link">...</span>
+                    </li>
+                  } @else {
+                    <li class="page-item" [class.active]="currentPage() === page">
+                      <a class="page-link" (click)="onPageChange(page)">
+                        {{ page }}
+                      </a>
+                    </li>
+                  }
+                }
+
+                <li class="page-item" [class.disabled]="currentPage() === totalPages()">
+                  <a class="page-link" (click)="onPageChange(currentPage() + 1)">
+                    <i class="bi bi-chevron-right"></i>
+                  </a>
+                </li>
+              </ul>
+            </nav>
+          }
+
+          <!-- Resumen de resultados -->
+          <div class="text-center text-muted mt-3">
+            <small>
+              Mostrando {{ (currentPage() - 1) * itemsPerPage + 1 }} -
+              {{ Math.min(currentPage() * itemsPerPage, totalItems()) }}
+              de {{ totalItems() }} gastos
+            </small>
+          </div>
+        </div>
+      }
+
+      <!-- Sin resultados -->
+      @if (!loading() && expenses().length === 0) {
+        <div class="card-responsive text-center py-5">
+          <i class="bi bi-inbox display-1 text-muted"></i>
+          <h5 class="mt-3 text-muted">No hay gastos registrados</h5>
+          <p class="text-muted">Comienza agregando tu primer gasto</p>
+          <button type="button" class="btn btn-primary mt-3" routerLink="/expenses/new">
+            <i class="bi bi-plus-lg me-2"></i> Nuevo Gasto
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+</div>

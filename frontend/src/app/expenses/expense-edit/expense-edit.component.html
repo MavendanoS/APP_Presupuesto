@@ -1,0 +1,177 @@
+<div class="container-fluid p-4">
+  <div class="row justify-content-center">
+    <div class="col-12 col-lg-8">
+      <div class="card-responsive">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h2 class="h4 mb-0">Editar Gasto</h2>
+          <button type="button" class="btn btn-outline-secondary btn-sm" routerLink="/expenses">
+            <i class="bi bi-x-lg"></i> Cancelar
+          </button>
+        </div>
+
+        <!-- Error Message -->
+        @if (errorMessage()) {
+          <app-error-message
+            [message]="errorMessage()!"
+            (dismissed)="errorMessage.set(null)"
+          />
+        }
+
+        <!-- Form -->
+        <form [formGroup]="expenseForm" (ngSubmit)="onSubmit()">
+          <!-- Tipo de Gasto -->
+          <div class="mb-4">
+            <label class="form-label fw-bold">Tipo de Gasto</label>
+            <div class="row g-3">
+              @for (expenseType of expenseTypes; track expenseType.value) {
+                <div class="col-12 col-md-4">
+                  <input
+                    type="radio"
+                    class="btn-check"
+                    [id]="'type-' + expenseType.value"
+                    formControlName="type"
+                    [value]="expenseType.value"
+                  />
+                  <label
+                    class="btn btn-outline-primary w-100 py-3"
+                    [for]="'type-' + expenseType.value"
+                    [class.btn-payment]="expenseType.value === 'payment' && type?.value === 'payment'"
+                    [class.btn-purchase]="expenseType.value === 'purchase' && type?.value === 'purchase'"
+                    [class.btn-small-expense]="expenseType.value === 'small_expense' && type?.value === 'small_expense'"
+                  >
+                    <i class="{{expenseType.icon}} d-block mb-2" style="font-size: 1.5rem;"></i>
+                    {{ expenseType.label }}
+                  </label>
+                </div>
+              }
+            </div>
+          </div>
+
+          <div class="row g-3">
+            <!-- Categoría -->
+            <div class="col-12 col-md-6">
+              <label for="category" class="form-label">Categoría</label>
+              <select
+                id="category"
+                class="form-select"
+                formControlName="category_id"
+              >
+                @for (category of categories(); track category.id) {
+                  <option [value]="category.id">
+                    {{ category.name }}
+                  </option>
+                }
+              </select>
+            </div>
+
+            <!-- Monto -->
+            <div class="col-12 col-md-6">
+              <label for="amount" class="form-label">Monto (CLP)</label>
+              <div class="input-group">
+                <span class="input-group-text">$</span>
+                <input
+                  type="number"
+                  id="amount"
+                  class="form-control"
+                  formControlName="amount"
+                  [class.is-invalid]="amount?.invalid && amount?.touched"
+                  placeholder="15000"
+                  min="1"
+                  step="1"
+                />
+                @if (amount?.invalid && amount?.touched) {
+                  <div class="invalid-feedback">
+                    @if (amount?.errors?.['required']) {
+                      El monto es requerido
+                    }
+                    @if (amount?.errors?.['min']) {
+                      El monto debe ser mayor a 0
+                    }
+                  </div>
+                }
+              </div>
+            </div>
+
+            <!-- Descripción -->
+            <div class="col-12">
+              <label for="description" class="form-label">Descripción</label>
+              <input
+                type="text"
+                id="description"
+                class="form-control"
+                formControlName="description"
+                [class.is-invalid]="description?.invalid && description?.touched"
+                placeholder="Ej: Arriendo mes de Enero"
+              />
+              @if (description?.invalid && description?.touched) {
+                <div class="invalid-feedback">
+                  @if (description?.errors?.['required']) {
+                    La descripción es requerida
+                  }
+                  @if (description?.errors?.['minlength']) {
+                    Mínimo 3 caracteres
+                  }
+                </div>
+              }
+            </div>
+
+            <!-- Fecha -->
+            <div class="col-12 col-md-6">
+              <label for="date" class="form-label">Fecha</label>
+              <input
+                type="date"
+                id="date"
+                class="form-control"
+                formControlName="date"
+                [class.is-invalid]="date?.invalid && date?.touched"
+              />
+              @if (date?.invalid && date?.touched) {
+                <div class="invalid-feedback">
+                  La fecha es requerida
+                </div>
+              }
+            </div>
+
+            <!-- Notas (opcional) -->
+            <div class="col-12">
+              <label for="notes" class="form-label">Notas (opcional)</label>
+              <textarea
+                id="notes"
+                class="form-control"
+                formControlName="notes"
+                rows="3"
+                placeholder="Notas adicionales..."
+              ></textarea>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="d-flex gap-2 justify-content-end mt-4 pt-3 border-top">
+            <button
+              type="button"
+              class="btn btn-outline-secondary"
+              routerLink="/expenses"
+              [disabled]="loading()"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              class="btn btn-primary"
+              [disabled]="expenseForm.invalid || loading()"
+            >
+              @if (loading()) {
+                <span class="spinner-border spinner-border-sm me-2"></span>
+                Guardando...
+              } @else {
+                <i class="bi bi-check-lg me-2"></i>
+                Guardar Cambios
+              }
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

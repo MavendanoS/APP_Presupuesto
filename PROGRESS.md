@@ -451,40 +451,240 @@ frontend/src/app/
 
 ---
 
+## ✅ Fase 7: Angular - Shared Components & Services (Completada)
+**Fecha**: 2025-11-17
+**Duración**: ~2.5 horas
+
+### Tareas Completadas
+- [x] NavbarComponent responsivo con menú móvil
+- [x] LoadingComponent con mensaje personalizable
+- [x] ErrorMessageComponent con cierre automático
+- [x] ResponsiveTableComponent (tabla desktop, cards mobile)
+- [x] ExpenseService con CRUD completo
+- [x] CategoryService con filtros y stats
+- [x] AnalyticsService con todas las métricas
+
+### Componentes Creados
+```
+frontend/src/app/shared/components/
+├── navbar/
+│   ├── navbar.component.ts       # Navbar con dropdown de usuario
+│   ├── navbar.component.html
+│   └── navbar.component.scss
+├── loading/
+│   ├── loading.component.ts      # Spinner con mensaje
+│   ├── loading.component.html
+│   └── loading.component.scss
+├── error-message/
+│   ├── error-message.component.ts    # Alert dismissible
+│   ├── error-message.component.html
+│   └── error-message.component.scss
+└── responsive-table/
+    ├── responsive-table.component.ts  # Tabla adaptativa
+    ├── responsive-table.component.html
+    └── responsive-table.component.scss
+```
+
+### Servicios Creados
+```
+frontend/src/app/core/services/
+├── expense.service.ts     # CRUD + summary + filtros
+├── category.service.ts    # CRUD + stats por tipo
+└── analytics.service.ts   # Dashboard, charts, trends, predictions, exports
+```
+
+### Características
+
+**NavbarComponent:**
+- Logo y título de la aplicación
+- Links de navegación (Dashboard, Gastos)
+- Dropdown de usuario con nombre y logout
+- Menú móvil colapsable con Bootstrap
+- Integración con AuthService para datos de usuario
+
+**ResponsiveTableComponent:**
+- Tabla HTML en desktop con ordenamiento
+- Cards de Bootstrap en mobile (<768px)
+- Columnas configurables con metadata
+- Eventos de sort y acciones
+- Templates personalizables por celda
+
+**ExpenseService:**
+- getExpenses() con filtros (type, category, dates, search)
+- getExpense(id) para detalle
+- createExpense() con validación
+- updateExpense(id, data)
+- deleteExpense(id)
+- getSummary() con totales
+
+**AnalyticsService:**
+- getDashboardMetrics() - métricas generales
+- getChartsData() - datos para gráficos
+- getTrends() - tendencias de N períodos
+- getPredictions() - predicciones futuras
+- exportCSV() - exportar a CSV
+- exportExcel() - exportar a Excel
+
+---
+
+## ✅ Fase 8: Angular - Expenses Module (Completada)
+**Fecha**: 2025-11-17
+**Duración**: ~3 horas
+
+### Tareas Completadas
+- [x] ExpenseFormComponent multi-tipo (payment/purchase/small_expense)
+- [x] ExpenseListComponent con filtros y paginación
+- [x] ExpenseEditComponent para actualizar gastos
+- [x] Rutas con lazy loading configuradas
+- [x] Integración con servicios backend
+- [x] Formularios reactivos con validación
+- [x] Filtros dinámicos por tipo y categoría
+- [x] Sistema de paginación inteligente
+
+### Componentes Creados
+```
+frontend/src/app/expenses/
+├── expense-form/
+│   ├── expense-form.component.ts     # Formulario de creación
+│   ├── expense-form.component.html
+│   └── expense-form.component.scss
+├── expense-list/
+│   ├── expense-list.component.ts     # Lista con filtros
+│   ├── expense-list.component.html
+│   └── expense-list.component.scss
+└── expense-edit/
+    ├── expense-edit.component.ts     # Formulario de edición
+    ├── expense-edit.component.html
+    └── expense-edit.component.scss
+```
+
+### Características
+
+**ExpenseFormComponent:**
+- Selector visual de tipo de gasto (3 botones grandes)
+- Categorías dinámicas según tipo seleccionado
+- Validación: monto > 0, descripción min 3 caracteres
+- Fecha con valor por defecto (hoy)
+- Notas opcionales
+- Pre-selección de tipo desde query params (para acciones rápidas)
+- Loading state durante guardado
+
+**ExpenseListComponent:**
+- Filtros por:
+  - Tipo de gasto (todos, payment, purchase, small_expense)
+  - Categoría
+  - Rango de fechas (desde - hasta)
+  - Búsqueda por descripción
+- Paginación:
+  - 10 items por página
+  - Navegación con flechas y números
+  - Ellipsis para páginas intermedias
+  - Contador de resultados
+- Tabla responsiva (desktop = tabla, mobile = cards)
+- Acciones por fila: Editar y Eliminar
+- Badges de colores por tipo de gasto
+- Confirmación antes de eliminar
+
+**ExpenseEditComponent:**
+- Similar a ExpenseFormComponent
+- Carga de datos existentes
+- Actualización de categorías al cambiar tipo
+- Redirección a lista después de guardar
+
+**Rutas Configuradas:**
+- `/expenses` - Lista de gastos
+- `/expenses/new` - Crear nuevo gasto
+- `/expenses/new?type=payment` - Crear con tipo pre-seleccionado
+- `/expenses/edit/:id` - Editar gasto existente
+
+---
+
+## ✅ Fase 9: Angular - Dashboard con Métricas y Gráficos (Completada)
+**Fecha**: 2025-11-17
+**Duración**: ~2.5 horas
+
+### Tareas Completadas
+- [x] DashboardComponent actualizado con datos reales
+- [x] Integración con AnalyticsService
+- [x] Métricas del mes actual automáticas
+- [x] Desglose por tipo de gasto con colores
+- [x] Top 5 categorías en tabla y gráfico
+- [x] ng2-charts y Chart.js instalados
+- [x] ExpenseChartComponent con gráfico doughnut
+- [x] Acciones rápidas con navegación a formulario pre-seleccionado
+- [x] Estilos personalizados por tipo de gasto
+
+### Componentes Creados/Actualizados
+```
+frontend/src/app/
+├── dashboard/
+│   ├── dashboard.component.ts (actualizado)
+│   ├── dashboard.component.html (actualizado)
+│   └── dashboard.component.scss (actualizado)
+└── shared/components/expense-chart/
+    ├── expense-chart.component.ts    # Gráfico reutilizable
+    ├── expense-chart.component.html
+    └── expense-chart.component.scss
+```
+
+### Características del Dashboard
+
+**Métricas Principales:**
+1. **Ingresos**: Total + cantidad de registros
+2. **Gastos Totales**: Total + cantidad de registros
+3. **Balance**: Dinámico (positivo en verde, negativo en rojo)
+4. **Categorías Activas**: Número de categorías con gastos
+
+**Desglose por Tipo:**
+- Pagos (rojo) con icono calendario
+- Compras (verde) con icono carrito
+- Gastos Hormiga (naranja) con icono taza
+
+**Visualización de Datos:**
+- Gráfico doughnut de distribución por categoría
+- Tabla con top 5 categorías (categoría, tipo, total, cantidad)
+- Porcentajes automáticos en tooltips
+- Formato chileno (CLP)
+
+**Acciones Rápidas:**
+- Nuevo Pago → `/expenses/new?type=payment`
+- Nueva Compra → `/expenses/new?type=purchase`
+- Gasto Hormiga → `/expenses/new?type=small_expense`
+- Ver Todos los Gastos → `/expenses`
+
+**ExpenseChartComponent:**
+- Soporta 3 tipos: pie, doughnut, bar
+- Colores predefinidos (10 colores)
+- Tooltips con formato CLP y porcentajes
+- Leyenda en la parte inferior
+- Ordenamiento automático por monto (mayor a menor)
+- Mensaje cuando no hay datos
+
+**Configuración de ng2-charts:**
+- provideCharts() en app.config.ts
+- withDefaultRegisterables() para componentes de Chart.js
+- Gráficos responsive y accesibles
+
+### Estilos Implementados
+
+**Badges por Tipo:**
+- badge-payment (rojo)
+- badge-purchase (verde)
+- badge-small-expense (naranja)
+
+**Botones de Acción:**
+- Hover con elevación
+- Transiciones suaves
+- Colores consistentes con tipos de gasto
+
+**Cards Responsivos:**
+- metric-card con icono
+- metric-card-small para desglose
+- Adaptación móvil automática
+
+---
+
 ## 📋 Fases Pendientes
-
-### Fase 7: Angular - Shared Components
-- [ ] Crear proyecto Angular
-- [ ] Configurar Bootstrap
-- [ ] AuthService
-- [ ] HTTP Interceptors (JWT, errors)
-- [ ] AuthGuard
-- [ ] Breakpoints responsive
-
-### Fase 6: Angular - Auth Module
-- [ ] LoginComponent
-- [ ] RegisterComponent
-- [ ] Routing y lazy loading
-- [ ] Form validation
-
-### Fase 7: Angular - Shared Components
-- [ ] ResponsiveNavbarComponent
-- [ ] ResponsiveSidebarComponent
-- [ ] ResponsiveTableComponent
-- [ ] ClpCurrencyPipe
-- [ ] Loading y error components
-
-### Fase 8: Angular - Expenses Module
-- [ ] ExpenseFormComponent
-- [ ] ExpenseListComponent
-- [ ] ExpenseFiltersComponent
-- [ ] CRUD completo
-
-### Fase 9: Angular - Dashboard
-- [ ] DashboardComponent
-- [ ] Configurar ng2-charts
-- [ ] Gráficos responsivos
-- [ ] Métricas cards
 
 ### Fase 10: PWA + Testing
 - [ ] ng add @angular/pwa

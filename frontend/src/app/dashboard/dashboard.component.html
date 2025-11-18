@@ -1,56 +1,30 @@
 <div class="dashboard-container">
   <!-- Navbar -->
-  <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-    <div class="container-fluid">
-      <a class="navbar-brand" href="#">
-        <strong>APP Presupuesto</strong>
-      </a>
-
-      <button
-        class="navbar-toggler"
-        type="button"
-        data-bs-toggle="collapse"
-        data-bs-target="#navbarNav"
-      >
-        <span class="navbar-toggler-icon"></span>
-      </button>
-
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav ms-auto">
-          <li class="nav-item">
-            <span class="nav-link">
-              @if (user()) {
-                Hola, {{ user()!.name }}
-              }
-            </span>
-          </li>
-          <li class="nav-item">
-            <button class="btn btn-outline-light btn-sm" (click)="logout()">
-              Cerrar Sesión
-            </button>
-          </li>
-        </ul>
-      </div>
-    </div>
-  </nav>
+  <app-navbar />
 
   <!-- Main Content -->
   <div class="container-fluid p-4">
+    <!-- Error Message -->
+    @if (errorMessage()) {
+      <app-error-message
+        [message]="errorMessage()!"
+        (dismissed)="errorMessage.set(null)"
+      />
+    }
+
     @if (loading()) {
-      <div class="text-center py-5">
-        <div class="spinner-border text-primary" role="status">
-          <span class="visually-hidden">Cargando...</span>
-        </div>
-      </div>
-    } @else {
+      <app-loading message="Cargando métricas..." />
+    } @else if (metrics()) {
       <!-- Welcome Card -->
       <div class="row mb-4">
         <div class="col-12">
           <div class="card-responsive">
             <h1 class="h3 mb-3">Bienvenido, {{ user()?.name }}!</h1>
+            <p class="text-muted mb-1">
+              Resumen del período: <strong>{{ metrics()!.period.start_date }}</strong> al <strong>{{ metrics()!.period.end_date }}</strong>
+            </p>
             <p class="text-muted mb-0">
-              Esta es tu aplicación de gestión de gastos personales.
-              Aquí podrás controlar tus pagos, compras y gastos hormiga.
+              Controla tus finanzas personales de manera simple y efectiva.
             </p>
           </div>
         </div>
@@ -64,48 +38,137 @@
             <div class="metric-icon bg-success">
               <i class="bi bi-wallet2"></i>
             </div>
-            <h6 class="text-muted mb-1">Ingresos del Mes</h6>
-            <h3 class="mb-0">{{ 1200000 | clpCurrency }}</h3>
-            <small class="text-success">+100%</small>
+            <h6 class="text-muted mb-1">Ingresos</h6>
+            <h3 class="mb-0">{{ metrics()!.income.total | clpCurrency }}</h3>
+            <small class="text-muted">{{ metrics()!.income.count }} registros</small>
           </div>
         </div>
 
-        <!-- Gastos -->
+        <!-- Gastos Totales -->
         <div class="col-12 col-md-6 col-lg-3">
           <div class="card-responsive metric-card">
             <div class="metric-icon bg-danger">
               <i class="bi bi-cash-stack"></i>
             </div>
-            <h6 class="text-muted mb-1">Gastos del Mes</h6>
-            <h3 class="mb-0">{{ 0 | clpCurrency }}</h3>
-            <small class="text-muted">Sin datos aún</small>
+            <h6 class="text-muted mb-1">Gastos Totales</h6>
+            <h3 class="mb-0">{{ metrics()!.expenses.total | clpCurrency }}</h3>
+            <small class="text-muted">{{ metrics()!.expenses.count }} registros</small>
           </div>
         </div>
 
         <!-- Balance -->
         <div class="col-12 col-md-6 col-lg-3">
           <div class="card-responsive metric-card">
-            <div class="metric-icon bg-info">
-              <i class="bi bi-graph-up"></i>
+            <div class="metric-icon" [ngClass]="metrics()!.balance.amount >= 0 ? 'bg-info' : 'bg-warning'">
+              <i class="bi" [ngClass]="getBalanceIcon()"></i>
             </div>
             <h6 class="text-muted mb-1">Balance</h6>
-            <h3 class="mb-0 text-success">{{ 1200000 | clpCurrency }}</h3>
-            <small class="text-success">Positivo</small>
+            <h3 class="mb-0" [ngClass]="getBalanceClass()">{{ metrics()!.balance.amount | clpCurrency }}</h3>
+            <small [ngClass]="getBalanceClass()">{{ getBalanceText() }}</small>
           </div>
         </div>
 
-        <!-- Categorías -->
+        <!-- Categorías con más gastos -->
         <div class="col-12 col-md-6 col-lg-3">
           <div class="card-responsive metric-card">
-            <div class="metric-icon bg-warning">
+            <div class="metric-icon bg-primary">
               <i class="bi bi-tags"></i>
             </div>
-            <h6 class="text-muted mb-1">Categorías</h6>
-            <h3 class="mb-0">12</h3>
-            <small class="text-muted">Predeterminadas</small>
+            <h6 class="text-muted mb-1">Categorías Activas</h6>
+            <h3 class="mb-0">{{ getTotalCategories() }}</h3>
+            <small class="text-muted">Este período</small>
           </div>
         </div>
       </div>
+
+      <!-- Desglose por Tipo de Gasto -->
+      <div class="row g-4 mb-4">
+        <div class="col-12 col-md-4">
+          <div class="card-responsive metric-card-small">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <h6 class="text-muted mb-1">Pagos</h6>
+                <h4 class="mb-0 text-payment">{{ metrics()!.expenses.by_type.payment | clpCurrency }}</h4>
+              </div>
+              <i class="bi bi-calendar-check display-6 text-payment opacity-50"></i>
+            </div>
+          </div>
+        </div>
+        <div class="col-12 col-md-4">
+          <div class="card-responsive metric-card-small">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <h6 class="text-muted mb-1">Compras</h6>
+                <h4 class="mb-0 text-purchase">{{ metrics()!.expenses.by_type.purchase | clpCurrency }}</h4>
+              </div>
+              <i class="bi bi-cart display-6 text-purchase opacity-50"></i>
+            </div>
+          </div>
+        </div>
+        <div class="col-12 col-md-4">
+          <div class="card-responsive metric-card-small">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <h6 class="text-muted mb-1">Gastos Hormiga</h6>
+                <h4 class="mb-0 text-small-expense">{{ metrics()!.expenses.by_type.small_expense | clpCurrency }}</h4>
+              </div>
+              <i class="bi bi-cup-hot display-6 text-small-expense opacity-50"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Visualización de Gastos -->
+      @if (metrics()!.top_categories.length > 0) {
+        <div class="row g-4 mb-4">
+          <!-- Gráfico de Gastos por Categoría -->
+          <div class="col-12 col-lg-6">
+            <div class="card-responsive">
+              <h5 class="mb-3">Distribución de Gastos por Categoría</h5>
+              <app-expense-chart
+                [categories]="metrics()!.top_categories"
+                [chartType]="'doughnut'"
+              />
+            </div>
+          </div>
+
+          <!-- Top 5 Categorías Tabla -->
+          <div class="col-12 col-lg-6">
+            <div class="card-responsive">
+              <h5 class="mb-3">Top 5 Categorías con Más Gastos</h5>
+              <div class="table-responsive">
+                <table class="table table-hover">
+                  <thead>
+                    <tr>
+                      <th>Categoría</th>
+                      <th>Tipo</th>
+                      <th class="text-end">Total</th>
+                      <th class="text-end">Cant.</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (category of metrics()!.top_categories; track category.category_id) {
+                      <tr>
+                        <td><strong>{{ category.category_name }}</strong></td>
+                        <td>
+                          <span class="badge badge-sm"
+                                [class.badge-payment]="category.type === 'payment'"
+                                [class.badge-purchase]="category.type === 'purchase'"
+                                [class.badge-small-expense]="category.type === 'small_expense'">
+                            {{ category.type === 'payment' ? 'Pago' : category.type === 'purchase' ? 'Compra' : 'Gasto Hormiga' }}
+                          </span>
+                        </td>
+                        <td class="text-end"><strong>{{ category.total | clpCurrency }}</strong></td>
+                        <td class="text-end">{{ category.count }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
 
       <!-- Quick Actions -->
       <div class="row">
@@ -113,22 +176,28 @@
           <div class="card-responsive">
             <h5 class="mb-3">Acciones Rápidas</h5>
             <div class="row g-3">
-              <div class="col-12 col-sm-6 col-md-4">
-                <button class="btn btn-payment w-100">
+              <div class="col-12 col-sm-6 col-md-3">
+                <button class="btn btn-payment w-100 py-3" (click)="navigateToNewExpense('payment')">
                   <i class="bi bi-calendar-check me-2"></i>
                   Nuevo Pago
                 </button>
               </div>
-              <div class="col-12 col-sm-6 col-md-4">
-                <button class="btn btn-purchase w-100">
+              <div class="col-12 col-sm-6 col-md-3">
+                <button class="btn btn-purchase w-100 py-3" (click)="navigateToNewExpense('purchase')">
                   <i class="bi bi-cart me-2"></i>
                   Nueva Compra
                 </button>
               </div>
-              <div class="col-12 col-sm-6 col-md-4">
-                <button class="btn btn-small-expense w-100">
+              <div class="col-12 col-sm-6 col-md-3">
+                <button class="btn btn-small-expense w-100 py-3" (click)="navigateToNewExpense('small_expense')">
                   <i class="bi bi-cup-hot me-2"></i>
                   Gasto Hormiga
+                </button>
+              </div>
+              <div class="col-12 col-sm-6 col-md-3">
+                <button class="btn btn-outline-primary w-100 py-3" routerLink="/expenses">
+                  <i class="bi bi-list-ul me-2"></i>
+                  Ver Todos los Gastos
                 </button>
               </div>
             </div>

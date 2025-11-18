@@ -1,0 +1,53 @@
+@import '../../../../scss/variables';
+@import '../../../../scss/mixins';
+
+.table {
+  th {
+    font-weight: 600;
+    color: $dark-color;
+    border-bottom: 2px solid $primary-color;
+
+    &.sortable {
+      cursor: pointer;
+      user-select: none;
+      @include transition(background-color);
+
+      &:hover {
+        background-color: rgba($primary-color, 0.05);
+      }
+    }
+
+    i {
+      font-size: 0.875rem;
+      color: $primary-color;
+    }
+  }
+
+  tbody tr {
+    @include transition(background-color);
+
+    &:hover {
+      background-color: rgba($primary-color, 0.05);
+    }
+  }
+}
+
+.mobile-cards {
+  .card {
+    cursor: pointer;
+    @include transition(all);
+    border-left: 3px solid transparent;
+
+    &:hover {
+      border-left-color: $primary-color;
+      box-shadow: $box-shadow;
+    }
+
+    small {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+  }
+}

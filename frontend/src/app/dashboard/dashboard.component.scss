@@ -39,6 +39,104 @@
   }
 }
 
+.metric-card-small {
+  padding: $spacing-md;
+
+  h4 {
+    font-weight: 700;
+  }
+
+  h6 {
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-transform: uppercase;
+  }
+}
+
+// Color utilities
+.text-payment {
+  color: $payment-color !important;
+}
+
+.text-purchase {
+  color: $purchase-color !important;
+}
+
+.text-small-expense {
+  color: $small-expense-color !important;
+}
+
+// Badges
+.badge-payment {
+  background-color: rgba($payment-color, 0.1);
+  color: $payment-color;
+  border: 1px solid rgba($payment-color, 0.3);
+}
+
+.badge-purchase {
+  background-color: rgba($purchase-color, 0.1);
+  color: $purchase-color;
+  border: 1px solid rgba($purchase-color, 0.3);
+}
+
+.badge-small-expense {
+  background-color: rgba($small-expense-color, 0.1);
+  color: $small-expense-color;
+  border: 1px solid rgba($small-expense-color, 0.3);
+}
+
+.badge-sm {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+}
+
+// Quick action buttons
+.btn-payment,
+.btn-purchase,
+.btn-small-expense {
+  font-weight: 600;
+  border: 2px solid;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+}
+
+.btn-payment {
+  background-color: rgba($payment-color, 0.1);
+  border-color: $payment-color;
+  color: $payment-color;
+
+  &:hover {
+    background-color: $payment-color;
+    color: white;
+  }
+}
+
+.btn-purchase {
+  background-color: rgba($purchase-color, 0.1);
+  border-color: $purchase-color;
+  color: $purchase-color;
+
+  &:hover {
+    background-color: $purchase-color;
+    color: white;
+  }
+}
+
+.btn-small-expense {
+  background-color: rgba($small-expense-color, 0.1);
+  border-color: $small-expense-color;
+  color: $small-expense-color;
+
+  &:hover {
+    background-color: $small-expense-color;
+    color: white;
+  }
+}
+
 // Responsive adjustments
 @include respond-to('xs') {
   .metric-card {

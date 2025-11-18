@@ -1,0 +1,15 @@
+<div class="chart-container">
+  @if (categories.length > 0) {
+    <canvas
+      baseChart
+      [data]="chartData"
+      [type]="chartType"
+      [options]="chartOptions"
+    ></canvas>
+  } @else {
+    <div class="text-center py-5 text-muted">
+      <i class="bi bi-pie-chart display-4 mb-3"></i>
+      <p>No hay datos para mostrar</p>
+    </div>
+  }
+</div>

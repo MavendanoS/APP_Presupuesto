@@ -1,0 +1,49 @@
+@import '../../../scss/variables';
+@import '../../../scss/mixins';
+
+// Badges para tipos de gasto
+.badge-payment {
+  background-color: rgba($payment-color, 0.1);
+  color: $payment-color;
+  border: 1px solid rgba($payment-color, 0.3);
+}
+
+.badge-purchase {
+  background-color: rgba($purchase-color, 0.1);
+  color: $purchase-color;
+  border: 1px solid rgba($purchase-color, 0.3);
+}
+
+.badge-small-expense {
+  background-color: rgba($small-expense-color, 0.1);
+  color: $small-expense-color;
+  border: 1px solid rgba($small-expense-color, 0.3);
+}
+
+// Paginación
+.pagination {
+  .page-link {
+    cursor: pointer;
+    user-select: none;
+
+    &:hover {
+      background-color: rgba($primary-color, 0.1);
+    }
+  }
+
+  .page-item.active .page-link {
+    background-color: $primary-color;
+    border-color: $primary-color;
+  }
+
+  .page-item.disabled .page-link {
+    cursor: not-allowed;
+  }
+}
+
+// Responsive adjustments
+@include respond-to('sm') {
+  .pagination {
+    font-size: 0.875rem;
+  }
+}
