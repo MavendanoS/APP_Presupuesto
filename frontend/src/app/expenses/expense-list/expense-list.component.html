@@ -140,17 +140,19 @@
                       type="button"
                       class="btn btn-outline-primary"
                       [routerLink]="['/expenses/edit', row.id]"
-                      title="Editar"
+                      title="Editar gasto"
                     >
                       <i class="bi bi-pencil"></i>
+                      <span class="d-none d-md-inline ms-1">Editar</span>
                     </button>
                     <button
                       type="button"
                       class="btn btn-outline-danger"
                       (click)="deleteExpense(row.id)"
-                      title="Eliminar"
+                      title="Eliminar gasto"
                     >
                       <i class="bi bi-trash"></i>
+                      <span class="d-none d-md-inline ms-1">Eliminar</span>
                     </button>
                   </div>
                 }
