@@ -54,18 +54,7 @@
         "maxSize": 100,
         "maxAge": "1h"
       }
-    },
-    {
-      "name": "api-auth",
-      "urls": [
-        "/api/auth/me"
-      ],
-      "cacheConfig": {
-        "strategy": "freshness",
-        "maxSize": 5,
-        "maxAge": "30m",
-        "timeout": "5s"
-      }
     }
-  ]
+  ],
+  "navigationRequestStrategy": "performance"
 }

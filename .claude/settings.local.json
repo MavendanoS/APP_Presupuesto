@@ -18,7 +18,13 @@
       "Bash(ng add:*)",
       "Bash(npx @angular/cli add:*)",
       "Bash(npm run build:*)",
-      "Bash(npx wrangler:*)"
+      "Bash(npx wrangler:*)",
+      "Bash(node hash-password.js:*)",
+      "Bash(curl:*)",
+      "Bash(ng build:*)",
+      "Bash(npx ng build:*)",
+      "Bash(cat:*)",
+      "Bash(npx ng generate:*)"
     ],
     "deny": [],
     "ask": []

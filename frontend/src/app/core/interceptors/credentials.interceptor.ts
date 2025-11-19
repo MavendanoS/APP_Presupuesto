@@ -11,5 +11,11 @@ export const credentialsInterceptor: HttpInterceptorFn = (req, next) => {
     withCredentials: true
   });
 
+  // Debug: log para verificar que withCredentials está activado
+  console.log(`[Credentials Interceptor] ${req.method} ${req.url}`, {
+    withCredentials: clonedReq.withCredentials,
+    headers: clonedReq.headers.keys()
+  });
+
   return next(clonedReq);
 };
