@@ -10,7 +10,6 @@ import { environment } from '../../../environments/environment';
 })
 export class AuthService {
   private readonly API_URL = `${environment.apiUrl}/auth`;
-  private readonly TOKEN_KEY = 'auth_token';
 
   // Signals para estado reactivo
   currentUser = signal<User | null>(null);
@@ -20,36 +19,39 @@ export class AuthService {
     private http: HttpClient,
     private router: Router
   ) {
-    // Verificar si hay token al iniciar
+    // Verificar si hay sesión activa (cookie)
     this.checkAuthStatus();
   }
 
   /**
-   * Verificar si el usuario está autenticado
+   * Verificar si el usuario está autenticado (la cookie se envía automáticamente)
    */
   private checkAuthStatus(): void {
-    const token = this.getToken();
-    if (token) {
-      this.getCurrentUser().subscribe({
-        next: (user) => {
-          this.currentUser.set(user);
-          this.isAuthenticated.set(true);
-        },
-        error: () => {
-          this.logout();
-        }
-      });
-    }
+    // Intentar obtener el usuario actual
+    // Si hay una cookie válida, el backend la validará
+    this.getCurrentUser().subscribe({
+      next: (user) => {
+        this.currentUser.set(user);
+        this.isAuthenticated.set(true);
+      },
+      error: () => {
+        // No hay sesión activa, esto es normal en la primera carga
+        this.currentUser.set(null);
+        this.isAuthenticated.set(false);
+      }
+    });
   }
 
   /**
    * Registrar nuevo usuario
    */
   register(data: RegisterRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.API_URL}/register`, data).pipe(
+    return this.http.post<AuthResponse>(`${this.API_URL}/register`, data, {
+      withCredentials: true // Importante: enviar y recibir cookies
+    }).pipe(
       tap(response => {
         if (response.success) {
-          this.setToken(response.data.token);
+          // La cookie se configura automáticamente desde el backend
           this.currentUser.set(response.data.user);
           this.isAuthenticated.set(true);
         }
@@ -61,10 +63,12 @@ export class AuthService {
    * Login de usuario
    */
   login(credentials: LoginRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.API_URL}/login`, credentials).pipe(
+    return this.http.post<AuthResponse>(`${this.API_URL}/login`, credentials, {
+      withCredentials: true // Importante: enviar y recibir cookies
+    }).pipe(
       tap(response => {
         if (response.success) {
-          this.setToken(response.data.token);
+          // La cookie se configura automáticamente desde el backend
           this.currentUser.set(response.data.user);
           this.isAuthenticated.set(true);
         }
@@ -76,7 +80,9 @@ export class AuthService {
    * Obtener usuario actual
    */
   getCurrentUser(): Observable<User> {
-    return this.http.get<{ success: boolean; data: { user: User } }>(`${this.API_URL}/me`).pipe(
+    return this.http.get<{ success: boolean; data: { user: User } }>(`${this.API_URL}/me`, {
+      withCredentials: true // Enviar cookie con la petición
+    }).pipe(
       tap(response => {
         if (response.success) {
           this.currentUser.set(response.data.user);
@@ -89,33 +95,23 @@ export class AuthService {
   }
 
   /**
-   * Logout
+   * Logout - llama al backend para limpiar la cookie
    */
   logout(): void {
-    this.removeToken();
-    this.currentUser.set(null);
-    this.isAuthenticated.set(false);
-    this.router.navigate(['/auth/login']);
-  }
-
-  /**
-   * Guardar token
-   */
-  private setToken(token: string): void {
-    localStorage.setItem(this.TOKEN_KEY, token);
-  }
-
-  /**
-   * Obtener token
-   */
-  getToken(): string | null {
-    return localStorage.getItem(this.TOKEN_KEY);
-  }
-
-  /**
-   * Eliminar token
-   */
-  private removeToken(): void {
-    localStorage.removeItem(this.TOKEN_KEY);
+    this.http.post(`${this.API_URL}/logout`, {}, {
+      withCredentials: true // Enviar cookie para que el backend la pueda limpiar
+    }).subscribe({
+      next: () => {
+        this.currentUser.set(null);
+        this.isAuthenticated.set(false);
+        this.router.navigate(['/auth/login']);
+      },
+      error: () => {
+        // Incluso si falla, limpiar el estado local
+        this.currentUser.set(null);
+        this.isAuthenticated.set(false);
+        this.router.navigate(['/auth/login']);
+      }
+    });
   }
 }

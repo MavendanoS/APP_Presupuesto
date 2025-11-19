@@ -5,6 +5,7 @@ import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
 
 import { routes } from './app.routes';
+import { credentialsInterceptor } from './core/interceptors/credentials.interceptor';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
 import { errorInterceptor } from './core/interceptors/error.interceptor';
 import { provideServiceWorker } from '@angular/service-worker';
@@ -15,7 +16,7 @@ export const appConfig: ApplicationConfig = {
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
     provideHttpClient(
-      withInterceptors([authInterceptor, errorInterceptor])
+      withInterceptors([credentialsInterceptor, authInterceptor, errorInterceptor])
     ),
     provideAnimations(),
     provideCharts(withDefaultRegisterables()), provideServiceWorker('ngsw-worker.js', {

@@ -33,32 +33,37 @@ export class ApiService {
       });
     }
 
-    return this.http.get<ApiResponse<T>>(`${this.BASE_URL}${endpoint}`, { params: httpParams })
-      .pipe(map(response => response.data));
+    return this.http.get<ApiResponse<T>>(`${this.BASE_URL}${endpoint}`, {
+      params: httpParams,
+      withCredentials: true
+    }).pipe(map(response => response.data));
   }
 
   /**
    * POST request
    */
   post<T>(endpoint: string, body: any): Observable<T> {
-    return this.http.post<ApiResponse<T>>(`${this.BASE_URL}${endpoint}`, body)
-      .pipe(map(response => response.data));
+    return this.http.post<ApiResponse<T>>(`${this.BASE_URL}${endpoint}`, body, {
+      withCredentials: true
+    }).pipe(map(response => response.data));
   }
 
   /**
    * PUT request
    */
   put<T>(endpoint: string, body: any): Observable<T> {
-    return this.http.put<ApiResponse<T>>(`${this.BASE_URL}${endpoint}`, body)
-      .pipe(map(response => response.data));
+    return this.http.put<ApiResponse<T>>(`${this.BASE_URL}${endpoint}`, body, {
+      withCredentials: true
+    }).pipe(map(response => response.data));
   }
 
   /**
    * DELETE request
    */
   delete<T>(endpoint: string): Observable<T> {
-    return this.http.delete<ApiResponse<T>>(`${this.BASE_URL}${endpoint}`)
-      .pipe(map(response => response.data));
+    return this.http.delete<ApiResponse<T>>(`${this.BASE_URL}${endpoint}`, {
+      withCredentials: true
+    }).pipe(map(response => response.data));
   }
 
   /**
@@ -77,7 +82,8 @@ export class ApiService {
 
     return this.http.get(`${this.BASE_URL}${endpoint}`, {
       params: httpParams,
-      responseType: 'blob'
+      responseType: 'blob',
+      withCredentials: true
     });
   }
 }

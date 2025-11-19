@@ -4,8 +4,9 @@
  */
 
 import { Router } from 'itty-router';
-import { registerUser, loginUser, getCurrentUser } from '../services/authService.js';
+import { registerUser, loginUser, getCurrentUser, generatePasswordResetToken, resetPasswordWithToken } from '../services/authService.js';
 import { requireAuth } from '../middleware/auth.js';
+import { withRateLimit, resetRateLimit } from '../middleware/rateLimit.js';
 
 const authRouter = Router({ base: '/api/auth' });
 
@@ -30,12 +31,28 @@ authRouter.post('/register', async (request, env) => {
 
     const result = await registerUser(env.DB, { email, password, name }, env.JWT_SECRET);
 
+    // Configurar cookie HttpOnly
+    // SameSite=None permite cookies cross-site (frontend pages.dev → backend workers.dev)
+    const cookieOptions = [
+      `auth_token=${result.token}`,
+      'HttpOnly',
+      'Secure',
+      'SameSite=None',
+      'Path=/',
+      `Max-Age=${7 * 24 * 60 * 60}`, // 7 días en segundos
+    ].join('; ');
+
     return new Response(JSON.stringify({
       success: true,
-      data: result
+      data: {
+        user: result.user
+      }
     }), {
       status: 201,
-      headers: { 'Content-Type': 'application/json' }
+      headers: {
+        'Content-Type': 'application/json',
+        'Set-Cookie': cookieOptions
+      }
     });
 
   } catch (error) {
@@ -51,9 +68,9 @@ authRouter.post('/register', async (request, env) => {
 
 /**
  * POST /api/auth/login
- * Iniciar sesión
+ * Iniciar sesión (con rate limiting)
  */
-authRouter.post('/login', async (request, env) => {
+authRouter.post('/login', withRateLimit(async (request, env) => {
   try {
     const body = await request.json();
     const { email, password } = body;
@@ -70,12 +87,31 @@ authRouter.post('/login', async (request, env) => {
 
     const result = await loginUser(env.DB, { email, password }, env.JWT_SECRET);
 
+    // Login exitoso - resetear rate limit para esta IP
+    resetRateLimit(request);
+
+    // Configurar cookie HttpOnly
+    // SameSite=None permite cookies cross-site (frontend pages.dev → backend workers.dev)
+    const cookieOptions = [
+      `auth_token=${result.token}`,
+      'HttpOnly',
+      'Secure',
+      'SameSite=None',
+      'Path=/',
+      `Max-Age=${7 * 24 * 60 * 60}`, // 7 días en segundos
+    ].join('; ');
+
     return new Response(JSON.stringify({
       success: true,
-      data: result
+      data: {
+        user: result.user
+      }
     }), {
       status: 200,
-      headers: { 'Content-Type': 'application/json' }
+      headers: {
+        'Content-Type': 'application/json',
+        'Set-Cookie': cookieOptions
+      }
     });
 
   } catch (error) {
@@ -87,6 +123,33 @@ authRouter.post('/login', async (request, env) => {
       headers: { 'Content-Type': 'application/json' }
     });
   }
+}));
+
+/**
+ * POST /api/auth/logout
+ * Cerrar sesión (limpiar cookie)
+ */
+authRouter.post('/logout', async (request, env) => {
+  // Limpiar cookie configurándola con Max-Age=0
+  const cookieOptions = [
+    'auth_token=',
+    'HttpOnly',
+    'Secure',
+    'SameSite=None',
+    'Path=/',
+    'Max-Age=0', // Expirar inmediatamente
+  ].join('; ');
+
+  return new Response(JSON.stringify({
+    success: true,
+    message: 'Sesión cerrada correctamente'
+  }), {
+    status: 200,
+    headers: {
+      'Content-Type': 'application/json',
+      'Set-Cookie': cookieOptions
+    }
+  });
 });
 
 /**
@@ -116,5 +179,87 @@ authRouter.get('/me', requireAuth(async (request, env) => {
     });
   }
 }));
+
+/**
+ * POST /api/auth/forgot-password
+ * Solicitar recuperación de contraseña
+ */
+authRouter.post('/forgot-password', withRateLimit(async (request, env) => {
+  try {
+    const body = await request.json();
+    const { email } = body;
+
+    if (!email) {
+      return new Response(JSON.stringify({
+        error: 'Email requerido'
+      }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const result = await generatePasswordResetToken(env.DB, email);
+
+    // NOTA: En producción, aquí se enviaría un email con el token
+    // Por ahora, devolvemos el token directamente para desarrollo
+    return new Response(JSON.stringify({
+      success: true,
+      message: 'Si el email existe, se ha generado un token de recuperación',
+      // TODO: Remover en producción cuando se implemente envío de emails
+      data: { resetToken: result.token }
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+  } catch (error) {
+    return new Response(JSON.stringify({
+      error: 'Error al procesar solicitud',
+      message: error.message
+    }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}));
+
+/**
+ * POST /api/auth/reset-password
+ * Resetear contraseña con token
+ */
+authRouter.post('/reset-password', async (request, env) => {
+  try {
+    const body = await request.json();
+    const { token, newPassword } = body;
+
+    if (!token || !newPassword) {
+      return new Response(JSON.stringify({
+        error: 'Token y nueva contraseña requeridos'
+      }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    await resetPasswordWithToken(env.DB, token, newPassword);
+
+    return new Response(JSON.stringify({
+      success: true,
+      message: 'Contraseña actualizada correctamente'
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+  } catch (error) {
+    return new Response(JSON.stringify({
+      error: 'Error al resetear contraseña',
+      message: error.message
+    }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+});
 
 export default authRouter;

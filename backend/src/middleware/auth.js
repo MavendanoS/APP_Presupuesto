@@ -6,21 +6,43 @@
 import { verifyToken } from '../utils/jwt.js';
 
 /**
+ * Extraer token de cookies
+ */
+function getTokenFromCookies(request) {
+  const cookieHeader = request.headers.get('Cookie');
+  if (!cookieHeader) return null;
+
+  const cookies = cookieHeader.split(';').map(c => c.trim());
+  const authCookie = cookies.find(c => c.startsWith('auth_token='));
+
+  if (!authCookie) return null;
+
+  return authCookie.substring('auth_token='.length);
+}
+
+/**
  * Middleware para verificar JWT
- * Extrae el token del header Authorization y lo verifica
+ * Extrae el token de cookies o del header Authorization
  * Si es válido, agrega el payload a request.user
  */
 export async function authMiddleware(request, env) {
-  const authHeader = request.headers.get('Authorization');
+  // Primero intentar obtener token de cookie (más seguro)
+  let token = getTokenFromCookies(request);
 
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  // Si no hay cookie, intentar con Authorization header (backwards compatibility)
+  if (!token) {
+    const authHeader = request.headers.get('Authorization');
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.substring(7); // Remover "Bearer "
+    }
+  }
+
+  if (!token) {
     return {
       isAuthenticated: false,
       error: 'No se proporcionó token de autenticación'
     };
   }
-
-  const token = authHeader.substring(7); // Remover "Bearer "
 
   try {
     const payload = await verifyToken(token, env.JWT_SECRET);

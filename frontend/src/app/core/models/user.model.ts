@@ -19,7 +19,6 @@ export interface RegisterRequest {
 export interface AuthResponse {
   success: boolean;
   data: {
-    token: string;
     user: User;
   };
 }

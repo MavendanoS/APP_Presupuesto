@@ -50,6 +50,21 @@ export const routes: Routes = [
     ]
   },
   {
+    path: 'income',
+    canActivate: [authGuard],
+    loadComponent: () => import('./income/income-list/income-list').then(m => m.IncomeListComponent)
+  },
+  {
+    path: 'categories',
+    canActivate: [authGuard],
+    loadComponent: () => import('./categories/category-list/category-list').then(m => m.CategoryListComponent)
+  },
+  {
+    path: 'analytics',
+    canActivate: [authGuard],
+    loadComponent: () => import('./analytics/analytics-view/analytics-view').then(m => m.AnalyticsViewComponent)
+  },
+  {
     path: '**',
     redirectTo: '/dashboard'
   }

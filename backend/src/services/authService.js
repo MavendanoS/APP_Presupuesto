@@ -131,6 +131,93 @@ export async function getCurrentUser(db, userId) {
 }
 
 /**
+ * Generar token de recuperación de contraseña
+ * @param {Object} db - D1 database binding
+ * @param {string} email - Email del usuario
+ * @returns {Promise<Object>} { token }
+ */
+export async function generatePasswordResetToken(db, email) {
+  const cleanEmail = sanitizeInput(email);
+  if (!isValidEmail(cleanEmail)) {
+    throw new Error('Email inválido');
+  }
+
+  // Buscar usuario
+  const user = await findUserByEmail(db, cleanEmail);
+  if (!user) {
+    // Por seguridad, no revelar si el email existe o no
+    throw new Error('Si el email existe, se enviará un enlace de recuperación');
+  }
+
+  // Generar token aleatorio (32 bytes = 64 caracteres hex)
+  const tokenBytes = new Uint8Array(32);
+  crypto.getRandomValues(tokenBytes);
+  const token = Array.from(tokenBytes, byte => byte.toString(16).padStart(2, '0')).join('');
+
+  // Expiración: 1 hora
+  const expiresAt = Math.floor(Date.now() / 1000) + (60 * 60);
+
+  // Invalidar tokens anteriores del usuario
+  await db.prepare(`
+    UPDATE password_reset_tokens
+    SET used = 1
+    WHERE user_id = ? AND used = 0
+  `).bind(user.id).run();
+
+  // Guardar nuevo token
+  await db.prepare(`
+    INSERT INTO password_reset_tokens (user_id, token, expires_at)
+    VALUES (?, ?, ?)
+  `).bind(user.id, token, expiresAt).run();
+
+  return { token, email: user.email };
+}
+
+/**
+ * Resetear contraseña con token
+ * @param {Object} db - D1 database binding
+ * @param {string} token - Token de recuperación
+ * @param {string} newPassword - Nueva contraseña
+ * @returns {Promise<void>}
+ */
+export async function resetPasswordWithToken(db, token, newPassword) {
+  // Validar nueva contraseña
+  const passwordValidation = validatePassword(newPassword);
+  if (!passwordValidation.isValid) {
+    throw new Error(passwordValidation.errors.join(', '));
+  }
+
+  const now = Math.floor(Date.now() / 1000);
+
+  // Buscar token válido
+  const resetToken = await db.prepare(`
+    SELECT * FROM password_reset_tokens
+    WHERE token = ? AND used = 0 AND expires_at > ?
+  `).bind(token, now).first();
+
+  if (!resetToken) {
+    throw new Error('Token inválido o expirado');
+  }
+
+  // Hashear nueva contraseña
+  const password_hash = await hashPassword(newPassword);
+
+  // Actualizar contraseña del usuario
+  await db.prepare(`
+    UPDATE users
+    SET password_hash = ?, updated_at = unixepoch()
+    WHERE id = ?
+  `).bind(password_hash, resetToken.user_id).run();
+
+  // Marcar token como usado
+  await db.prepare(`
+    UPDATE password_reset_tokens
+    SET used = 1
+    WHERE id = ?
+  `).bind(resetToken.id).run();
+}
+
+/**
  * Crear categorías predeterminadas para un nuevo usuario
  * @param {Object} db - D1 database binding
  * @param {number} userId - ID del usuario

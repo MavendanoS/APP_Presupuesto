@@ -1,23 +1,12 @@
 import { HttpInterceptorFn } from '@angular/common/http';
-import { inject } from '@angular/core';
-import { AuthService } from '../services/auth.service';
 
 /**
- * Interceptor para agregar JWT token a todas las requests
+ * Interceptor de autenticación
+ * Las cookies HttpOnly se envían automáticamente con withCredentials: true
+ * No se requiere lógica adicional
  */
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
-  const authService = inject(AuthService);
-  const token = authService.getToken();
-
-  // Si hay token, agregarlo al header Authorization
-  if (token) {
-    const clonedRequest = req.clone({
-      setHeaders: {
-        Authorization: `Bearer ${token}`
-      }
-    });
-    return next(clonedRequest);
-  }
-
+  // Las cookies HttpOnly se envían automáticamente
+  // No necesitamos agregar headers manualmente
   return next(req);
 };

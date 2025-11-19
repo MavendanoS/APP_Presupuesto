@@ -12,40 +12,75 @@ import analyticsRouter from './routes/analytics.js';
 
 const router = Router();
 
-// CORS headers
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-};
+// CORS headers - Permitir credenciales (cookies)
+// Orígenes permitidos para desarrollo y producción
+const allowedOrigins = [
+  'http://localhost:4200',
+  'https://dev.app-presupuesto.pages.dev',
+  'https://app-presupuesto.pages.dev'
+];
 
 // Middleware para agregar CORS a todas las respuestas
-function addCorsHeaders(response) {
+function addCorsHeaders(response, request) {
+  const origin = request.headers.get('Origin');
   const newResponse = new Response(response.body, response);
-  Object.keys(corsHeaders).forEach(key => {
-    newResponse.headers.set(key, corsHeaders[key]);
-  });
+
+  // Si el origin está en la lista de permitidos, usarlo
+  // Esto permite cookies cross-domain para orígenes específicos
+  if (allowedOrigins.includes(origin)) {
+    newResponse.headers.set('Access-Control-Allow-Origin', origin);
+  } else {
+    // Fallback al primero de la lista
+    newResponse.headers.set('Access-Control-Allow-Origin', allowedOrigins[0]);
+  }
+
+  newResponse.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  newResponse.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  newResponse.headers.set('Access-Control-Allow-Credentials', 'true');
+
   return newResponse;
 }
 
 // Manejador de OPTIONS para CORS
-router.options('*', () => {
-  return new Response(null, { headers: corsHeaders });
+router.options('*', (request) => {
+  const origin = request.headers.get('Origin');
+  const headers = {
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Allow-Credentials': 'true',
+  };
+
+  if (allowedOrigins.includes(origin)) {
+    headers['Access-Control-Allow-Origin'] = origin;
+  } else {
+    headers['Access-Control-Allow-Origin'] = allowedOrigins[0];
+  }
+
+  return new Response(null, { headers });
 });
 
 // Health check
-router.get('/api/health', () => {
+router.get('/api/health', (request) => {
+  const origin = request.headers.get('Origin');
+  const headers = {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Allow-Credentials': 'true',
+  };
+
+  if (allowedOrigins.includes(origin)) {
+    headers['Access-Control-Allow-Origin'] = origin;
+  } else {
+    headers['Access-Control-Allow-Origin'] = allowedOrigins[0];
+  }
+
   return new Response(JSON.stringify({
     status: 'ok',
     message: 'API funcionando correctamente',
     timestamp: new Date().toISOString(),
     version: '1.0.0'
-  }), {
-    headers: {
-      'Content-Type': 'application/json',
-      ...corsHeaders
-    }
-  });
+  }), { headers });
 });
 
 // Rutas de autenticación
@@ -65,7 +100,21 @@ router.all('/api/analytics/*', analyticsRouter.handle);
 router.all('/api/exports/*', analyticsRouter.handle);
 
 // Ruta por defecto
-router.all('*', () => {
+router.all('*', (request) => {
+  const origin = request.headers.get('Origin');
+  const headers = {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Allow-Credentials': 'true',
+  };
+
+  if (allowedOrigins.includes(origin)) {
+    headers['Access-Control-Allow-Origin'] = origin;
+  } else {
+    headers['Access-Control-Allow-Origin'] = allowedOrigins[0];
+  }
+
   return new Response(JSON.stringify({
     error: 'Ruta no encontrada',
     availableRoutes: [
@@ -102,10 +151,7 @@ router.all('*', () => {
     ]
   }), {
     status: 404,
-    headers: {
-      'Content-Type': 'application/json',
-      ...corsHeaders
-    }
+    headers
   });
 });
 
@@ -114,7 +160,7 @@ export default {
   async fetch(request, env, ctx) {
     try {
       const response = await router.handle(request, env, ctx);
-      return addCorsHeaders(response);
+      return addCorsHeaders(response, request);
     } catch (error) {
       const errorResponse = new Response(JSON.stringify({
         error: 'Error interno del servidor',
@@ -126,7 +172,7 @@ export default {
           'Content-Type': 'application/json'
         }
       });
-      return addCorsHeaders(errorResponse);
+      return addCorsHeaders(errorResponse, request);
     }
   }
 };

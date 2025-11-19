@@ -1,16 +1,17 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { ExpenseService } from '../../core/services/expense.service';
 import { CategoryService } from '../../core/services/category.service';
 import { Category, ExpenseType } from '../../core/models';
 import { ErrorMessageComponent } from '../../shared/components/error-message/error-message.component';
+import { NavbarComponent } from '../../shared/components/navbar/navbar.component';
 
 @Component({
   selector: 'app-expense-edit',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, ErrorMessageComponent],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, ErrorMessageComponent, NavbarComponent],
   templateUrl: './expense-edit.component.html',
   styleUrls: ['./expense-edit.component.scss']
 })

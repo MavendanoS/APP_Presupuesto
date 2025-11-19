@@ -8,6 +8,7 @@ import { Expense, Category, ExpenseType, ExpenseFilters } from '../../core/model
 import { ResponsiveTableComponent, TableColumn } from '../../shared/components/responsive-table/responsive-table.component';
 import { LoadingComponent } from '../../shared/components/loading/loading.component';
 import { ErrorMessageComponent } from '../../shared/components/error-message/error-message.component';
+import { NavbarComponent } from '../../shared/components/navbar/navbar.component';
 import { ClpCurrencyPipe } from '../../shared/pipes/clp-currency.pipe';
 import { ExpenseTypePipe } from '../../shared/pipes/expense-type.pipe';
 
@@ -21,6 +22,7 @@ import { ExpenseTypePipe } from '../../shared/pipes/expense-type.pipe';
     ResponsiveTableComponent,
     LoadingComponent,
     ErrorMessageComponent,
+    NavbarComponent,
     ClpCurrencyPipe,
     ExpenseTypePipe
   ],
