@@ -20,14 +20,29 @@ const allowedOrigins = [
   'https://app-presupuesto.pages.dev'
 ];
 
+// Verificar si un origen es válido (incluyendo preview deployments)
+function isAllowedOrigin(origin) {
+  if (!origin) return false;
+
+  // Permitir orígenes exactos de la lista
+  if (allowedOrigins.includes(origin)) return true;
+
+  // Permitir preview deployments de Cloudflare Pages (*.app-presupuesto.pages.dev)
+  if (origin.match(/^https:\/\/[a-zA-Z0-9-]+\.app-presupuesto\.pages\.dev$/)) {
+    return true;
+  }
+
+  return false;
+}
+
 // Middleware para agregar CORS a todas las respuestas
 function addCorsHeaders(response, request) {
   const origin = request.headers.get('Origin');
   const newResponse = new Response(response.body, response);
 
-  // Si el origin está en la lista de permitidos, usarlo
+  // Si el origin es válido, usarlo
   // Esto permite cookies cross-domain para orígenes específicos
-  if (allowedOrigins.includes(origin)) {
+  if (isAllowedOrigin(origin)) {
     newResponse.headers.set('Access-Control-Allow-Origin', origin);
   } else {
     // Fallback al primero de la lista
@@ -50,7 +65,7 @@ router.options('*', (request) => {
     'Access-Control-Allow-Credentials': 'true',
   };
 
-  if (allowedOrigins.includes(origin)) {
+  if (isAllowedOrigin(origin)) {
     headers['Access-Control-Allow-Origin'] = origin;
   } else {
     headers['Access-Control-Allow-Origin'] = allowedOrigins[0];
@@ -69,7 +84,7 @@ router.get('/api/health', (request) => {
     'Access-Control-Allow-Credentials': 'true',
   };
 
-  if (allowedOrigins.includes(origin)) {
+  if (isAllowedOrigin(origin)) {
     headers['Access-Control-Allow-Origin'] = origin;
   } else {
     headers['Access-Control-Allow-Origin'] = allowedOrigins[0];

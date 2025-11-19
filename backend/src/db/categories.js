@@ -212,7 +212,7 @@ export async function getCategoriesWithStats(db, userId, filters = {}) {
     expenseParams.push(end_date);
   }
 
-  const categories = await db.prepare(`
+  const query = `
     SELECT
       c.id,
       c.user_id,
@@ -228,7 +228,18 @@ export async function getCategoriesWithStats(db, userId, filters = {}) {
     WHERE ${categoryWhere.join(' AND ')}
     GROUP BY c.id, c.user_id, c.name, c.type, c.color, c.icon, c.created_at
     ORDER BY c.name ASC
-  `).bind(...categoryParams, ...expenseParams).all();
+  `;
+
+  // IMPORTANTE: Los parámetros deben estar en el orden que aparecen en la query SQL
+  // LEFT JOIN usa expenseParams, luego WHERE usa categoryParams
+  const allParams = [...expenseParams, ...categoryParams];
+
+  console.log('🗄️ SQL Query:', query);
+  console.log('🗄️ SQL Params (expense first, then category):', allParams);
+
+  const categories = await db.prepare(query).bind(...allParams).all();
+
+  console.log('🗄️ SQL Results:', categories.results?.length || 0, 'categories');
 
   return categories.results || [];
 }

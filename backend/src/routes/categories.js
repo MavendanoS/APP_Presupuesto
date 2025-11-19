@@ -93,7 +93,13 @@ categoriesRouter.get('/stats', requireAuth(async (request, env) => {
       end_date: url.searchParams.get('end_date')
     };
 
+    console.log('🔍 Backend /stats - URL:', request.url);
+    console.log('🔍 Backend /stats - Filters:', filters);
+    console.log('🔍 Backend /stats - UserId:', userId);
+
     const categories = await getCategoriesWithStatsService(env.DB, userId, filters);
+
+    console.log('✅ Backend /stats - Categories found:', categories.length);
 
     return new Response(JSON.stringify({
       success: true,
@@ -104,6 +110,7 @@ categoriesRouter.get('/stats', requireAuth(async (request, env) => {
     });
 
   } catch (error) {
+    console.error('❌ Backend /stats - Error:', error);
     return new Response(JSON.stringify({
       error: 'Error al obtener estadísticas',
       message: error.message

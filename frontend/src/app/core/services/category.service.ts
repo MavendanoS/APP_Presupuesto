@@ -31,6 +31,8 @@ export class CategoryService {
   getCategoriesWithStats(filters?: CategoryStatsFilters): Observable<{ categories: CategoryWithStats[] }> {
     const params: Record<string, string> = {};
 
+    console.log('📦 CategoryService - Input filters:', filters);
+
     if (filters?.type) {
       params['type'] = filters.type;
     }
@@ -40,6 +42,8 @@ export class CategoryService {
     if (filters?.end_date) {
       params['end_date'] = filters.end_date;
     }
+
+    console.log('📤 CategoryService - Sending params:', params);
 
     return this.api.get<{ categories: CategoryWithStats[] }>(`${this.endpoint}/stats`, params);
   }

@@ -47,7 +47,14 @@ export class CategoryListComponent implements OnInit {
     this.loading.set(true);
     this.error.set(null);
 
-    const filters = this.filterType() !== 'all' ? { type: this.filterType() as CategoryType } : undefined;
+    const filterType = this.filterType();
+    const filters = filterType !== 'all' ? { type: filterType as CategoryType } : undefined;
+
+    console.log('🔍 Debug Filtros:', {
+      filterType,
+      filters,
+      viewMode: this.viewMode()
+    });
 
     const request = this.viewMode() === 'stats'
       ? this.categoryService.getCategoriesWithStats(filters)
@@ -55,10 +62,12 @@ export class CategoryListComponent implements OnInit {
 
     request.subscribe({
       next: (response) => {
+        console.log('✅ Respuesta del servidor:', response);
         this.categories.set(response.categories as CategoryWithStats[]);
         this.loading.set(false);
       },
       error: (err) => {
+        console.error('❌ Error:', err);
         this.error.set(err.error?.message || 'Error al cargar categorías');
         this.loading.set(false);
       }

@@ -181,12 +181,16 @@ export class TimeSeriesComponent implements OnInit {
 
   private formatPeriod(period: string): string {
     if (this.groupBy() === 'day') {
-      const date = new Date(period);
+      // Para fechas diarias, parseamos directamente
+      const [year, month, day] = period.split('-').map(Number);
+      const date = new Date(year, month - 1, day);
       return date.toLocaleDateString('es-CL', { day: '2-digit', month: 'short' });
     } else if (this.groupBy() === 'week') {
       return `Semana ${period}`;
     } else {
-      const date = new Date(period + '-01');
+      // Para meses, parseamos el año y mes directamente sin crear fecha UTC
+      const [year, month] = period.split('-').map(Number);
+      const date = new Date(year, month - 1, 1);
       return date.toLocaleDateString('es-CL', { month: 'short', year: 'numeric' });
     }
   }
