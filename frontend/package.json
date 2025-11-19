@@ -6,7 +6,8 @@
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "deploy:dev": "npm run build && cp public/_redirects dist/frontend/browser/_redirects && npx wrangler pages deploy dist/frontend/browser --project-name=app-presupuesto --branch=dev"
   },
   "prettier": {
     "printWidth": 100,
