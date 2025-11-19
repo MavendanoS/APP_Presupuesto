@@ -1,0 +1,153 @@
+<app-navbar></app-navbar>
+
+<div class="container-fluid p-4">
+  <div class="row justify-content-center">
+    <div class="col-12 col-lg-8">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <!-- Header -->
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="h4 mb-0">
+              <i class="bi bi-cash-stack text-success"></i> {{ isEditMode() ? 'Editar Ingreso' : 'Nuevo Ingreso' }}
+            </h2>
+            <button type="button" class="btn btn-outline-secondary btn-sm" (click)="onCancel()">
+              <i class="bi bi-x-lg"></i> Cancelar
+            </button>
+          </div>
+
+          <!-- Error Message -->
+          @if (error()) {
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+              {{ error() }}
+              <button type="button" class="btn-close" (click)="error.set(null)"></button>
+            </div>
+          }
+
+          <!-- Form -->
+          <form [formGroup]="incomeForm" (ngSubmit)="onSubmit()">
+            <div class="row g-3">
+              <!-- Fuente del Ingreso -->
+              <div class="col-12">
+                <label for="source" class="form-label fw-bold">Fuente del Ingreso</label>
+                <input
+                  type="text"
+                  id="source"
+                  class="form-control"
+                  formControlName="source"
+                  placeholder="Ej: Salario, Freelance, Venta..."
+                  [class.is-invalid]="incomeForm.get('source')?.invalid && incomeForm.get('source')?.touched"
+                />
+                @if (incomeForm.get('source')?.invalid && incomeForm.get('source')?.touched) {
+                  <div class="invalid-feedback">
+                    La fuente del ingreso es requerida (mínimo 3 caracteres)
+                  </div>
+                }
+              </div>
+
+              <!-- Monto -->
+              <div class="col-12 col-md-6">
+                <label for="amount" class="form-label fw-bold">Monto (CLP)</label>
+                <div class="input-group">
+                  <span class="input-group-text">$</span>
+                  <input
+                    type="number"
+                    id="amount"
+                    class="form-control"
+                    formControlName="amount"
+                    placeholder="0"
+                    min="0"
+                    step="0.01"
+                    [class.is-invalid]="incomeForm.get('amount')?.invalid && incomeForm.get('amount')?.touched"
+                  />
+                  @if (incomeForm.get('amount')?.invalid && incomeForm.get('amount')?.touched) {
+                    <div class="invalid-feedback">
+                      El monto debe ser mayor a 0
+                    </div>
+                  }
+                </div>
+              </div>
+
+              <!-- Fecha -->
+              <div class="col-12 col-md-6">
+                <label for="date" class="form-label fw-bold">Fecha</label>
+                <input
+                  type="date"
+                  id="date"
+                  class="form-control"
+                  formControlName="date"
+                  [class.is-invalid]="incomeForm.get('date')?.invalid && incomeForm.get('date')?.touched"
+                />
+                @if (incomeForm.get('date')?.invalid && incomeForm.get('date')?.touched) {
+                  <div class="invalid-feedback">
+                    La fecha es requerida
+                  </div>
+                }
+              </div>
+
+              <!-- Ingreso Recurrente -->
+              <div class="col-12">
+                <div class="form-check form-switch">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="is_recurring"
+                    formControlName="is_recurring"
+                  />
+                  <label class="form-check-label fw-bold" for="is_recurring">
+                    Ingreso Recurrente
+                  </label>
+                </div>
+              </div>
+
+              <!-- Frecuencia (solo si es recurrente) -->
+              @if (incomeForm.get('is_recurring')?.value) {
+                <div class="col-12">
+                  <label for="frequency" class="form-label fw-bold">Frecuencia</label>
+                  <select id="frequency" class="form-select" formControlName="frequency">
+                    @for (freq of frequencies; track freq.value) {
+                      <option [value]="freq.value">{{ freq.label }}</option>
+                    }
+                  </select>
+                </div>
+              }
+
+              <!-- Notas -->
+              <div class="col-12">
+                <label for="notes" class="form-label fw-bold">Notas (opcional)</label>
+                <textarea
+                  id="notes"
+                  class="form-control"
+                  formControlName="notes"
+                  rows="3"
+                  placeholder="Agrega detalles adicionales..."
+                ></textarea>
+              </div>
+            </div>
+
+            <!-- Buttons -->
+            <div class="d-flex gap-2 mt-4">
+              <button
+                type="submit"
+                class="btn btn-success flex-grow-1"
+                [disabled]="loading() || incomeForm.invalid"
+              >
+                @if (loading()) {
+                  <span class="spinner-border spinner-border-sm me-2"></span>
+                }
+                <i class="bi bi-check-lg"></i> Guardar Ingreso
+              </button>
+              <button
+                type="button"
+                class="btn btn-outline-secondary"
+                (click)="onCancel()"
+                [disabled]="loading()"
+              >
+                Cancelar
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

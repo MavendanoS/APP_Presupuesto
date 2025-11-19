@@ -1,0 +1,63 @@
+.card {
+  border: none;
+  border-radius: 12px;
+}
+
+.border-success {
+  border-left: 4px solid #28a745 !important;
+}
+
+.table {
+  margin-bottom: 0;
+
+  thead {
+    background-color: #f8f9fa;
+
+    th {
+      font-weight: 600;
+      color: #333;
+      border-bottom: 2px solid #dee2e6;
+      padding: 1rem 0.75rem;
+    }
+  }
+
+  tbody {
+    tr {
+      &:hover {
+        background-color: rgba(40, 167, 69, 0.05);
+      }
+    }
+
+    td {
+      padding: 1rem 0.75rem;
+      vertical-align: middle;
+    }
+  }
+}
+
+.btn-group {
+  box-shadow: none;
+}
+
+.btn-outline-primary, .btn-outline-danger {
+  border-radius: 6px;
+
+  &:hover {
+    transform: translateY(-1px);
+  }
+}
+
+.badge {
+  padding: 0.5rem 0.75rem;
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .table {
+    font-size: 0.875rem;
+  }
+
+  .btn-group-sm .btn {
+    padding: 0.25rem 0.5rem;
+  }
+}

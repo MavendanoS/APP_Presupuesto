@@ -52,7 +52,20 @@ export const routes: Routes = [
   {
     path: 'income',
     canActivate: [authGuard],
-    loadComponent: () => import('./income/income-list/income-list').then(m => m.IncomeListComponent)
+    children: [
+      {
+        path: '',
+        loadComponent: () => import('./income/income-list/income-list').then(m => m.IncomeListComponent)
+      },
+      {
+        path: 'new',
+        loadComponent: () => import('./income/income-form/income-form.component').then(m => m.IncomeFormComponent)
+      },
+      {
+        path: 'edit/:id',
+        loadComponent: () => import('./income/income-form/income-form.component').then(m => m.IncomeFormComponent)
+      }
+    ]
   },
   {
     path: 'categories',
