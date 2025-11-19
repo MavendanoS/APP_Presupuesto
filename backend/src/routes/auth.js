@@ -31,13 +31,14 @@ authRouter.post('/register', async (request, env) => {
 
     const result = await registerUser(env.DB, { email, password, name }, env.JWT_SECRET);
 
-    // Configurar cookie HttpOnly
-    // SameSite=None permite cookies cross-site (frontend pages.dev → backend workers.dev)
+    // Configurar cookie HttpOnly con Partitioned para cookies de terceros (CHIPS)
+    // SameSite=None + Partitioned permite cookies cross-site (frontend pages.dev → backend workers.dev)
     const cookieOptions = [
       `auth_token=${result.token}`,
       'HttpOnly',
       'Secure',
       'SameSite=None',
+      'Partitioned',
       'Path=/',
       `Max-Age=${7 * 24 * 60 * 60}`, // 7 días en segundos
     ].join('; ');
@@ -90,13 +91,14 @@ authRouter.post('/login', withRateLimit(async (request, env) => {
     // Login exitoso - resetear rate limit para esta IP
     resetRateLimit(request);
 
-    // Configurar cookie HttpOnly
-    // SameSite=None permite cookies cross-site (frontend pages.dev → backend workers.dev)
+    // Configurar cookie HttpOnly con Partitioned para cookies de terceros (CHIPS)
+    // SameSite=None + Partitioned permite cookies cross-site (frontend pages.dev → backend workers.dev)
     const cookieOptions = [
       `auth_token=${result.token}`,
       'HttpOnly',
       'Secure',
       'SameSite=None',
+      'Partitioned',
       'Path=/',
       `Max-Age=${7 * 24 * 60 * 60}`, // 7 días en segundos
     ].join('; ');
@@ -136,6 +138,7 @@ authRouter.post('/logout', async (request, env) => {
     'HttpOnly',
     'Secure',
     'SameSite=None',
+    'Partitioned',
     'Path=/',
     'Max-Age=0', // Expirar inmediatamente
   ].join('; ');
