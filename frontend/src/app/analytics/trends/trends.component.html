@@ -1,0 +1,156 @@
+<!-- Period Selector -->
+<div class="row mb-4">
+  <div class="col-12">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <div class="d-flex align-items-center gap-3">
+          <label class="form-label fw-bold mb-0">Períodos a analizar:</label>
+          <div class="btn-group" role="group">
+            <button
+              type="button"
+              class="btn btn-sm"
+              [class.btn-primary]="periods() === 3"
+              [class.btn-outline-primary]="periods() !== 3"
+              (click)="changePeriods(3)"
+            >
+              3 meses
+            </button>
+            <button
+              type="button"
+              class="btn btn-sm"
+              [class.btn-primary]="periods() === 6"
+              [class.btn-outline-primary]="periods() !== 6"
+              (click)="changePeriods(6)"
+            >
+              6 meses
+            </button>
+            <button
+              type="button"
+              class="btn btn-sm"
+              [class.btn-primary]="periods() === 12"
+              [class.btn-outline-primary]="periods() !== 12"
+              (click)="changePeriods(12)"
+            >
+              12 meses
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Loading State -->
+@if (loading()) {
+  <app-loading message="Cargando tendencias..." />
+}
+
+<!-- Error State -->
+@if (error()) {
+  <app-error-message [message]="error()!" (dismissed)="error.set(null)" />
+}
+
+<!-- Content -->
+@if (!loading() && !error() && trendsData()) {
+  <div class="row g-4">
+    <!-- Monthly Trends Chart -->
+    <div class="col-12">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title mb-3">
+            <i class="bi bi-graph-up-arrow text-primary me-2"></i>
+            Tendencias Mensuales por Tipo
+          </h5>
+          <app-bar-chart
+            [labels]="chartLabels()"
+            [datasets]="chartDatasets()"
+            [height]="350"
+            [stacked]="false"
+          />
+        </div>
+      </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="col-12">
+      <h5 class="mb-3">
+        <i class="bi bi-bar-chart me-2"></i>
+        Estadísticas por Tipo
+      </h5>
+    </div>
+
+    @for (stat of trendsData()!.averages; track stat.type) {
+      <div class="col-12 col-md-6 col-lg-4">
+        <div class="card shadow-sm stat-card" [class]="'stat-card-' + stat.type">
+          <div class="card-body">
+            <h6 class="text-muted mb-2 text-uppercase" style="font-size: 0.8rem;">
+              {{ stat.type === 'payment' ? 'Pagos' : stat.type === 'purchase' ? 'Compras' : 'Gastos Hormiga' }}
+            </h6>
+            <div class="stat-item">
+              <span class="stat-label">Promedio Mensual:</span>
+              <span class="stat-value">${{ stat.avg_monthly_total | number:'1.0-0' }}</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Máximo Mensual:</span>
+              <span class="stat-value text-danger">${{ stat.max_monthly_total | number:'1.0-0' }}</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Mínimo Mensual:</span>
+              <span class="stat-value text-success">${{ stat.min_monthly_total | number:'1.0-0' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Anomalies Table -->
+    @if (trendsData()!.anomalies.length > 0) {
+      <div class="col-12">
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <h5 class="card-title mb-3">
+              <i class="bi bi-exclamation-triangle text-warning me-2"></i>
+              Anomalías Detectadas
+            </h5>
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Fecha</th>
+                    <th>Categoría</th>
+                    <th>Tipo</th>
+                    <th class="text-end">Monto</th>
+                    <th class="text-end">Promedio Tipo</th>
+                    <th>Descripción</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (anomaly of trendsData()!.anomalies; track anomaly.id) {
+                    <tr class="anomaly-row">
+                      <td>{{ anomaly.date | date:'dd/MM/yyyy' }}</td>
+                      <td>
+                        <span class="badge bg-secondary">{{ anomaly.category_name }}</span>
+                      </td>
+                      <td>
+                        <span class="badge" [class]="'bg-' + getTypeBadgeClass(anomaly.type)">
+                          {{ getTypeLabel(anomaly.type) }}
+                        </span>
+                      </td>
+                      <td class="text-end">
+                        <strong class="text-danger">${{ anomaly.amount | number:'1.0-0' }}</strong>
+                      </td>
+                      <td class="text-end text-muted">
+                        ${{ anomaly.type_average | number:'1.0-0' }}
+                      </td>
+                      <td>{{ anomaly.description }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+}

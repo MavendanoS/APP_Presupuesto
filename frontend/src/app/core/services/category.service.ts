@@ -1,8 +1,14 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
-import { Category, CategoryWithStats, CreateCategoryRequest } from '../models';
-import { ExpenseType } from '../models';
+import {
+  Category,
+  CategoryWithStats,
+  CreateCategoryRequest,
+  UpdateCategoryRequest,
+  CategoryFilters,
+  CategoryStatsFilters
+} from '../models/category.model';
 
 @Injectable({
   providedIn: 'root'
@@ -12,49 +18,44 @@ export class CategoryService {
 
   constructor(private api: ApiService) {}
 
-  /**
-   * Obtener todas las categorías
-   */
-  getCategories(type?: ExpenseType): Observable<{ categories: Category[] }> {
-    const params = type ? { type } : undefined;
+  getCategories(filters?: CategoryFilters): Observable<{ categories: Category[] }> {
+    const params: Record<string, string> = {};
+
+    if (filters?.type) {
+      params['type'] = filters.type;
+    }
+
     return this.api.get<{ categories: Category[] }>(this.endpoint, params);
   }
 
-  /**
-   * Obtener categorías con estadísticas
-   */
-  getCategoriesWithStats(filters?: {
-    type?: ExpenseType;
-    start_date?: string;
-    end_date?: string;
-  }): Observable<{ categories: CategoryWithStats[] }> {
-    return this.api.get<{ categories: CategoryWithStats[] }>(`${this.endpoint}/stats`, filters);
+  getCategoriesWithStats(filters?: CategoryStatsFilters): Observable<{ categories: CategoryWithStats[] }> {
+    const params: Record<string, string> = {};
+
+    if (filters?.type) {
+      params['type'] = filters.type;
+    }
+    if (filters?.start_date) {
+      params['start_date'] = filters.start_date;
+    }
+    if (filters?.end_date) {
+      params['end_date'] = filters.end_date;
+    }
+
+    return this.api.get<{ categories: CategoryWithStats[] }>(`${this.endpoint}/stats`, params);
   }
 
-  /**
-   * Obtener categoría específica
-   */
-  getCategory(id: number): Observable<{ category: Category }> {
+  getCategoryById(id: number): Observable<{ category: Category }> {
     return this.api.get<{ category: Category }>(`${this.endpoint}/${id}`);
   }
 
-  /**
-   * Crear nueva categoría
-   */
-  createCategory(category: CreateCategoryRequest): Observable<{ category: Category }> {
-    return this.api.post<{ category: Category }>(this.endpoint, category);
+  createCategory(data: CreateCategoryRequest): Observable<{ category: Category }> {
+    return this.api.post<{ category: Category }>(this.endpoint, data);
   }
 
-  /**
-   * Actualizar categoría
-   */
-  updateCategory(id: number, category: Partial<CreateCategoryRequest>): Observable<{ category: Category }> {
-    return this.api.put<{ category: Category }>(`${this.endpoint}/${id}`, category);
+  updateCategory(id: number, data: UpdateCategoryRequest): Observable<{ category: Category }> {
+    return this.api.put<{ category: Category }>(`${this.endpoint}/${id}`, data);
   }
 
-  /**
-   * Eliminar categoría
-   */
   deleteCategory(id: number): Observable<{ message: string }> {
     return this.api.delete<{ message: string }>(`${this.endpoint}/${id}`);
   }

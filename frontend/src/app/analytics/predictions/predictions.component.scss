@@ -1,0 +1,52 @@
+.card {
+  border: none;
+  border-radius: 12px;
+}
+
+.confidence-badge {
+  display: flex;
+  align-items: center;
+
+  .badge {
+    font-size: 0.875rem;
+    padding: 0.4rem 0.8rem;
+    font-weight: 600;
+  }
+}
+
+.table-danger {
+  background-color: rgba(239, 68, 68, 0.05);
+
+  &:hover {
+    background-color: rgba(239, 68, 68, 0.1);
+  }
+}
+
+.alert-warning {
+  border-left: 4px solid #F59E0B;
+}
+
+.btn-group {
+  box-shadow: none;
+
+  .btn {
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+}
+
+@media (max-width: 768px) {
+  .table {
+    font-size: 0.875rem;
+  }
+
+  .confidence-badge {
+    justify-content: flex-start;
+    width: 100%;
+
+    .badge {
+      font-size: 0.75rem;
+      padding: 0.3rem 0.6rem;
+    }
+  }
+}

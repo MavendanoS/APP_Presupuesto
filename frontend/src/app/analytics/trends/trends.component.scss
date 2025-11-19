@@ -1,0 +1,72 @@
+.card {
+  border: none;
+  border-radius: 12px;
+}
+
+.stat-card {
+  border-left: 4px solid #6B7280;
+
+  &.stat-card-payment {
+    border-left-color: #3B82F6;
+  }
+
+  &.stat-card-purchase {
+    border-left-color: #F59E0B;
+  }
+
+  &.stat-card-small_expense {
+    border-left-color: #EF4444;
+  }
+
+  .stat-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #f1f1f1;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    .stat-label {
+      font-size: 0.875rem;
+      color: #6B7280;
+    }
+
+    .stat-value {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #1F2937;
+    }
+  }
+}
+
+.anomaly-row {
+  &:hover {
+    background-color: rgba(245, 158, 11, 0.05);
+  }
+}
+
+.btn-group {
+  box-shadow: none;
+
+  .btn {
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+}
+
+@media (max-width: 768px) {
+  .table {
+    font-size: 0.875rem;
+  }
+
+  .stat-card .stat-item {
+    font-size: 0.8rem;
+
+    .stat-value {
+      font-size: 0.9rem;
+    }
+  }
+}

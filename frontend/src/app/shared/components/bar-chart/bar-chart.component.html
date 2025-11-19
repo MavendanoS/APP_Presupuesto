@@ -1,0 +1,15 @@
+<div class="chart-container" [style.height.px]="height">
+  @if (chartData.datasets.length > 0) {
+    <canvas
+      baseChart
+      [type]="chartType"
+      [data]="chartData"
+      [options]="chartOptions"
+    ></canvas>
+  } @else {
+    <div class="empty-state">
+      <i class="bi bi-bar-chart display-4 text-muted mb-3"></i>
+      <p class="text-muted">No hay datos disponibles para mostrar</p>
+    </div>
+  }
+</div>

@@ -87,7 +87,7 @@ export class ExpenseEditComponent implements OnInit {
 
   loadCategories(): void {
     const type = this.expenseForm.get('type')?.value as ExpenseType;
-    this.categoryService.getCategories(type).subscribe({
+    this.categoryService.getCategories({ type }).subscribe({
       next: (response) => {
         this.categories.set(response.categories);
         // Si no hay categoría seleccionada, seleccionar la primera

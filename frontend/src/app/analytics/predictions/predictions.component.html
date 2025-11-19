@@ -1,0 +1,155 @@
+<!-- Controls -->
+<div class="row mb-4">
+  <div class="col-12">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <div class="d-flex flex-column flex-md-row align-items-md-center gap-3 justify-content-between">
+          <div class="d-flex align-items-center gap-3">
+            <label class="form-label fw-bold mb-0">Meses a predecir:</label>
+            <div class="btn-group" role="group">
+              @for (months of [1, 2, 3, 6]; track months) {
+                <button
+                  type="button"
+                  class="btn btn-sm"
+                  [class.btn-primary]="monthsAhead() === months"
+                  [class.btn-outline-primary]="monthsAhead() !== months"
+                  (click)="changeMonthsAhead(months)"
+                >
+                  {{ months }} {{ months === 1 ? 'mes' : 'meses' }}
+                </button>
+              }
+            </div>
+          </div>
+
+          @if (predictionsData()) {
+            <div class="confidence-badge">
+              <span class="text-muted small me-2">Confianza:</span>
+              <span class="badge" [class]="getConfidenceBadgeClass(predictionsData()!.confidence)">
+                {{ getConfidenceLabel(predictionsData()!.confidence) }}
+              </span>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Loading State -->
+@if (loading()) {
+  <app-loading message="Generando predicciones..." />
+}
+
+<!-- Error State -->
+@if (error()) {
+  <app-error-message [message]="error()!" (dismissed)="error.set(null)" />
+}
+
+<!-- Content -->
+@if (!loading() && !error() && predictionsData()) {
+  <!-- Warning for negative balance -->
+  @if (hasNegativeBalance(predictionsData()!)) {
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="alert alert-warning d-flex align-items-start">
+          <i class="bi bi-exclamation-triangle-fill me-2" style="font-size: 1.5rem;"></i>
+          <div>
+            <strong>Advertencia:</strong> Se predice balance negativo en los siguientes meses:
+            <strong>{{ getNegativeBalanceMonths(predictionsData()!).join(', ') }}</strong>.
+            Considera ajustar tus gastos o aumentar tus ingresos.
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <div class="row g-4">
+    <!-- Predictions Chart -->
+    <div class="col-12">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title mb-3">
+            <i class="bi bi-graph-up text-primary me-2"></i>
+            Predicciones Financieras
+          </h5>
+          <p class="text-muted small mb-3">
+            <i class="bi bi-info-circle me-1"></i>
+            Basado en {{ predictionsData()!.based_on_months }} meses de datos históricos
+          </p>
+          <app-line-chart
+            [labels]="chartLabels()"
+            [datasets]="chartDatasets()"
+            [height]="400"
+          />
+        </div>
+      </div>
+    </div>
+
+    <!-- Predictions Table -->
+    <div class="col-12">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title mb-3">
+            <i class="bi bi-table text-info me-2"></i>
+            Detalles de Predicciones
+          </h5>
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>Mes</th>
+                  <th class="text-end">Ingresos Predichos</th>
+                  <th class="text-end">Gastos Predichos</th>
+                  <th class="text-end">Balance Predicho</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (pred of predictionsData()!.predictions; track pred.month) {
+                  <tr [class.table-danger]="pred.predicted_balance < 0">
+                    <td>
+                      <strong>{{ formatMonth(pred.month) }}</strong>
+                    </td>
+                    <td class="text-end text-success">
+                      ${{ pred.predicted_income | number:'1.0-0' }}
+                    </td>
+                    <td class="text-end text-danger">
+                      ${{ (pred.predicted_expenses.payment || 0) + (pred.predicted_expenses.purchase || 0) + (pred.predicted_expenses.small_expense || 0) | number:'1.0-0' }}
+                    </td>
+                    <td class="text-end">
+                      <strong [class.text-success]="pred.predicted_balance >= 0" [class.text-danger]="pred.predicted_balance < 0">
+                        ${{ pred.predicted_balance | number:'1.0-0' }}
+                      </strong>
+                      @if (pred.predicted_balance < 0) {
+                        <i class="bi bi-exclamation-circle-fill text-danger ms-1"></i>
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Methodology Note -->
+    <div class="col-12">
+      <div class="card shadow-sm bg-light">
+        <div class="card-body">
+          <h6 class="card-title">
+            <i class="bi bi-lightbulb me-2"></i>
+            Sobre las Predicciones
+          </h6>
+          <p class="small mb-0 text-muted">
+            Las predicciones se basan en el análisis de tus patrones históricos de ingresos y gastos.
+            La confianza de las predicciones depende de la consistencia de tus datos históricos.
+            <strong>Nivel de confianza {{ getConfidenceLabel(predictionsData()!.confidence) }}</strong>
+            indica que estas proyecciones tienen una precisión
+            {{ predictionsData()!.confidence === 'high' ? 'alta' : predictionsData()!.confidence === 'medium' ? 'moderada' : 'limitada' }}
+            basada en tus hábitos financieros actuales.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+}

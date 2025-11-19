@@ -70,7 +70,20 @@ export const routes: Routes = [
   {
     path: 'categories',
     canActivate: [authGuard],
-    loadComponent: () => import('./categories/category-list/category-list').then(m => m.CategoryListComponent)
+    children: [
+      {
+        path: '',
+        loadComponent: () => import('./categories/category-list/category-list').then(m => m.CategoryListComponent)
+      },
+      {
+        path: 'new',
+        loadComponent: () => import('./categories/category-form/category-form').then(m => m.CategoryFormComponent)
+      },
+      {
+        path: 'edit/:id',
+        loadComponent: () => import('./categories/category-form/category-form').then(m => m.CategoryFormComponent)
+      }
+    ]
   },
   {
     path: 'analytics',

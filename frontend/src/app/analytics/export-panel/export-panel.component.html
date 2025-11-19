@@ -1,0 +1,157 @@
+<div class="row justify-content-center">
+  <div class="col-12 col-lg-8">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title mb-4">
+          <i class="bi bi-download text-primary me-2"></i>
+          Exportar Datos Financieros
+        </h5>
+
+        <!-- Error Message -->
+        @if (error()) {
+          <app-error-message [message]="error()!" (dismissed)="error.set(null)" />
+        }
+
+        <!-- Export Options Form -->
+        <div class="row g-4">
+          <!-- Date Range -->
+          <div class="col-12">
+            <h6 class="mb-3">
+              <i class="bi bi-calendar-range me-2"></i>
+              Rango de Fechas
+            </h6>
+            <div class="row g-3">
+              <div class="col-12 col-md-6">
+                <label class="form-label fw-bold">Fecha Inicio</label>
+                <input
+                  type="date"
+                  class="form-control"
+                  [value]="startDate()"
+                  (change)="onStartDateChange($any($event.target).value)"
+                />
+              </div>
+              <div class="col-12 col-md-6">
+                <label class="form-label fw-bold">Fecha Fin</label>
+                <input
+                  type="date"
+                  class="form-control"
+                  [value]="endDate()"
+                  (change)="onEndDateChange($any($event.target).value)"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Export Type -->
+          <div class="col-12">
+            <h6 class="mb-3">
+              <i class="bi bi-filter me-2"></i>
+              Tipo de Datos
+            </h6>
+            <div class="row g-3">
+              <div class="col-12 col-md-4">
+                <div class="form-check card-check">
+                  <input
+                    class="form-check-input"
+                    type="radio"
+                    name="exportType"
+                    id="typeAll"
+                    [checked]="exportType() === 'all'"
+                    (change)="changeExportType('all')"
+                  />
+                  <label class="form-check-label" for="typeAll">
+                    <i class="bi bi-diagram-3 me-2"></i>
+                    <strong>Todos los Datos</strong>
+                    <small class="d-block text-muted">Ingresos y gastos completos</small>
+                  </label>
+                </div>
+              </div>
+              <div class="col-12 col-md-4">
+                <div class="form-check card-check">
+                  <input
+                    class="form-check-input"
+                    type="radio"
+                    name="exportType"
+                    id="typeExpenses"
+                    [checked]="exportType() === 'expenses'"
+                    (change)="changeExportType('expenses')"
+                  />
+                  <label class="form-check-label" for="typeExpenses">
+                    <i class="bi bi-wallet2 text-danger me-2"></i>
+                    <strong>Solo Gastos</strong>
+                    <small class="d-block text-muted">Todos los tipos de gastos</small>
+                  </label>
+                </div>
+              </div>
+              <div class="col-12 col-md-4">
+                <div class="form-check card-check">
+                  <input
+                    class="form-check-input"
+                    type="radio"
+                    name="exportType"
+                    id="typeIncome"
+                    [checked]="exportType() === 'income'"
+                    (change)="changeExportType('income')"
+                  />
+                  <label class="form-check-label" for="typeIncome">
+                    <i class="bi bi-cash-stack text-success me-2"></i>
+                    <strong>Solo Ingresos</strong>
+                    <small class="d-block text-muted">Ingresos y fuentes</small>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Export Buttons -->
+          <div class="col-12">
+            <h6 class="mb-3">
+              <i class="bi bi-file-earmark-arrow-down me-2"></i>
+              Formato de Exportación
+            </h6>
+            <div class="d-flex gap-3 flex-column flex-md-row">
+              <button
+                class="btn btn-success btn-lg flex-grow-1"
+                (click)="exportCSV()"
+                [disabled]="exporting()"
+              >
+                @if (exporting()) {
+                  <span class="spinner-border spinner-border-sm me-2"></span>
+                }
+                <i class="bi bi-filetype-csv me-2"></i>
+                Descargar CSV
+              </button>
+              <button
+                class="btn btn-primary btn-lg flex-grow-1"
+                (click)="exportExcel()"
+                [disabled]="exporting()"
+              >
+                @if (exporting()) {
+                  <span class="spinner-border spinner-border-sm me-2"></span>
+                }
+                <i class="bi bi-file-earmark-spreadsheet me-2"></i>
+                Descargar Excel
+              </button>
+            </div>
+          </div>
+
+          <!-- Info Note -->
+          <div class="col-12">
+            <div class="alert alert-info d-flex align-items-start">
+              <i class="bi bi-info-circle-fill me-2" style="font-size: 1.5rem;"></i>
+              <div>
+                <strong>Sobre las exportaciones:</strong>
+                <ul class="mb-0 mt-2 small">
+                  <li>Los archivos incluyen todos los detalles según el rango de fechas y tipo seleccionado</li>
+                  <li>CSV es ideal para importar a otras aplicaciones o análisis en hojas de cálculo</li>
+                  <li>Excel incluye formato y es más fácil de leer directamente</li>
+                  <li>Los archivos se descargan directamente en tu dispositivo</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

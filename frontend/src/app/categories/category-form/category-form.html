@@ -1,0 +1,150 @@
+<app-navbar />
+
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-6">
+      <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+          <h4 class="mb-0">
+            <i class="bi bi-tag me-2"></i>
+            {{ isEditMode() ? 'Editar Categoría' : 'Nueva Categoría' }}
+          </h4>
+        </div>
+
+        <div class="card-body">
+          @if (loading()) {
+            <app-loading />
+          }
+
+          @if (error()) {
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+              <i class="bi bi-exclamation-triangle me-2"></i>
+              {{ error() }}
+              <button type="button" class="btn-close" (click)="error.set(null)"></button>
+            </div>
+          }
+
+          @if (!loading()) {
+            <form [formGroup]="categoryForm" (ngSubmit)="onSubmit()">
+              <!-- Nombre -->
+              <div class="mb-3">
+                <label for="name" class="form-label">
+                  Nombre <span class="text-danger">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="name"
+                  class="form-control"
+                  formControlName="name"
+                  placeholder="Ej: Supermercado"
+                  [class.is-invalid]="categoryForm.get('name')?.invalid && categoryForm.get('name')?.touched"
+                >
+                @if (categoryForm.get('name')?.hasError('required') && categoryForm.get('name')?.touched) {
+                  <div class="invalid-feedback">El nombre es requerido</div>
+                }
+                @if (categoryForm.get('name')?.hasError('maxlength')) {
+                  <div class="invalid-feedback">Máximo 50 caracteres</div>
+                }
+              </div>
+
+              <!-- Tipo -->
+              <div class="mb-3">
+                <label for="type" class="form-label">
+                  Tipo <span class="text-danger">*</span>
+                </label>
+                <select
+                  id="type"
+                  class="form-select"
+                  formControlName="type"
+                >
+                  @for (type of categoryTypes; track type.value) {
+                    <option [value]="type.value">{{ type.label }}</option>
+                  }
+                </select>
+              </div>
+
+              <!-- Icono -->
+              <div class="mb-3">
+                <label class="form-label">
+                  Icono <span class="text-danger">*</span>
+                </label>
+                <div class="icon-grid">
+                  @for (icon of icons; track icon) {
+                    <button
+                      type="button"
+                      class="icon-button"
+                      [class.active]="categoryForm.get('icon')?.value === icon"
+                      (click)="categoryForm.patchValue({ icon: icon })"
+                    >
+                      <i class="bi bi-{{ icon }}"></i>
+                    </button>
+                  }
+                </div>
+              </div>
+
+              <!-- Color -->
+              <div class="mb-4">
+                <label class="form-label">
+                  Color <span class="text-danger">*</span>
+                </label>
+                <div class="color-grid">
+                  @for (color of colors; track color) {
+                    <button
+                      type="button"
+                      class="color-button"
+                      [class.active]="categoryForm.get('color')?.value === color"
+                      [style.background-color]="color"
+                      (click)="categoryForm.patchValue({ color: color })"
+                    >
+                      @if (categoryForm.get('color')?.value === color) {
+                        <i class="bi bi-check text-white"></i>
+                      }
+                    </button>
+                  }
+                </div>
+              </div>
+
+              <!-- Preview -->
+              <div class="mb-4">
+                <label class="form-label">Vista Previa</label>
+                <div class="category-preview">
+                  <span
+                    class="badge"
+                    [style.background-color]="categoryForm.get('color')?.value"
+                  >
+                    <i class="bi bi-{{ categoryForm.get('icon')?.value }} me-1"></i>
+                    {{ categoryForm.get('name')?.value || 'Nombre de categoría' }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Botones -->
+              <div class="d-flex gap-2 justify-content-end">
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary"
+                  (click)="cancel()"
+                  [disabled]="loading()"
+                >
+                  <i class="bi bi-x-circle me-1"></i>
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  class="btn btn-primary"
+                  [disabled]="categoryForm.invalid || loading()"
+                >
+                  @if (loading()) {
+                    <span class="spinner-border spinner-border-sm me-1"></span>
+                  }
+                  <i class="bi bi-check-circle me-1"></i>
+                  {{ isEditMode() ? 'Actualizar' : 'Crear' }}
+                </button>
+              </div>
+            </form>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

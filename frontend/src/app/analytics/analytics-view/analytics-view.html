@@ -1,20 +1,85 @@
 <app-navbar></app-navbar>
 
-<div class="container mt-4">
-  <div class="row">
+<div class="container-fluid p-4">
+  <!-- Page Header -->
+  <div class="row mb-4">
     <div class="col-12">
-      <div class="card shadow-sm">
-        <div class="card-body text-center py-5">
-          <i class="bi bi-graph-up display-1 text-primary mb-3"></i>
-          <h2 class="card-title mb-3">Analytics</h2>
-          <p class="card-text text-muted">
-            Módulo de análisis y reportes en desarrollo
-          </p>
-          <p class="text-muted">
-            <small>Próximamente tendrás gráficos y estadísticas de tus finanzas</small>
-          </p>
-        </div>
+      <div class="card-responsive">
+        <h1 class="h3 mb-2">
+          <i class="bi bi-graph-up-arrow text-primary me-2"></i>
+          Análisis Financiero
+        </h1>
+        <p class="text-muted mb-0">
+          Visualiza tendencias, patrones y predicciones de tus finanzas personales
+        </p>
       </div>
     </div>
+  </div>
+
+  <!-- Tab Navigation -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <ul class="nav nav-tabs nav-tabs-custom">
+        <li class="nav-item">
+          <button
+            class="nav-link"
+            [class.active]="activeTab() === 'overview'"
+            (click)="changeTab('overview')"
+          >
+            <i class="bi bi-bar-chart me-1"></i>
+            <span class="d-none d-sm-inline">Resumen</span>
+          </button>
+        </li>
+        <li class="nav-item">
+          <button
+            class="nav-link"
+            [class.active]="activeTab() === 'trends'"
+            (click)="changeTab('trends')"
+          >
+            <i class="bi bi-graph-up-arrow me-1"></i>
+            <span class="d-none d-sm-inline">Tendencias</span>
+          </button>
+        </li>
+        <li class="nav-item">
+          <button
+            class="nav-link"
+            [class.active]="activeTab() === 'predictions'"
+            (click)="changeTab('predictions')"
+          >
+            <i class="bi bi-stars me-1"></i>
+            <span class="d-none d-sm-inline">Predicciones</span>
+          </button>
+        </li>
+        <li class="nav-item">
+          <button
+            class="nav-link"
+            [class.active]="activeTab() === 'export'"
+            (click)="changeTab('export')"
+          >
+            <i class="bi bi-download me-1"></i>
+            <span class="d-none d-sm-inline">Exportar</span>
+          </button>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Tab Content -->
+  <div class="tab-content">
+    @if (activeTab() === 'overview') {
+      <app-time-series />
+    }
+
+    @if (activeTab() === 'trends') {
+      <app-trends />
+    }
+
+    @if (activeTab() === 'predictions') {
+      <app-predictions />
+    }
+
+    @if (activeTab() === 'export') {
+      <app-export-panel />
+    }
   </div>
 </div>

@@ -1,20 +1,104 @@
-<app-navbar></app-navbar>
+<app-navbar />
 
-<div class="container mt-4">
-  <div class="row">
+<div class="container-fluid py-4">
+  <div class="row mb-4">
     <div class="col-12">
-      <div class="card shadow-sm">
-        <div class="card-body text-center py-5">
-          <i class="bi bi-tags display-1 text-info mb-3"></i>
-          <h2 class="card-title mb-3">Categorías</h2>
-          <p class="card-text text-muted">
-            Módulo de gestión de categorías en desarrollo
-          </p>
-          <p class="text-muted">
-            <small>Próximamente podrás crear y administrar categorías personalizadas</small>
-          </p>
-        </div>
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <h2 class="mb-0">
+          <i class="bi bi-tags me-2"></i>
+          Categorías
+        </h2>
+        <a routerLink="/categories/new" class="btn btn-primary">
+          <i class="bi bi-plus-circle me-1"></i>
+          Nueva Categoría
+        </a>
       </div>
     </div>
   </div>
+
+  <!-- Filtros -->
+  <div class="row mb-3">
+    <div class="col-12">
+      <div class="d-flex gap-2 flex-wrap">
+        @for (type of categoryTypes; track type.value) {
+          <button
+            class="btn btn-sm"
+            [class.btn-primary]="filterType() === type.value"
+            [class.btn-outline-primary]="filterType() !== type.value"
+            (click)="changeFilter(type.value)"
+          >
+            {{ type.label }}
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+
+  @if (error()) {
+    <app-error-message [message]="error()!" (retry)="loadCategories()" />
+  }
+
+  @if (loading()) {
+    <app-loading />
+  }
+
+  @if (!loading() && !error()) {
+    @if (categories().length === 0) {
+      <div class="alert alert-info">
+        <i class="bi bi-info-circle me-2"></i>
+        No hay categorías registradas.
+        <a routerLink="/categories/new" class="alert-link">Crea tu primera categoría</a>
+      </div>
+    } @else {
+      <div class="row">
+        @for (category of categories(); track category.id) {
+          <div class="col-12 col-sm-6 col-lg-4 col-xl-3 mb-3">
+            <div class="card category-card h-100 shadow-sm">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                  <div class="category-icon" [style.background-color]="category.color">
+                    <i class="bi bi-{{ category.icon }}"></i>
+                  </div>
+                  <span class="badge bg-{{ getTypeBadgeClass(category.type) }}">
+                    {{ getTypeLabel(category.type) }}
+                  </span>
+                </div>
+
+                <h5 class="card-title mb-2">{{ category.name }}</h5>
+
+                @if (viewMode() === 'stats') {
+                  <div class="stats mb-3">
+                    <div class="stat-item">
+                      <small class="text-muted">Total gastado</small>
+                      <div class="stat-value">{{ formatCurrency(category.total_amount || 0) }}</div>
+                    </div>
+                    <div class="stat-item">
+                      <small class="text-muted">Cantidad de gastos</small>
+                      <div class="stat-value">{{ category.expense_count || 0 }}</div>
+                    </div>
+                  </div>
+                }
+
+                <div class="d-flex gap-2">
+                  <button
+                    class="btn btn-sm btn-outline-primary flex-fill"
+                    (click)="editCategory(category.id)"
+                  >
+                    <i class="bi bi-pencil"></i>
+                    Editar
+                  </button>
+                  <button
+                    class="btn btn-sm btn-outline-danger"
+                    (click)="deleteCategory(category)"
+                  >
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  }
 </div>

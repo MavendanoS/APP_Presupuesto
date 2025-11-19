@@ -1,0 +1,147 @@
+<!-- Filters -->
+<div class="row mb-4">
+  <div class="col-12">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <div class="row g-3 align-items-end">
+          <!-- Date Range -->
+          <div class="col-12 col-md-4">
+            <label class="form-label fw-bold">Fecha Inicio</label>
+            <input
+              type="date"
+              class="form-control"
+              [value]="startDate()"
+              (change)="onStartDateChange($any($event.target).value)"
+            />
+          </div>
+          <div class="col-12 col-md-4">
+            <label class="form-label fw-bold">Fecha Fin</label>
+            <input
+              type="date"
+              class="form-control"
+              [value]="endDate()"
+              (change)="onEndDateChange($any($event.target).value)"
+            />
+          </div>
+
+          <!-- Group By -->
+          <div class="col-12 col-md-4">
+            <label class="form-label fw-bold">Agrupar por</label>
+            <div class="btn-group w-100" role="group">
+              <button
+                type="button"
+                class="btn btn-sm"
+                [class.btn-primary]="groupBy() === 'day'"
+                [class.btn-outline-primary]="groupBy() !== 'day'"
+                (click)="changeGroupBy('day')"
+              >
+                Día
+              </button>
+              <button
+                type="button"
+                class="btn btn-sm"
+                [class.btn-primary]="groupBy() === 'week'"
+                [class.btn-outline-primary]="groupBy() !== 'week'"
+                (click)="changeGroupBy('week')"
+              >
+                Semana
+              </button>
+              <button
+                type="button"
+                class="btn btn-sm"
+                [class.btn-primary]="groupBy() === 'month'"
+                [class.btn-outline-primary]="groupBy() !== 'month'"
+                (click)="changeGroupBy('month')"
+              >
+                Mes
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Loading State -->
+@if (loading()) {
+  <app-loading message="Cargando gráficos..." />
+}
+
+<!-- Error State -->
+@if (error()) {
+  <app-error-message [message]="error()!" (dismissed)="error.set(null)" />
+}
+
+<!-- Charts -->
+@if (!loading() && !error() && chartsData()) {
+  <div class="row g-4">
+    <!-- Income Over Time -->
+    <div class="col-12 col-lg-6">
+      <div class="card shadow-sm h-100">
+        <div class="card-body">
+          <h5 class="card-title mb-3">
+            <i class="bi bi-cash-stack text-success me-2"></i>
+            Ingresos en el Tiempo
+          </h5>
+          <app-line-chart
+            [labels]="incomeChartLabels()"
+            [datasets]="incomeChartDatasets()"
+            [height]="300"
+          />
+        </div>
+      </div>
+    </div>
+
+    <!-- Expenses by Type Over Time -->
+    <div class="col-12 col-lg-6">
+      <div class="card shadow-sm h-100">
+        <div class="card-body">
+          <h5 class="card-title mb-3">
+            <i class="bi bi-wallet2 text-danger me-2"></i>
+            Gastos por Tipo
+          </h5>
+          <app-line-chart
+            [labels]="expensesByTypeLabels()"
+            [datasets]="expensesByTypeDatasets()"
+            [height]="300"
+          />
+        </div>
+      </div>
+    </div>
+
+    <!-- Combined Income vs Expenses -->
+    <div class="col-12 col-lg-6">
+      <div class="card shadow-sm h-100">
+        <div class="card-body">
+          <h5 class="card-title mb-3">
+            <i class="bi bi-graph-up text-primary me-2"></i>
+            Ingresos vs Gastos
+          </h5>
+          <app-line-chart
+            [labels]="combinedLabels()"
+            [datasets]="combinedDatasets()"
+            [height]="300"
+          />
+        </div>
+      </div>
+    </div>
+
+    <!-- Category Distribution -->
+    <div class="col-12 col-lg-6">
+      <div class="card shadow-sm h-100">
+        <div class="card-body">
+          <h5 class="card-title mb-3">
+            <i class="bi bi-pie-chart text-warning me-2"></i>
+            Distribución por Categoría (Top 10)
+          </h5>
+          <app-bar-chart
+            [labels]="categoryLabels()"
+            [datasets]="categoryDatasets()"
+            [height]="300"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+}

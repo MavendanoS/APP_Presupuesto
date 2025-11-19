@@ -1,0 +1,68 @@
+.card-responsive {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  padding: 1.5rem;
+}
+
+.nav-tabs-custom {
+  border-bottom: 2px solid #e5e7eb;
+
+  .nav-link {
+    border: none;
+    background: transparent;
+    color: #6B7280;
+    padding: 0.75rem 1.25rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    border-bottom: 3px solid transparent;
+
+    i {
+      font-size: 1.1rem;
+    }
+
+    &:hover {
+      color: #3B82F6;
+      background-color: rgba(59, 130, 246, 0.05);
+    }
+
+    &.active {
+      color: #3B82F6;
+      border-bottom-color: #3B82F6;
+      background-color: rgba(59, 130, 246, 0.05);
+      font-weight: 600;
+    }
+  }
+}
+
+// Mobile responsive tabs
+@media (max-width: 576px) {
+  .nav-tabs-custom {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    .nav-item {
+      white-space: nowrap;
+    }
+
+    .nav-link {
+      padding: 0.75rem 0.75rem;
+      font-size: 0.875rem;
+
+      i {
+        font-size: 1rem;
+      }
+    }
+  }
+
+  .card-responsive {
+    padding: 1rem;
+  }
+}
