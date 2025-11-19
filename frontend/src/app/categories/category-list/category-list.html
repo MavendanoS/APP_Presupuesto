@@ -50,55 +50,94 @@
         <a routerLink="/categories/new" class="alert-link">Crea tu primera categoría</a>
       </div>
     } @else {
-      <div class="row">
-        @for (category of categories(); track category.id) {
-          <div class="col-12 col-sm-6 col-lg-4 col-xl-3 mb-3">
-            <div class="card category-card h-100 shadow-sm">
-              <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start mb-3">
-                  <div class="category-icon" [style.background-color]="category.color">
-                    <i class="bi bi-{{ category.icon }}"></i>
-                  </div>
-                  <span class="badge bg-{{ getTypeBadgeClass(category.type) }}">
-                    {{ getTypeLabel(category.type) }}
-                  </span>
-                </div>
-
-                <h5 class="card-title mb-2">{{ category.name }}</h5>
-
+      <!-- Tablas agrupadas por tipo -->
+      @for (type of getVisibleTypes(); track type) {
+        @if (getCategoriesByType(type).length > 0) {
+          <div class="card shadow-sm mb-4">
+            <div class="card-header bg-{{ getTypeBadgeClass(type) }} text-white">
+              <h5 class="mb-0">
+                <i class="bi bi-tag me-2"></i>
+                {{ getTypeLabel(type) }}
+              </h5>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-hover mb-0">
+                <thead>
+                  <tr>
+                    <th style="width: 60px;"></th>
+                    <th>Nombre</th>
+                    @if (viewMode() === 'stats') {
+                      <th class="text-end" style="width: 150px;">Total Gastado</th>
+                      <th class="text-center" style="width: 120px;">Cantidad</th>
+                    }
+                    <th class="text-end" style="width: 200px;">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (category of getCategoriesByType(type); track category.id) {
+                    <tr>
+                      <td class="text-center">
+                        <div class="category-icon-small" [style.background-color]="category.color">
+                          <i class="bi bi-{{ category.icon }}"></i>
+                        </div>
+                      </td>
+                      <td class="align-middle">
+                        <strong>{{ category.name }}</strong>
+                      </td>
+                      @if (viewMode() === 'stats') {
+                        <td class="text-end align-middle">
+                          <strong>{{ formatCurrency(category.total_amount || 0) }}</strong>
+                        </td>
+                        <td class="text-center align-middle">
+                          <span class="badge bg-secondary">{{ category.expense_count || 0 }}</span>
+                        </td>
+                      }
+                      <td class="text-end align-middle">
+                        <div class="btn-group btn-group-sm" role="group">
+                          <button
+                            class="btn btn-outline-primary"
+                            (click)="editCategory(category.id)"
+                            title="Editar categoría"
+                          >
+                            <i class="bi bi-pencil me-1"></i>
+                            Editar
+                          </button>
+                          <button
+                            class="btn btn-outline-danger"
+                            (click)="deleteCategory(category)"
+                            title="Eliminar categoría"
+                          >
+                            <i class="bi bi-trash me-1"></i>
+                            Eliminar
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
                 @if (viewMode() === 'stats') {
-                  <div class="stats mb-3">
-                    <div class="stat-item">
-                      <small class="text-muted">Total gastado</small>
-                      <div class="stat-value">{{ formatCurrency(category.total_amount || 0) }}</div>
-                    </div>
-                    <div class="stat-item">
-                      <small class="text-muted">Cantidad de gastos</small>
-                      <div class="stat-value">{{ category.expense_count || 0 }}</div>
-                    </div>
-                  </div>
+                  <tfoot class="table-light">
+                    <tr>
+                      <td colspan="2" class="text-end"><strong>Total {{ getTypeLabel(type) }}:</strong></td>
+                      <td class="text-end">
+                        <strong>
+                          {{ formatCurrency(getTotalAmountByType(type)) }}
+                        </strong>
+                      </td>
+                      <td class="text-center">
+                        <span class="badge bg-dark">
+                          {{ getTotalCountByType(type) }}
+                        </span>
+                      </td>
+                      <td></td>
+                    </tr>
+                  </tfoot>
                 }
-
-                <div class="d-flex gap-2">
-                  <button
-                    class="btn btn-sm btn-outline-primary flex-fill"
-                    (click)="editCategory(category.id)"
-                  >
-                    <i class="bi bi-pencil"></i>
-                    Editar
-                  </button>
-                  <button
-                    class="btn btn-sm btn-outline-danger"
-                    (click)="deleteCategory(category)"
-                  >
-                    <i class="bi bi-trash"></i>
-                  </button>
-                </div>
-              </div>
+              </table>
             </div>
           </div>
         }
-      </div>
+      }
     }
   }
 </div>

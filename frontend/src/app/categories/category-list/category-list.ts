@@ -47,7 +47,7 @@ export class CategoryListComponent implements OnInit {
     this.loading.set(true);
     this.error.set(null);
 
-    const filters = this.filterType() !== 'all' ? { type: this.filterType() as CategoryType } : {};
+    const filters = this.filterType() !== 'all' ? { type: this.filterType() as CategoryType } : undefined;
 
     const request = this.viewMode() === 'stats'
       ? this.categoryService.getCategoriesWithStats(filters)
@@ -116,5 +116,27 @@ export class CategoryListComponent implements OnInit {
     const rounded = Math.round(amount);
     const formatted = rounded.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
     return `$${formatted}`;
+  }
+
+  getCategoriesByType(type: CategoryType): CategoryWithStats[] {
+    if (this.filterType() !== 'all') {
+      return this.categories();
+    }
+    return this.categories().filter(cat => cat.type === type);
+  }
+
+  getVisibleTypes(): CategoryType[] {
+    if (this.filterType() !== 'all') {
+      return [this.filterType() as CategoryType];
+    }
+    return ['payment', 'purchase', 'small_expense'];
+  }
+
+  getTotalAmountByType(type: CategoryType): number {
+    return this.getCategoriesByType(type).reduce((sum, cat) => sum + (cat.total_amount || 0), 0);
+  }
+
+  getTotalCountByType(type: CategoryType): number {
+    return this.getCategoriesByType(type).reduce((sum, cat) => sum + (cat.expense_count || 0), 0);
   }
 }
