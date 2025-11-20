@@ -4,7 +4,7 @@
  */
 
 import { Router } from 'itty-router';
-import { registerUser, loginUser, getCurrentUser, generatePasswordResetToken, resetPasswordWithToken } from '../services/authService.js';
+import { registerUser, loginUser, getCurrentUser, generatePasswordResetToken, resetPasswordWithToken, updateUserProfile, changeUserPassword } from '../services/authService.js';
 import { requireAuth } from '../middleware/auth.js';
 import { withRateLimit, resetRateLimit } from '../middleware/rateLimit.js';
 
@@ -265,5 +265,92 @@ authRouter.post('/reset-password', async (request, env) => {
     });
   }
 });
+
+/**
+ * PUT /api/auth/profile
+ * Actualizar perfil de usuario
+ */
+authRouter.put('/profile', requireAuth(async (request, env) => {
+  try {
+    const body = await request.json();
+    const { name, email } = body;
+
+    if (!name || !email) {
+      return new Response(JSON.stringify({
+        error: 'Nombre y email requeridos'
+      }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const userId = request.user.userId; // Establecido por requireAuth
+
+    const updatedUser = await updateUserProfile(env.DB, userId, { name, email });
+
+    // Retornar usuario sin password_hash
+    const { password_hash: _, ...userWithoutPassword } = updatedUser;
+
+    return new Response(JSON.stringify({
+      success: true,
+      data: {
+        user: userWithoutPassword
+      }
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+  } catch (error) {
+    return new Response(JSON.stringify({
+      error: 'Error al actualizar perfil',
+      message: error.message
+    }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}));
+
+/**
+ * PUT /api/auth/change-password
+ * Cambiar contraseña de usuario
+ */
+authRouter.put('/change-password', requireAuth(async (request, env) => {
+  try {
+    const body = await request.json();
+    const { currentPassword, newPassword } = body;
+
+    if (!currentPassword || !newPassword) {
+      return new Response(JSON.stringify({
+        error: 'Contraseña actual y nueva contraseña requeridas'
+      }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const userId = request.user.userId; // Establecido por requireAuth
+
+    await changeUserPassword(env.DB, userId, { currentPassword, newPassword });
+
+    return new Response(JSON.stringify({
+      success: true,
+      message: 'Contraseña actualizada correctamente'
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+  } catch (error) {
+    return new Response(JSON.stringify({
+      error: 'Error al cambiar contraseña',
+      message: error.message
+    }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}));
 
 export default authRouter;

@@ -52,6 +52,7 @@ function addCorsHeaders(response, request) {
   newResponse.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   newResponse.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   newResponse.headers.set('Access-Control-Allow-Credentials', 'true');
+  newResponse.headers.set('Access-Control-Expose-Headers', 'Content-Disposition');
 
   return newResponse;
 }
@@ -63,6 +64,7 @@ router.options('*', (request) => {
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Access-Control-Allow-Credentials': 'true',
+    'Access-Control-Expose-Headers': 'Content-Disposition',
   };
 
   if (isAllowedOrigin(origin)) {

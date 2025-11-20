@@ -128,21 +128,13 @@
             <div class="d-flex gap-2 mt-4">
               <button
                 type="submit"
-                class="btn btn-success flex-grow-1"
+                class="btn btn-success w-100"
                 [disabled]="loading() || incomeForm.invalid"
               >
                 @if (loading()) {
                   <span class="spinner-border spinner-border-sm me-2"></span>
                 }
                 <i class="bi bi-check-lg"></i> Guardar Ingreso
-              </button>
-              <button
-                type="button"
-                class="btn btn-outline-secondary"
-                (click)="onCancel()"
-                [disabled]="loading()"
-              >
-                Cancelar
               </button>
             </div>
           </form>

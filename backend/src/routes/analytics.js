@@ -247,10 +247,10 @@ analyticsRouter.get('/exports/excel', requireAuth(async (request, env) => {
 
     const result = await exportToExcelService(env.DB, userId, filters);
 
-    return new Response(result.csv, {
+    return new Response(result.buffer, {
       status: 200,
       headers: {
-        'Content-Type': 'application/vnd.ms-excel',
+        'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         'Content-Disposition': `attachment; filename="${result.filename}"`
       }
     });

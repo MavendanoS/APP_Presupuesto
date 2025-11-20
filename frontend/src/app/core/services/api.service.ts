@@ -74,7 +74,7 @@ export class ApiService {
   /**
    * Download file (CSV, Excel)
    */
-  download(endpoint: string, params?: any): Observable<Blob> {
+  download(endpoint: string, params?: any): Observable<{ blob: Blob; filename: string }> {
     let httpParams = new HttpParams();
 
     if (params) {
@@ -88,7 +88,25 @@ export class ApiService {
     return this.http.get(`${this.BASE_URL}${endpoint}`, {
       params: httpParams,
       responseType: 'blob',
-      withCredentials: true
-    });
+      withCredentials: true,
+      observe: 'response'
+    }).pipe(
+      map(response => {
+        const blob = response.body!;
+
+        // Extraer nombre del archivo del header Content-Disposition
+        const contentDisposition = response.headers.get('Content-Disposition');
+        let filename = 'export.xlsx';
+
+        if (contentDisposition) {
+          const matches = /filename="?([^"]+)"?/i.exec(contentDisposition);
+          if (matches && matches[1]) {
+            filename = matches[1];
+          }
+        }
+
+        return { blob, filename };
+      })
+    );
   }
 }

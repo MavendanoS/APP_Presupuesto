@@ -1,0 +1,294 @@
+<div class="profile-container">
+  <div class="container py-4">
+    <div class="row justify-content-center">
+      <div class="col-12 col-lg-8">
+        <!-- Header -->
+        <div class="profile-header mb-4">
+          <h2>
+            <i class="bi bi-person-circle me-2"></i>
+            Mi Perfil
+          </h2>
+          <p class="text-muted">Gestiona tu información personal y seguridad</p>
+        </div>
+
+        <!-- Tabs -->
+        <ul class="nav nav-tabs mb-4">
+          <li class="nav-item">
+            <button
+              class="nav-link"
+              [class.active]="activeTab() === 'profile'"
+              (click)="changeTab('profile')"
+            >
+              <i class="bi bi-person me-1"></i>
+              Información Personal
+            </button>
+          </li>
+          <li class="nav-item">
+            <button
+              class="nav-link"
+              [class.active]="activeTab() === 'password'"
+              (click)="changeTab('password')"
+            >
+              <i class="bi bi-shield-lock me-1"></i>
+              Cambiar Contraseña
+            </button>
+          </li>
+        </ul>
+
+        <!-- Messages -->
+        @if (success()) {
+          <div class="alert alert-success alert-dismissible fade show">
+            <i class="bi bi-check-circle me-2"></i>
+            {{ success() }}
+            <button type="button" class="btn-close" (click)="success.set(null)"></button>
+          </div>
+        }
+
+        @if (error()) {
+          <div class="alert alert-danger alert-dismissible fade show">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            {{ error() }}
+            <button type="button" class="btn-close" (click)="error.set(null)"></button>
+          </div>
+        }
+
+        <!-- Profile Tab Content -->
+        @if (activeTab() === 'profile') {
+          <div class="card profile-card">
+            <div class="card-body">
+              <h5 class="card-title mb-4">
+                <i class="bi bi-info-circle me-2"></i>
+                Datos Personales
+              </h5>
+
+              <form [formGroup]="profileForm" (ngSubmit)="onSubmitProfile()">
+                <!-- Name Field -->
+                <div class="mb-3">
+                  <label for="name" class="form-label">
+                    <i class="bi bi-person me-1"></i>
+                    Nombre
+                  </label>
+                  <input
+                    type="text"
+                    id="name"
+                    class="form-control"
+                    formControlName="name"
+                    placeholder="Tu nombre completo"
+                    [class.is-invalid]="name?.invalid && name?.touched"
+                  />
+                  @if (name?.invalid && name?.touched) {
+                    <div class="invalid-feedback">
+                      @if (name?.errors?.['required']) {
+                        El nombre es requerido
+                      }
+                      @if (name?.errors?.['minlength']) {
+                        El nombre debe tener al menos 3 caracteres
+                      }
+                    </div>
+                  }
+                </div>
+
+                <!-- Email Field -->
+                <div class="mb-4">
+                  <label for="email" class="form-label">
+                    <i class="bi bi-envelope me-1"></i>
+                    Correo Electrónico
+                  </label>
+                  <input
+                    type="email"
+                    id="email"
+                    class="form-control"
+                    formControlName="email"
+                    placeholder="tu@email.com"
+                    [class.is-invalid]="email?.invalid && email?.touched"
+                  />
+                  @if (email?.invalid && email?.touched) {
+                    <div class="invalid-feedback">
+                      @if (email?.errors?.['required']) {
+                        El email es requerido
+                      }
+                      @if (email?.errors?.['email']) {
+                        Ingresa un email válido
+                      }
+                    </div>
+                  }
+                  <div class="form-text">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Usarás este email para iniciar sesión
+                  </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="d-flex gap-2">
+                  <button
+                    type="submit"
+                    class="btn btn-primary"
+                    [disabled]="profileForm.invalid || loading()"
+                  >
+                    @if (loading()) {
+                      <span class="spinner-border spinner-border-sm me-2"></span>
+                      Guardando...
+                    } @else {
+                      <i class="bi bi-save me-2"></i>
+                      Guardar Cambios
+                    }
+                  </button>
+                  <a routerLink="/dashboard" class="btn btn-outline-secondary">
+                    <i class="bi bi-x-circle me-2"></i>
+                    Cancelar
+                  </a>
+                </div>
+              </form>
+            </div>
+          </div>
+        }
+
+        <!-- Password Tab Content -->
+        @if (activeTab() === 'password') {
+          <div class="card profile-card">
+            <div class="card-body">
+              <h5 class="card-title mb-4">
+                <i class="bi bi-shield-lock me-2"></i>
+                Actualizar Contraseña
+              </h5>
+
+              <form [formGroup]="passwordForm" (ngSubmit)="onSubmitPassword()">
+                <!-- Current Password -->
+                <div class="mb-3">
+                  <label for="currentPassword" class="form-label">
+                    <i class="bi bi-key me-1"></i>
+                    Contraseña Actual
+                  </label>
+                  <div class="input-group">
+                    <input
+                      [type]="showCurrentPassword() ? 'text' : 'password'"
+                      id="currentPassword"
+                      class="form-control"
+                      formControlName="currentPassword"
+                      placeholder="Tu contraseña actual"
+                      [class.is-invalid]="currentPassword?.invalid && currentPassword?.touched"
+                    />
+                    <button
+                      class="btn btn-outline-secondary"
+                      type="button"
+                      (click)="togglePasswordVisibility('current')"
+                    >
+                      <i [class]="showCurrentPassword() ? 'bi bi-eye-slash' : 'bi bi-eye'"></i>
+                    </button>
+                  </div>
+                  @if (currentPassword?.invalid && currentPassword?.touched) {
+                    <div class="invalid-feedback d-block">
+                      La contraseña actual es requerida
+                    </div>
+                  }
+                </div>
+
+                <!-- New Password -->
+                <div class="mb-3">
+                  <label for="newPassword" class="form-label">
+                    <i class="bi bi-lock me-1"></i>
+                    Nueva Contraseña
+                  </label>
+                  <div class="input-group">
+                    <input
+                      [type]="showNewPassword() ? 'text' : 'password'"
+                      id="newPassword"
+                      class="form-control"
+                      formControlName="newPassword"
+                      placeholder="Mínimo 8 caracteres"
+                      [class.is-invalid]="newPassword?.invalid && newPassword?.touched"
+                    />
+                    <button
+                      class="btn btn-outline-secondary"
+                      type="button"
+                      (click)="togglePasswordVisibility('new')"
+                    >
+                      <i [class]="showNewPassword() ? 'bi bi-eye-slash' : 'bi bi-eye'"></i>
+                    </button>
+                  </div>
+                  @if (newPassword?.invalid && newPassword?.touched) {
+                    <div class="invalid-feedback d-block">
+                      @if (newPassword?.errors?.['required']) {
+                        La nueva contraseña es requerida
+                      }
+                      @if (newPassword?.errors?.['minlength']) {
+                        La contraseña debe tener al menos 8 caracteres
+                      }
+                    </div>
+                  }
+                </div>
+
+                <!-- Confirm Password -->
+                <div class="mb-4">
+                  <label for="confirmPassword" class="form-label">
+                    <i class="bi bi-lock-fill me-1"></i>
+                    Confirmar Nueva Contraseña
+                  </label>
+                  <div class="input-group">
+                    <input
+                      [type]="showConfirmPassword() ? 'text' : 'password'"
+                      id="confirmPassword"
+                      class="form-control"
+                      formControlName="confirmPassword"
+                      placeholder="Repite tu nueva contraseña"
+                      [class.is-invalid]="(confirmPassword?.invalid && confirmPassword?.touched) || (!passwordsMatch && confirmPassword?.touched)"
+                    />
+                    <button
+                      class="btn btn-outline-secondary"
+                      type="button"
+                      (click)="togglePasswordVisibility('confirm')"
+                    >
+                      <i [class]="showConfirmPassword() ? 'bi bi-eye-slash' : 'bi bi-eye'"></i>
+                    </button>
+                  </div>
+                  @if (!passwordsMatch && confirmPassword?.touched) {
+                    <div class="invalid-feedback d-block">
+                      Las contraseñas no coinciden
+                    </div>
+                  }
+                  <div class="form-text">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Usa al menos 8 caracteres con letras y números
+                  </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="d-flex gap-2">
+                  <button
+                    type="submit"
+                    class="btn btn-primary"
+                    [disabled]="passwordForm.invalid || loading()"
+                  >
+                    @if (loading()) {
+                      <span class="spinner-border spinner-border-sm me-2"></span>
+                      Actualizando...
+                    } @else {
+                      <i class="bi bi-shield-check me-2"></i>
+                      Cambiar Contraseña
+                    }
+                  </button>
+                  <a routerLink="/dashboard" class="btn btn-outline-secondary">
+                    <i class="bi bi-x-circle me-2"></i>
+                    Cancelar
+                  </a>
+                </div>
+              </form>
+            </div>
+          </div>
+        }
+
+        <!-- Security Info -->
+        <div class="info-box mt-4">
+          <i class="bi bi-shield-check me-2"></i>
+          <div>
+            <strong>Seguridad:</strong>
+            <p class="mb-0 mt-1 small">
+              Todos tus datos están protegidos con encriptación.
+              Nunca compartas tu contraseña con nadie.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -103,36 +103,25 @@
             </div>
           </div>
 
-          <!-- Export Buttons -->
+          <!-- Export Button -->
           <div class="col-12">
             <h6 class="mb-3">
               <i class="bi bi-file-earmark-arrow-down me-2"></i>
-              Formato de Exportación
+              Exportar Datos
             </h6>
-            <div class="d-flex gap-3 flex-column flex-md-row">
-              <button
-                class="btn btn-success btn-lg flex-grow-1"
-                (click)="exportCSV()"
-                [disabled]="exporting()"
-              >
-                @if (exporting()) {
-                  <span class="spinner-border spinner-border-sm me-2"></span>
-                }
-                <i class="bi bi-filetype-csv me-2"></i>
-                Descargar CSV
-              </button>
-              <button
-                class="btn btn-primary btn-lg flex-grow-1"
-                (click)="exportExcel()"
-                [disabled]="exporting()"
-              >
-                @if (exporting()) {
-                  <span class="spinner-border spinner-border-sm me-2"></span>
-                }
+            <button
+              class="btn btn-primary btn-lg w-100"
+              (click)="exportExcel()"
+              [disabled]="exporting()"
+            >
+              @if (exporting()) {
+                <span class="spinner-border spinner-border-sm me-2"></span>
+                Exportando...
+              } @else {
                 <i class="bi bi-file-earmark-spreadsheet me-2"></i>
                 Descargar Excel
-              </button>
-            </div>
+              }
+            </button>
           </div>
 
           <!-- Info Note -->
@@ -140,12 +129,12 @@
             <div class="alert alert-info d-flex align-items-start">
               <i class="bi bi-info-circle-fill me-2" style="font-size: 1.5rem;"></i>
               <div>
-                <strong>Sobre las exportaciones:</strong>
+                <strong>Sobre la exportación:</strong>
                 <ul class="mb-0 mt-2 small">
-                  <li>Los archivos incluyen todos los detalles según el rango de fechas y tipo seleccionado</li>
-                  <li>CSV es ideal para importar a otras aplicaciones o análisis en hojas de cálculo</li>
-                  <li>Excel incluye formato y es más fácil de leer directamente</li>
-                  <li>Los archivos se descargan directamente en tu dispositivo</li>
+                  <li>El archivo Excel incluye todos los detalles según el rango de fechas y tipo seleccionado</li>
+                  <li>Se generan hojas separadas para Gastos, Ingresos y Resumen</li>
+                  <li>El formato incluye estilos y es fácil de leer directamente</li>
+                  <li>El archivo se descarga directamente en tu dispositivo</li>
                 </ul>
               </div>
             </div>

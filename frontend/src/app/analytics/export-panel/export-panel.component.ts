@@ -20,26 +20,6 @@ export class ExportPanelComponent {
 
   constructor(private analyticsService: AnalyticsService) {}
 
-  exportCSV(): void {
-    this.exporting.set(true);
-    this.error.set(null);
-
-    this.analyticsService.exportCSV({
-      start_date: this.startDate(),
-      end_date: this.endDate(),
-      type: this.exportType()
-    }).subscribe({
-      next: (blob) => {
-        this.downloadFile(blob, `export_${this.exportType()}_${new Date().getTime()}.csv`);
-        this.exporting.set(false);
-      },
-      error: (err) => {
-        this.error.set(err.error?.message || 'Error al exportar a CSV');
-        this.exporting.set(false);
-      }
-    });
-  }
-
   exportExcel(): void {
     this.exporting.set(true);
     this.error.set(null);
@@ -49,8 +29,8 @@ export class ExportPanelComponent {
       end_date: this.endDate(),
       type: this.exportType()
     }).subscribe({
-      next: (blob) => {
-        this.downloadFile(blob, `export_${this.exportType()}_${new Date().getTime()}.xlsx`);
+      next: (response) => {
+        this.downloadFile(response.blob, response.filename);
         this.exporting.set(false);
       },
       error: (err) => {

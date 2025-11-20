@@ -47,24 +47,13 @@ export class AnalyticsService {
   }
 
   /**
-   * Exportar a CSV
-   */
-  exportCSV(filters?: {
-    start_date?: string;
-    end_date?: string;
-    type?: 'all' | 'expenses' | 'income';
-  }): Observable<Blob> {
-    return this.api.download('/exports/csv', filters);
-  }
-
-  /**
    * Exportar a Excel
    */
   exportExcel(filters?: {
     start_date?: string;
     end_date?: string;
     type?: 'all' | 'expenses' | 'income';
-  }): Observable<Blob> {
+  }): Observable<{ blob: Blob; filename: string }> {
     return this.api.download('/exports/excel', filters);
   }
 }

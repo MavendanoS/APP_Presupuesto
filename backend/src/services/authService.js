@@ -247,6 +247,87 @@ export async function resetPasswordWithToken(db, token, newPassword, resendApiKe
 }
 
 /**
+ * Actualizar perfil de usuario
+ * @param {Object} db - D1 database binding
+ * @param {number} userId - ID del usuario
+ * @param {Object} userData - { name, email }
+ * @returns {Promise<Object>} Usuario actualizado
+ */
+export async function updateUserProfile(db, userId, userData) {
+  const { name, email } = userData;
+
+  // Validar email
+  const cleanEmail = sanitizeInput(email).toLowerCase();
+  if (!isValidEmail(cleanEmail)) {
+    throw new Error('Email inválido');
+  }
+
+  // Validar nombre
+  const cleanName = sanitizeInput(name);
+  const nameValidation = validateName(cleanName);
+  if (!nameValidation.isValid) {
+    throw new Error(nameValidation.errors.join(', '));
+  }
+
+  // Verificar si el email ya está en uso por otro usuario
+  const existingUser = await findUserByEmail(db, cleanEmail);
+  if (existingUser && existingUser.id !== userId) {
+    throw new Error('El email ya está en uso');
+  }
+
+  // Actualizar usuario
+  await db.prepare(`
+    UPDATE users
+    SET name = ?, email = ?, updated_at = unixepoch()
+    WHERE id = ?
+  `).bind(cleanName, cleanEmail, userId).run();
+
+  // Obtener usuario actualizado
+  const updatedUser = await findUserById(db, userId);
+
+  return updatedUser;
+}
+
+/**
+ * Cambiar contraseña de usuario
+ * @param {Object} db - D1 database binding
+ * @param {number} userId - ID del usuario
+ * @param {Object} passwordData - { currentPassword, newPassword }
+ * @returns {Promise<void>}
+ */
+export async function changeUserPassword(db, userId, passwordData) {
+  const { currentPassword, newPassword } = passwordData;
+
+  // Obtener usuario
+  const user = await findUserById(db, userId);
+  if (!user) {
+    throw new Error('Usuario no encontrado');
+  }
+
+  // Verificar contraseña actual
+  const isValidPassword = await verifyPassword(currentPassword, user.password_hash);
+  if (!isValidPassword) {
+    throw new Error('Contraseña actual incorrecta');
+  }
+
+  // Validar nueva contraseña
+  const passwordValidation = validatePassword(newPassword);
+  if (!passwordValidation.isValid) {
+    throw new Error(passwordValidation.errors.join(', '));
+  }
+
+  // Hashear nueva contraseña
+  const password_hash = await hashPassword(newPassword);
+
+  // Actualizar contraseña
+  await db.prepare(`
+    UPDATE users
+    SET password_hash = ?, updated_at = unixepoch()
+    WHERE id = ?
+  `).bind(password_hash, userId).run();
+}
+
+/**
  * Crear categorías predeterminadas para un nuevo usuario
  * @param {Object} db - D1 database binding
  * @param {number} userId - ID del usuario

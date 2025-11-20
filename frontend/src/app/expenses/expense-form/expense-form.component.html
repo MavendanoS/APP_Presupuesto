@@ -6,7 +6,10 @@
       <div class="card-responsive">
         <!-- Header -->
         <div class="d-flex justify-content-between align-items-center mb-4">
-          <h2 class="h4 mb-0">Nuevo Gasto</h2>
+          <h2 class="h4 mb-0">
+            <i class="bi bi-plus-circle-fill me-2 text-primary"></i>
+            Nuevo Gasto
+          </h2>
           <button type="button" class="btn btn-outline-secondary btn-sm" routerLink="/expenses">
             <i class="bi bi-x-lg"></i> Cancelar
           </button>
@@ -149,27 +152,16 @@
           </div>
 
           <!-- Actions -->
-          <div class="d-flex gap-2 justify-content-end mt-4 pt-3 border-top">
-            <button
-              type="button"
-              class="btn btn-outline-secondary"
-              routerLink="/expenses"
-              [disabled]="loading()"
-            >
-              Cancelar
-            </button>
+          <div class="d-flex gap-2 mt-4">
             <button
               type="submit"
-              class="btn btn-primary"
+              class="btn btn-success w-100"
               [disabled]="expenseForm.invalid || loading()"
             >
               @if (loading()) {
                 <span class="spinner-border spinner-border-sm me-2"></span>
-                Guardando...
-              } @else {
-                <i class="bi bi-check-lg me-2"></i>
-                Guardar Gasto
               }
+              <i class="bi bi-check-lg"></i> Guardar Gasto
             </button>
           </div>
         </form>

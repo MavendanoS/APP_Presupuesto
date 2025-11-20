@@ -134,4 +134,32 @@ export class AuthService {
       { token, newPassword }
     );
   }
+
+  /**
+   * Actualizar perfil de usuario
+   */
+  updateProfile(name: string, email: string): Observable<{ success: boolean; data: { user: User } }> {
+    return this.http.put<{ success: boolean; data: { user: User } }>(
+      `${this.API_URL}/profile`,
+      { name, email },
+      { withCredentials: true }
+    ).pipe(
+      tap(response => {
+        if (response.success) {
+          this.currentUser.set(response.data.user);
+        }
+      })
+    );
+  }
+
+  /**
+   * Cambiar contraseña
+   */
+  changePassword(currentPassword: string, newPassword: string): Observable<{ success: boolean; message: string }> {
+    return this.http.put<{ success: boolean; message: string }>(
+      `${this.API_URL}/change-password`,
+      { currentPassword, newPassword },
+      { withCredentials: true }
+    );
+  }
 }

@@ -3,6 +3,7 @@
  * Lógica de negocio para análisis y predicciones
  */
 
+import ExcelJS from 'exceljs';
 import {
   getDashboardMetrics,
   getChartsData,
@@ -188,12 +189,150 @@ export async function exportToCSVService(db, userId, filters = {}) {
 }
 
 /**
- * Exportar datos a formato Excel (simplificado como CSV con formato mejorado)
+ * Exportar datos a formato Excel (usando exceljs)
  */
 export async function exportToExcelService(db, userId, filters = {}) {
-  // Por ahora, usamos el mismo CSV pero con nombre .xlsx
-  // En producción, se usaría una librería como exceljs
-  const result = await exportToCSVService(db, userId, filters);
-  result.filename = result.filename.replace('.csv', '.xlsx');
-  return result;
+  const { start_date, end_date, type } = filters;
+  const { start, end } = validateDateRange(start_date, end_date);
+
+  // Validar tipo de exportación
+  const validTypes = ['all', 'expenses', 'income'];
+  const exportType = validTypes.includes(type) ? type : 'all';
+
+  const data = await getExportData(db, userId, start, end, exportType);
+
+  // Crear workbook de Excel
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = 'APP Presupuesto';
+  workbook.created = new Date();
+
+  // Estilo de encabezados
+  const headerStyle = {
+    font: { bold: true, color: { argb: 'FFFFFFFF' } },
+    fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0d6efd' } },
+    alignment: { horizontal: 'center', vertical: 'middle' }
+  };
+
+  // Hoja de Gastos
+  if (data.expenses.length > 0) {
+    const expensesSheet = workbook.addWorksheet('Gastos');
+
+    // Encabezados
+    expensesSheet.columns = [
+      { header: 'ID', key: 'id', width: 10 },
+      { header: 'Tipo', key: 'type', width: 20 },
+      { header: 'Monto', key: 'amount', width: 15 },
+      { header: 'Descripción', key: 'description', width: 30 },
+      { header: 'Fecha', key: 'date', width: 15 },
+      { header: 'Categoría', key: 'category', width: 20 },
+      { header: 'Notas', key: 'notes', width: 30 }
+    ];
+
+    // Aplicar estilo a encabezados
+    expensesSheet.getRow(1).eachCell((cell) => {
+      cell.style = headerStyle;
+    });
+
+    // Datos
+    data.expenses.forEach(expense => {
+      expensesSheet.addRow({
+        id: expense.id,
+        type: expense.type === 'payment' ? 'Pago' :
+              expense.type === 'purchase' ? 'Compra' : 'Gasto Hormiga',
+        amount: expense.amount,
+        description: sanitizeInput(expense.description),
+        date: expense.date,
+        category: expense.category_name || 'Sin categoría',
+        notes: sanitizeInput(expense.notes || '')
+      });
+    });
+
+    // Formato de montos
+    expensesSheet.getColumn('amount').numFmt = '$#,##0';
+  }
+
+  // Hoja de Ingresos
+  if (data.income.length > 0) {
+    const incomeSheet = workbook.addWorksheet('Ingresos');
+
+    // Encabezados
+    incomeSheet.columns = [
+      { header: 'ID', key: 'id', width: 10 },
+      { header: 'Fuente', key: 'source', width: 25 },
+      { header: 'Monto', key: 'amount', width: 15 },
+      { header: 'Fecha', key: 'date', width: 15 },
+      { header: 'Recurrente', key: 'recurring', width: 15 },
+      { header: 'Frecuencia', key: 'frequency', width: 15 },
+      { header: 'Notas', key: 'notes', width: 30 }
+    ];
+
+    // Aplicar estilo a encabezados
+    incomeSheet.getRow(1).eachCell((cell) => {
+      cell.style = headerStyle;
+    });
+
+    // Datos
+    data.income.forEach(income => {
+      incomeSheet.addRow({
+        id: income.id,
+        source: sanitizeInput(income.source),
+        amount: income.amount,
+        date: income.date,
+        recurring: income.is_recurring ? 'Sí' : 'No',
+        frequency: income.frequency || 'N/A',
+        notes: sanitizeInput(income.notes || '')
+      });
+    });
+
+    // Formato de montos
+    incomeSheet.getColumn('amount').numFmt = '$#,##0';
+  }
+
+  // Hoja de Resumen
+  const summarySheet = workbook.addWorksheet('Resumen');
+  summarySheet.columns = [
+    { header: 'Concepto', key: 'concept', width: 30 },
+    { header: 'Valor', key: 'value', width: 20 }
+  ];
+
+  // Aplicar estilo a encabezados
+  summarySheet.getRow(1).eachCell((cell) => {
+    cell.style = headerStyle;
+  });
+
+  // Datos de resumen
+  summarySheet.addRow({
+    concept: 'Período',
+    value: `${data.summary.period.start_date} a ${data.summary.period.end_date}`
+  });
+  summarySheet.addRow({
+    concept: 'Total Ingresos',
+    value: data.summary.income.total
+  });
+  summarySheet.addRow({
+    concept: 'Total Gastos',
+    value: data.summary.expenses.total
+  });
+  summarySheet.addRow({
+    concept: 'Balance',
+    value: data.summary.balance
+  });
+
+  // Formato de montos en resumen
+  summarySheet.getCell('B3').numFmt = '$#,##0';
+  summarySheet.getCell('B4').numFmt = '$#,##0';
+  summarySheet.getCell('B5').numFmt = '$#,##0';
+
+  // Generar buffer del archivo Excel
+  const buffer = await workbook.xlsx.writeBuffer();
+
+  return {
+    buffer: buffer,
+    filename: `export_${start}_${end}.xlsx`,
+    period: { start_date: start, end_date: end },
+    records_count: {
+      expenses: data.expenses.length,
+      income: data.income.length
+    }
+  };
 }

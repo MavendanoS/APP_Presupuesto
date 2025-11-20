@@ -19,7 +19,10 @@
       <div class="row mb-4">
         <div class="col-12">
           <div class="card-responsive">
-            <h1 class="h3 mb-3">Bienvenido, {{ user()?.name }}!</h1>
+            <h1 class="h3 mb-3">
+              <i class="bi bi-house-heart-fill me-2 text-primary"></i>
+              Bienvenido, {{ user()?.name }}!
+            </h1>
             <p class="text-muted mb-1">
               Resumen del período: <strong>{{ metrics()!.period.start_date }}</strong> al <strong>{{ metrics()!.period.end_date }}</strong>
             </p>
@@ -124,7 +127,10 @@
           <!-- Gráfico de Gastos por Categoría -->
           <div class="col-12 col-lg-6">
             <div class="card-responsive">
-              <h5 class="mb-3">Distribución de Gastos por Categoría</h5>
+              <h5 class="mb-3">
+                <i class="bi bi-pie-chart-fill me-2 text-primary"></i>
+                Distribución de Gastos por Categoría
+              </h5>
               <app-expense-chart
                 [categories]="getTopCategoriesAsChartData()"
                 [chartType]="'doughnut'"
@@ -135,7 +141,10 @@
           <!-- Top 5 Categorías Tabla -->
           <div class="col-12 col-lg-6">
             <div class="card-responsive">
-              <h5 class="mb-3">Top 5 Categorías con Más Gastos</h5>
+              <h5 class="mb-3">
+                <i class="bi bi-trophy-fill me-2 text-warning"></i>
+                Top 5 Categorías con Más Gastos
+              </h5>
               <div class="table-responsive">
                 <table class="table table-hover">
                   <thead>
@@ -168,7 +177,10 @@
       <div class="row">
         <div class="col-12">
           <div class="card-responsive">
-            <h5 class="mb-3">Acciones Rápidas</h5>
+            <h5 class="mb-3">
+              <i class="bi bi-lightning-charge-fill me-2 text-primary"></i>
+              Acciones Rápidas
+            </h5>
             <div class="row g-3">
               <div class="col-12 col-sm-6 col-md-3">
                 <button class="btn btn-payment w-100 py-3" (click)="navigateToNewExpense('payment')">

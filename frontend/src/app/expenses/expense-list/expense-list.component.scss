@@ -51,29 +51,39 @@
 
 // Botones de acción modernos
 .btn-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
   padding: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid $gray-200;
-  background: white;
-  color: $gray-500;
+  border: none;
+  background: $gray-100;
+  color: $gray-600;
   transition: all 0.2s ease;
+  font-size: 1rem;
 
   &:hover {
-    background: $gray-50;
-    border-color: $primary;
-    color: $primary;
-    transform: scale(1.05);
+    background: $primary;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
   }
 
-  &.btn-danger:hover {
-    border-color: $danger;
+  &.btn-danger {
+    background: #FEE2E2;
     color: $danger;
-    background: #FEF2F2;
+
+    &:hover {
+      background: $danger;
+      color: white;
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+    }
+  }
+
+  i {
+    font-size: 1.1rem;
   }
 }
 

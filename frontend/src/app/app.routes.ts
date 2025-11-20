@@ -99,6 +99,11 @@ export const routes: Routes = [
     loadComponent: () => import('./analytics/analytics-view/analytics-view').then(m => m.AnalyticsViewComponent)
   },
   {
+    path: 'profile',
+    canActivate: [authGuard],
+    loadComponent: () => import('./user/user-profile.component').then(m => m.UserProfileComponent)
+  },
+  {
     path: '**',
     redirectTo: '/dashboard'
   }
