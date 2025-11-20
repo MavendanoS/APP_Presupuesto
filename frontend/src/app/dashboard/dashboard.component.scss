@@ -16,40 +16,10 @@
   @include hover-lift;
   position: relative;
 
-  .metric-icon {
-    width: 56px;
-    height: 56px;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
+  .metric-icon-clean {
+    font-size: 2rem;
     margin-bottom: 1rem;
-
-    &.bg-success {
-      background: #D1FAE5;
-      color: $success;
-    }
-
-    &.bg-danger {
-      background: #FEE2E2;
-      color: $danger;
-    }
-
-    &.bg-info {
-      background: #EEF2FF;
-      color: $primary;
-    }
-
-    &.bg-warning {
-      background: #FEF3C7;
-      color: $warning;
-    }
-
-    &.bg-primary {
-      background: #EEF2FF;
-      color: $primary;
-    }
+    display: block;
   }
 
   h6 {
@@ -239,7 +209,7 @@
   .metric-card {
     text-align: center;
 
-    .metric-icon {
+    .metric-icon-clean {
       margin: 0 auto 1rem;
     }
   }

@@ -77,8 +77,8 @@
                   @for (category of getCategoriesByType(type); track category.id) {
                     <tr>
                       <td class="text-center">
-                        <div class="category-icon-small" [style.background-color]="category.color">
-                          <i class="bi {{ category.icon }}"></i>
+                        <div class="category-icon-small">
+                          <i class="bi {{ category.icon }}" [style.color]="category.color"></i>
                         </div>
                       </td>
                       <td class="align-middle">

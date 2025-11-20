@@ -29,12 +29,17 @@ export class DashboardComponent implements OnInit {
   loading = signal(true);
   errorMessage = signal<string | null>(null);
   metrics = signal<DashboardMetrics | null>(null);
+  showAmounts = signal(false);
 
   constructor(
     private authService: AuthService,
     private analyticsService: AnalyticsService,
     private router: Router
-  ) {}
+  ) {
+    // Load preference from localStorage (default hidden)
+    const saved = localStorage.getItem('showAmounts');
+    this.showAmounts.set(saved === 'true');
+  }
 
   get user() {
     return this.authService.currentUser;
@@ -42,6 +47,22 @@ export class DashboardComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadMetrics();
+  }
+
+  toggleAmounts(): void {
+    const newValue = !this.showAmounts();
+    this.showAmounts.set(newValue);
+    localStorage.setItem('showAmounts', newValue.toString());
+  }
+
+  formatAmount(amount: number): string {
+    return this.showAmounts() ? this.formatCurrency(amount) : '****';
+  }
+
+  private formatCurrency(amount: number): string {
+    const rounded = Math.round(amount);
+    const formatted = rounded.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    return `$${formatted}`;
   }
 
   loadMetrics(): void {

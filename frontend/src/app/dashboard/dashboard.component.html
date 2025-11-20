@@ -19,16 +19,29 @@
       <div class="row mb-4">
         <div class="col-12">
           <div class="card-responsive">
-            <h1 class="h3 mb-3">
-              <i class="bi bi-house-heart-fill me-2 text-primary"></i>
-              Bienvenido, {{ user()?.name }}!
-            </h1>
-            <p class="text-muted mb-1">
-              Resumen del período: <strong>{{ metrics()!.period.start_date }}</strong> al <strong>{{ metrics()!.period.end_date }}</strong>
-            </p>
-            <p class="text-muted mb-0">
-              Controla tus finanzas personales de manera simple y efectiva.
-            </p>
+            <div class="d-flex justify-content-between align-items-start mb-3">
+              <div>
+                <h1 class="h3 mb-3">
+                  <i class="bi bi-house-heart-fill me-2 text-primary"></i>
+                  Bienvenido, {{ user()?.name }}!
+                </h1>
+                <p class="text-muted mb-1">
+                  Resumen del período: <strong>{{ metrics()!.period.start_date }}</strong> al <strong>{{ metrics()!.period.end_date }}</strong>
+                </p>
+                <p class="text-muted mb-0">
+                  Controla tus finanzas personales de manera simple y efectiva.
+                </p>
+              </div>
+              <button
+                type="button"
+                class="btn btn-outline-secondary btn-sm"
+                (click)="toggleAmounts()"
+                title="{{ showAmounts() ? 'Ocultar montos' : 'Mostrar montos' }}"
+              >
+                <i class="bi" [ngClass]="showAmounts() ? 'bi-eye-slash' : 'bi-eye'"></i>
+                <span class="d-none d-md-inline ms-1">{{ showAmounts() ? 'Ocultar' : 'Mostrar' }}</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -38,11 +51,9 @@
         <!-- Ingresos -->
         <div class="col-12 col-md-6 col-lg-3">
           <div class="card-responsive metric-card">
-            <div class="metric-icon bg-success">
-              <i class="bi bi-wallet2"></i>
-            </div>
+            <i class="bi bi-wallet2 metric-icon-clean text-success"></i>
             <h6 class="text-muted mb-1">Ingresos</h6>
-            <h3 class="mb-0">{{ metrics()!.income.total | clpCurrency }}</h3>
+            <h3 class="mb-0">{{ formatAmount(metrics()!.income.total) }}</h3>
             <small class="text-muted">{{ metrics()!.income.count }} registros</small>
           </div>
         </div>
@@ -50,11 +61,9 @@
         <!-- Gastos Totales -->
         <div class="col-12 col-md-6 col-lg-3">
           <div class="card-responsive metric-card">
-            <div class="metric-icon bg-danger">
-              <i class="bi bi-cash-stack"></i>
-            </div>
+            <i class="bi bi-cash-stack metric-icon-clean text-danger"></i>
             <h6 class="text-muted mb-1">Gastos Totales</h6>
-            <h3 class="mb-0">{{ metrics()!.expenses.total | clpCurrency }}</h3>
+            <h3 class="mb-0">{{ formatAmount(metrics()!.expenses.total) }}</h3>
             <small class="text-muted">{{ getTotalExpenseCount() }} registros</small>
           </div>
         </div>
@@ -62,11 +71,9 @@
         <!-- Balance -->
         <div class="col-12 col-md-6 col-lg-3">
           <div class="card-responsive metric-card">
-            <div class="metric-icon" [ngClass]="metrics()!.balance >= 0 ? 'bg-info' : 'bg-warning'">
-              <i class="bi" [ngClass]="getBalanceIcon()"></i>
-            </div>
+            <i class="bi metric-icon-clean" [ngClass]="[getBalanceIcon(), metrics()!.balance >= 0 ? 'text-primary' : 'text-warning']"></i>
             <h6 class="text-muted mb-1">Balance</h6>
-            <h3 class="mb-0" [ngClass]="getBalanceClass()">{{ metrics()!.balance | clpCurrency }}</h3>
+            <h3 class="mb-0" [ngClass]="getBalanceClass()">{{ formatAmount(metrics()!.balance) }}</h3>
             <small [ngClass]="getBalanceClass()">{{ getBalanceText() }}</small>
           </div>
         </div>
@@ -74,9 +81,7 @@
         <!-- Categorías con más gastos -->
         <div class="col-12 col-md-6 col-lg-3">
           <div class="card-responsive metric-card">
-            <div class="metric-icon bg-primary">
-              <i class="bi bi-tags"></i>
-            </div>
+            <i class="bi bi-tags metric-icon-clean text-primary"></i>
             <h6 class="text-muted mb-1">Categorías Activas</h6>
             <h3 class="mb-0">{{ getTotalCategories() }}</h3>
             <small class="text-muted">Este período</small>
@@ -91,7 +96,7 @@
             <div class="d-flex justify-content-between align-items-center">
               <div>
                 <h6 class="text-muted mb-1">Pagos</h6>
-                <h4 class="mb-0 text-payment">{{ getExpensesByType('payment') | clpCurrency }}</h4>
+                <h4 class="mb-0 text-payment">{{ formatAmount(getExpensesByType('payment')) }}</h4>
               </div>
               <i class="bi bi-calendar-check display-6 text-payment opacity-50"></i>
             </div>
@@ -102,7 +107,7 @@
             <div class="d-flex justify-content-between align-items-center">
               <div>
                 <h6 class="text-muted mb-1">Compras</h6>
-                <h4 class="mb-0 text-purchase">{{ getExpensesByType('purchase') | clpCurrency }}</h4>
+                <h4 class="mb-0 text-purchase">{{ formatAmount(getExpensesByType('purchase')) }}</h4>
               </div>
               <i class="bi bi-cart display-6 text-purchase opacity-50"></i>
             </div>
@@ -113,7 +118,7 @@
             <div class="d-flex justify-content-between align-items-center">
               <div>
                 <h6 class="text-muted mb-1">Gastos Hormiga</h6>
-                <h4 class="mb-0 text-small-expense">{{ getExpensesByType('small_expense') | clpCurrency }}</h4>
+                <h4 class="mb-0 text-small-expense">{{ formatAmount(getExpensesByType('small_expense')) }}</h4>
               </div>
               <i class="bi bi-cup-hot display-6 text-small-expense opacity-50"></i>
             </div>
