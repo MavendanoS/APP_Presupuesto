@@ -19,7 +19,7 @@ export async function registerUser(db, userData, jwtSecret) {
   const { email, password, name } = userData;
 
   // Validar email
-  const cleanEmail = sanitizeInput(email);
+  const cleanEmail = sanitizeInput(email).toLowerCase(); // Convertir a minúsculas
   if (!isValidEmail(cleanEmail)) {
     throw new Error('Email inválido');
   }
@@ -82,7 +82,7 @@ export async function loginUser(db, credentials, jwtSecret) {
   const { email, password } = credentials;
 
   // Validar email
-  const cleanEmail = sanitizeInput(email);
+  const cleanEmail = sanitizeInput(email).toLowerCase(); // Convertir a minúsculas
   if (!isValidEmail(cleanEmail)) {
     throw new Error('Credenciales inválidas');
   }
@@ -137,7 +137,7 @@ export async function getCurrentUser(db, userId) {
  * @returns {Promise<Object>} { token }
  */
 export async function generatePasswordResetToken(db, email) {
-  const cleanEmail = sanitizeInput(email);
+  const cleanEmail = sanitizeInput(email).toLowerCase(); // Convertir a minúsculas
   if (!isValidEmail(cleanEmail)) {
     throw new Error('Email inválido');
   }

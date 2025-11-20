@@ -31,7 +31,7 @@ export async function createUser(db, userData) {
 }
 
 /**
- * Buscar usuario por email
+ * Buscar usuario por email (case-insensitive)
  * @param {Object} db - Binding de D1
  * @param {string} email
  * @returns {Promise<Object|null>} Usuario o null si no existe
@@ -40,7 +40,7 @@ export async function findUserByEmail(db, email) {
   const user = await db.prepare(`
     SELECT id, email, password_hash, name, created_at
     FROM users
-    WHERE email = ?
+    WHERE LOWER(email) = LOWER(?)
   `).bind(email).first();
 
   return user || null;
