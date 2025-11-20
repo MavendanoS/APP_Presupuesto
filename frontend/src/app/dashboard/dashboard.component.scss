@@ -3,55 +3,98 @@
 
 .dashboard-container {
   min-height: 100vh;
-  background-color: $light-color;
+  background-color: $body-bg;
 }
 
+// Metric cards premium
 .metric-card {
+  background: white;
+  border: 1px solid $gray-200;
+  border-radius: 16px;
+  padding: 1.5rem;
+  @include shadow-sm;
+  @include hover-lift;
   position: relative;
-  padding-left: 80px;
-  min-height: 100px;
 
   .metric-icon {
-    position: absolute;
-    left: $spacing-md;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    @include flex-center;
-    color: white;
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     font-size: 1.5rem;
-    z-index: 1;
-  }
+    margin-bottom: 1rem;
 
-  h3 {
-    font-weight: 700;
-    color: $dark-color;
+    &.bg-success {
+      background: #D1FAE5;
+      color: $success;
+    }
+
+    &.bg-danger {
+      background: #FEE2E2;
+      color: $danger;
+    }
+
+    &.bg-info {
+      background: #EEF2FF;
+      color: $primary;
+    }
+
+    &.bg-warning {
+      background: #FEF3C7;
+      color: $warning;
+    }
+
+    &.bg-primary {
+      background: #EEF2FF;
+      color: $primary;
+    }
   }
 
   h6 {
-    font-size: 0.875rem;
-    font-weight: 500;
+    font-size: 0.75rem;
     text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: $gray-400;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+
+  h3 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: $gray-900;
+    line-height: 1;
+    margin-bottom: 0.25rem;
   }
 
   small {
     font-size: 0.75rem;
+    color: $gray-500;
   }
 }
 
 .metric-card-small {
-  padding: $spacing-md;
+  background: white;
+  border: 1px solid $gray-200;
+  border-radius: 12px;
+  padding: 1.5rem;
+  @include shadow-sm;
+  @include hover-lift;
 
   h4 {
     font-weight: 700;
+    font-size: 1.5rem;
   }
 
   h6 {
-    font-size: 0.875rem;
-    font-weight: 500;
+    font-size: 0.75rem;
     text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: $gray-400;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
   }
 }
 
@@ -68,28 +111,60 @@
   color: $small-expense-color !important;
 }
 
-// Badges
-.badge-payment {
-  background-color: rgba($payment-color, 0.1);
-  color: $payment-color;
-  border: 1px solid rgba($payment-color, 0.3);
+// Chart container
+.card-responsive {
+  background: white;
+  border: 1px solid $gray-200;
+  border-radius: 16px;
+  padding: 1.5rem;
+  @include shadow-sm;
+
+  h5 {
+    color: $gray-900;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+  }
+
+  h1 {
+    color: $gray-900;
+    font-weight: 700;
+  }
+
+  .text-muted {
+    color: $gray-500 !important;
+  }
 }
 
-.badge-purchase {
-  background-color: rgba($purchase-color, 0.1);
-  color: $purchase-color;
-  border: 1px solid rgba($purchase-color, 0.3);
-}
+// Table styles
+.table {
+  color: $gray-700;
 
-.badge-small-expense {
-  background-color: rgba($small-expense-color, 0.1);
-  color: $small-expense-color;
-  border: 1px solid rgba($small-expense-color, 0.3);
-}
+  thead th {
+    border-bottom: 2px solid $gray-200;
+    color: $gray-600;
+    font-weight: 600;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
 
-.badge-sm {
-  font-size: 0.75rem;
-  padding: 0.25rem 0.5rem;
+  tbody tr {
+    border-bottom: 1px solid $gray-100;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: $gray-50;
+    }
+
+    td {
+      padding: 1rem;
+      vertical-align: middle;
+
+      strong {
+        color: $gray-900;
+      }
+    }
+  }
 }
 
 // Quick action buttons
@@ -97,12 +172,13 @@
 .btn-purchase,
 .btn-small-expense {
   font-weight: 600;
+  border-radius: 12px;
+  transition: all 0.2s ease;
   border: 2px solid;
-  transition: all 0.3s ease;
 
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
   }
 }
 
@@ -113,6 +189,7 @@
 
   &:hover {
     background-color: $payment-color;
+    border-color: $payment-color;
     color: white;
   }
 }
@@ -124,6 +201,7 @@
 
   &:hover {
     background-color: $purchase-color;
+    border-color: $purchase-color;
     color: white;
   }
 }
@@ -135,29 +213,34 @@
 
   &:hover {
     background-color: $small-expense-color;
+    border-color: $small-expense-color;
     color: white;
+  }
+}
+
+.btn-outline-primary {
+  border: 2px solid $primary;
+  color: $primary;
+  font-weight: 600;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: $primary;
+    border-color: $primary;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(79, 70, 229, 0.3);
   }
 }
 
 // Responsive adjustments
 @include respond-to('xs') {
   .metric-card {
-    padding-left: $spacing-md;
-    padding-top: 70px;
-    padding-bottom: $spacing-md;
-    min-height: 140px;
     text-align: center;
 
     .metric-icon {
-      left: 50%;
-      top: $spacing-md;
-      transform: translateX(-50%) translateY(0);
-      z-index: 1;
-    }
-
-    h3, h6, small {
-      position: relative;
-      z-index: 2;
+      margin: 0 auto 1rem;
     }
   }
 }

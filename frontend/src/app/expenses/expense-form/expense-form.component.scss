@@ -6,39 +6,38 @@
   margin: 0 auto;
   padding: 2rem 1rem;
 
-  @include respond-to('mobile') {
+  @include respond-to('xs') {
     padding: 1rem 0.5rem;
   }
 }
 
 .form-card {
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  border: none;
-  border-radius: 12px;
-  overflow: hidden;
+  background: white;
+  border: 1px solid $gray-200;
+  border-radius: 16px;
+  padding: 2rem;
+  @include shadow-sm;
+
+  @include respond-to('xs') {
+    padding: 1.5rem;
+  }
 
   .card-header {
-    background: linear-gradient(135deg, $primary-color 0%, darken($primary-color, 10%) 100%);
+    background: linear-gradient(135deg, $primary 0%, #4338CA 100%);
     color: white;
     padding: 1.5rem;
     border: none;
+    border-radius: 12px;
+    margin-bottom: 2rem;
 
     h2 {
       margin: 0;
       font-size: 1.5rem;
       font-weight: 600;
 
-      @include respond-to('mobile') {
+      @include respond-to('xs') {
         font-size: 1.25rem;
       }
-    }
-  }
-
-  .card-body {
-    padding: 2rem;
-
-    @include respond-to('mobile') {
-      padding: 1.5rem;
     }
   }
 }
@@ -47,77 +46,133 @@
   margin-bottom: 1.5rem;
 
   label {
+    color: $gray-700;
     font-weight: 500;
-    color: $dark-color;
+    font-size: 0.875rem;
     margin-bottom: 0.5rem;
     display: block;
 
     .required {
-      color: $danger-color;
+      color: $danger;
       margin-left: 0.25rem;
     }
   }
 
   .form-control,
   .form-select {
+    border: 1px solid $gray-200;
     border-radius: 8px;
-    border: 1px solid #dee2e6;
     padding: 0.75rem 1rem;
-    transition: all 0.2s;
+    font-size: 0.9375rem;
+    transition: all 0.2s ease;
+    color: $gray-900;
 
     &:focus {
-      border-color: $primary-color;
-      box-shadow: 0 0 0 0.2rem rgba($primary-color, 0.25);
+      border-color: $primary;
+      box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+      outline: none;
+    }
+
+    &::placeholder {
+      color: $gray-400;
     }
 
     &.is-invalid {
-      border-color: $danger-color;
+      border-color: $danger;
 
       &:focus {
-        box-shadow: 0 0 0 0.2rem rgba($danger-color, 0.25);
+        box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
       }
     }
   }
 
   .invalid-feedback {
     display: block;
-    margin-top: 0.25rem;
+    margin-top: 0.375rem;
     font-size: 0.875rem;
-    color: $danger-color;
+    color: $danger;
   }
 }
 
+// Botones de tipo de gasto modernos
 .type-badges {
-  display: flex;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
 
-  @include respond-to('mobile') {
-    flex-direction: column;
+  @include respond-to('xs') {
+    grid-template-columns: 1fr;
   }
 
   .badge-option {
-    flex: 1;
-    padding: 0.75rem 1rem;
-    border: 2px solid #dee2e6;
-    border-radius: 8px;
+    padding: 1.25rem;
+    border: 2px solid $gray-200;
+    border-radius: 12px;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.2s ease;
     text-align: center;
+    background: white;
 
     &:hover {
-      border-color: $primary-color;
-      background-color: rgba($primary-color, 0.05);
+      border-color: $primary;
+      background: #EEF2FF;
+      transform: translateY(-2px);
     }
 
     &.active {
-      border-color: $primary-color;
-      background-color: $primary-color;
+      border-color: $primary;
+      background: $primary;
       color: white;
+    }
+
+    i {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+      display: block;
     }
 
     input[type="radio"] {
       display: none;
+    }
+  }
+
+  .badge-payment {
+    &:hover:not(.active) {
+      border-color: $danger;
+      background: #FEF2F2;
+      color: #991B1B;
+    }
+
+    &.active {
+      border-color: $danger;
+      background: $danger;
+    }
+  }
+
+  .badge-purchase {
+    &:hover:not(.active) {
+      border-color: $success;
+      background: #ECFDF5;
+      color: #065F46;
+    }
+
+    &.active {
+      border-color: $success;
+      background: $success;
+    }
+  }
+
+  .badge-small-expense {
+    &:hover:not(.active) {
+      border-color: $warning;
+      background: #FFFBEB;
+      color: #92400E;
+    }
+
+    &.active {
+      border-color: $warning;
+      background: $warning;
     }
   }
 }
@@ -128,7 +183,7 @@
   justify-content: flex-end;
   margin-top: 2rem;
 
-  @include respond-to('mobile') {
+  @include respond-to('xs') {
     flex-direction: column-reverse;
 
     .btn {
@@ -138,26 +193,47 @@
 
   .btn {
     min-width: 120px;
-    padding: 0.75rem 1.5rem;
+    padding: 0.875rem 2rem;
     border-radius: 8px;
-    font-weight: 500;
-    transition: all 0.2s;
+    font-weight: 600;
+    transition: all 0.2s ease;
 
     &:not(:disabled):hover {
       transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+    }
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, $primary 0%, #4338CA 100%);
+    border: none;
+
+    &:hover {
+      box-shadow: 0 8px 20px rgba(79, 70, 229, 0.3);
+    }
+  }
+
+  .btn-secondary {
+    background: white;
+    border: 2px solid $gray-200;
+    color: $gray-700;
+
+    &:hover {
+      background: $gray-50;
+      border-color: $gray-300;
     }
   }
 }
 
 .alert {
-  border-radius: 8px;
+  border-radius: 12px;
   border: none;
   padding: 1rem;
   margin-bottom: 1.5rem;
 
   &.alert-danger {
-    background-color: rgba($danger-color, 0.1);
-    color: darken($danger-color, 10%);
+    background: #FEF2F2;
+    color: #991B1B;
+    border-left: 4px solid $danger;
   }
 }

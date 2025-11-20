@@ -18,17 +18,17 @@
   align-items: center;
   justify-content: center;
   font-size: 1.5rem;
-  color: $text-color;
+  color: $gray-900;
 
   &:hover {
-    border-color: $primary-color;
-    background: rgba($primary-color, 0.05);
+    border-color: $primary;
+    background: rgba($primary, 0.05);
     transform: translateY(-2px);
   }
 
   &.active {
-    border-color: $primary-color;
-    background: $primary-color;
+    border-color: $primary;
+    background: $primary;
     color: white;
   }
 }
@@ -56,7 +56,7 @@
   }
 
   &.active {
-    border-color: $text-color;
+    border-color: $gray-900;
     transform: scale(1.1);
   }
 }

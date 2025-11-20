@@ -1,23 +1,49 @@
-.card {
-  border: none;
-  border-radius: 12px;
+@import '../../../scss/variables';
+@import '../../../scss/mixins';
+
+.export-card {
+  background: white;
+  border: 1px solid $gray-200;
+  border-radius: 16px;
+  padding: 2rem;
+  @include shadow-sm;
+
+  h4 {
+    color: $gray-900;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+  }
 }
 
 .card-check {
   padding: 1rem;
-  border: 2px solid #e5e7eb;
-  border-radius: 8px;
+  border: 2px solid $gray-200;
+  border-radius: 12px;
   transition: all 0.2s ease;
   cursor: pointer;
   height: 100%;
+  background: white;
 
   &:hover {
-    border-color: #3B82F6;
-    background-color: rgba(59, 130, 246, 0.05);
+    border-color: $primary;
+    background: #EEF2FF;
+    transform: translateY(-2px);
   }
 
   .form-check-input {
     margin-top: 0.5rem;
+    width: 1.25rem;
+    height: 1.25rem;
+    border: 2px solid $gray-200;
+
+    &:checked {
+      background-color: $primary;
+      border-color: $primary;
+    }
+
+    &:focus {
+      box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+    }
   }
 
   .form-check-label {
@@ -28,22 +54,38 @@
     strong {
       display: block;
       margin-bottom: 0.25rem;
+      color: $gray-900;
     }
 
     small {
       font-size: 0.75rem;
+      color: $gray-500;
     }
   }
 
   &:has(.form-check-input:checked) {
-    border-color: #3B82F6;
-    background-color: rgba(59, 130, 246, 0.1);
+    border-color: $primary;
+    background: #EEF2FF;
   }
 }
 
-.btn-lg {
-  padding: 0.75rem 1.5rem;
+.btn-primary {
+  background: linear-gradient(135deg, $primary 0%, #4338CA 100%);
+  border: none;
+  border-radius: 8px;
+  padding: 0.875rem 2rem;
   font-weight: 600;
+  transition: all 0.2s ease;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(79, 70, 229, 0.3);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
 
   i {
     font-size: 1.25rem;
@@ -51,10 +93,18 @@
 }
 
 .alert-info {
-  border-left: 4px solid #3B82F6;
+  background: #EEF2FF;
+  border: 1px solid #C7D2FE;
+  border-left: 4px solid $primary;
+  border-radius: 12px;
+  color: $gray-700;
 }
 
 @media (max-width: 768px) {
+  .export-card {
+    padding: 1.5rem;
+  }
+
   .card-check {
     padding: 0.75rem;
 
@@ -65,8 +115,8 @@
     }
   }
 
-  .btn-lg {
-    padding: 0.6rem 1rem;
+  .btn-primary {
+    padding: 0.75rem 1.5rem;
     font-size: 0.9rem;
   }
 }

@@ -4,8 +4,8 @@
 .table {
   th {
     font-weight: 600;
-    color: $dark-color;
-    border-bottom: 2px solid $primary-color;
+    color: $gray-900;
+    border-bottom: 2px solid $primary;
 
     &.sortable {
       cursor: pointer;
@@ -13,13 +13,13 @@
       @include transition(background-color);
 
       &:hover {
-        background-color: rgba($primary-color, 0.05);
+        background-color: rgba($primary, 0.05);
       }
     }
 
     i {
       font-size: 0.875rem;
-      color: $primary-color;
+      color: $primary;
     }
   }
 
@@ -27,7 +27,7 @@
     @include transition(background-color);
 
     &:hover {
-      background-color: rgba($primary-color, 0.05);
+      background-color: rgba($primary, 0.05);
     }
   }
 }
@@ -39,7 +39,7 @@
     border-left: 3px solid transparent;
 
     &:hover {
-      border-left-color: $primary-color;
+      border-left-color: $primary;
       box-shadow: $box-shadow;
     }
 

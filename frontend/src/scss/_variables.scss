@@ -1,20 +1,44 @@
 // Variables Globales - APP Presupuesto
-// Formato Chileno y Breakpoints Responsivos
+// Paleta Fintech Premium
 
-// Colores Primarios
-$primary-color: #3B82F6;
-$secondary-color: #8B5CF6;
-$success-color: #10B981;
-$danger-color: #EF4444;
-$warning-color: #F59E0B;
-$info-color: #06B6D4;
-$dark-color: #1F2937;
-$light-color: #F3F4F6;
+// PRIMARY COLORS (Fintech Premium)
+$primary: #4F46E5 !default;      // Indigo moderno
+$secondary: #7C3AED !default;    // Purple accent
+$success: #10B981 !default;      // Emerald
+$danger: #EF4444 !default;       // Soft red
+$warning: #F59E0B !default;      // Amber
+$info: #3B82F6 !default;         // Sky blue
 
-// Colores de Gastos
-$payment-color: #EF4444;      // Rojo para pagos
-$purchase-color: #10B981;     // Verde para compras
-$small-expense-color: #F59E0B; // Naranja para gastos hormiga
+// NEUTRALS (Slate palette - sistema completo)
+$gray-50: #F8FAFC !default;
+$gray-100: #F1F5F9 !default;
+$gray-200: #E2E8F0 !default;
+$gray-300: #CBD5E1 !default;
+$gray-400: #94A3B8 !default;
+$gray-500: #64748B !default;
+$gray-600: #475569 !default;
+$gray-700: #334155 !default;
+$gray-800: #1E293B !default;
+$gray-900: #0F172A !default;
+
+// BACKGROUNDS
+$body-bg: $gray-50 !default;
+$card-bg: #FFFFFF !default;
+
+// EXPENSE TYPES (mantener compatibilidad)
+$color-payment: $danger !default;
+$color-purchase: $success !default;
+$color-small-expense: $warning !default;
+
+// Legacy support
+$payment-color: $danger;
+$purchase-color: $success;
+$small-expense-color: $warning;
+
+// BORDERS
+$border-color: $gray-200 !default;
+$border-radius: 0.5rem !default;
+$border-radius-lg: 1rem !default;
 
 // Breakpoints Responsivos (Bootstrap defaults)
 $breakpoint-xs: 0;
@@ -25,7 +49,7 @@ $breakpoint-xl: 1200px;  // Desktop
 $breakpoint-xxl: 1400px; // Large desktop
 
 // Tipografía
-$font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+$font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 $font-size-base: 1rem;
 $font-size-small: 0.875rem;
 $font-size-large: 1.125rem;
@@ -38,18 +62,15 @@ $spacing-md: $spacing-unit * 3;
 $spacing-lg: $spacing-unit * 4;
 $spacing-xl: $spacing-unit * 6;
 
-// Bordes y Sombras
-$border-radius: 0.5rem;
-$border-radius-sm: 0.25rem;
-$border-radius-lg: 0.75rem;
-$box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-$box-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+// Bordes y Sombras (modernizados)
+$border-radius-sm: 0.375rem;
+$box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+$box-shadow-lg: 0 10px 40px -5px rgba(0, 0, 0, 0.1);
 
 // Transiciones
-$transition-speed: 0.3s;
-$transition-ease: ease-in-out;
+$transition-speed: 0.2s;
+$transition-ease: ease;
 
 // Additional Colors
-$border-color: #E5E7EB;
-$background-color: #F9FAFB;
-$text-color: #1F2937;
+$background-color: $gray-50;
+$text-color: $gray-900;

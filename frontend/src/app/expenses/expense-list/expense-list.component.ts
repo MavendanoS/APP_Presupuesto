@@ -5,7 +5,6 @@ import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { ExpenseService } from '../../core/services/expense.service';
 import { CategoryService } from '../../core/services/category.service';
 import { Expense, Category, ExpenseType, ExpenseFilters } from '../../core/models';
-import { ResponsiveTableComponent, TableColumn } from '../../shared/components/responsive-table/responsive-table.component';
 import { LoadingComponent } from '../../shared/components/loading/loading.component';
 import { ErrorMessageComponent } from '../../shared/components/error-message/error-message.component';
 import { NavbarComponent } from '../../shared/components/navbar/navbar.component';
@@ -19,7 +18,6 @@ import { ExpenseTypePipe } from '../../shared/pipes/expense-type.pipe';
     CommonModule,
     RouterModule,
     ReactiveFormsModule,
-    ResponsiveTableComponent,
     LoadingComponent,
     ErrorMessageComponent,
     NavbarComponent,
@@ -53,16 +51,6 @@ export class ExpenseListComponent implements OnInit {
     { value: 'payment', label: 'Pagos' },
     { value: 'purchase', label: 'Compras' },
     { value: 'small_expense', label: 'Gastos Hormiga' }
-  ];
-
-  // Columnas para la tabla
-  columns: TableColumn[] = [
-    { key: 'date', label: 'Fecha', sortable: true },
-    { key: 'type', label: 'Tipo', sortable: true },
-    { key: 'description', label: 'Descripción', sortable: false },
-    { key: 'category_name', label: 'Categoría', sortable: true },
-    { key: 'amount', label: 'Monto', sortable: true },
-    { key: 'actions', label: 'Acciones', sortable: false }
   ];
 
   constructor(
@@ -149,21 +137,6 @@ export class ExpenseListComponent implements OnInit {
     }
 
     return filters;
-  }
-
-  onSort(event: { column: string; direction: 'asc' | 'desc' }): void {
-    // Implementar ordenamiento local
-    const data = [...this.expenses()];
-    data.sort((a: any, b: any) => {
-      const aValue = a[event.column];
-      const bValue = b[event.column];
-
-      if (aValue < bValue) return event.direction === 'asc' ? -1 : 1;
-      if (aValue > bValue) return event.direction === 'asc' ? 1 : -1;
-      return 0;
-    });
-
-    this.expenses.set(data);
   }
 
   onPageChange(page: number): void {

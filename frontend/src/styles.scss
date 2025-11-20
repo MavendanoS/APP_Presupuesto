@@ -16,18 +16,20 @@ body {
   height: 100%;
   font-family: $font-family;
   font-size: $font-size-base;
-  color: $dark-color;
-  background-color: $light-color;
+  color: $text-color;
+  background-color: $body-bg;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 // Links
 a {
-  color: $primary-color;
+  color: $primary;
   text-decoration: none;
   @include transition(color);
 
   &:hover {
-    color: darken($primary-color, 10%);
+    color: #4338CA;
     text-decoration: underline;
   }
 }
@@ -80,11 +82,11 @@ a {
   font-weight: 600;
 
   &.positive {
-    color: $success-color;
+    color: $success;
   }
 
   &.negative {
-    color: $danger-color;
+    color: $danger;
   }
 }
 
@@ -119,4 +121,124 @@ a {
   .no-print {
     display: none !important;
   }
+}
+
+// FINTECH PREMIUM STYLES
+
+// Escala tipográfica
+.text-xs { font-size: 0.75rem; }
+.text-sm { font-size: 0.875rem; }
+.text-base { font-size: 1rem; }
+.text-lg { font-size: 1.125rem; }
+.text-xl { font-size: 1.25rem; }
+.text-2xl { font-size: 1.5rem; }
+.text-3xl { font-size: 1.875rem; }
+
+// Cards modernas
+.card-modern {
+  background: white;
+  border: 1px solid $gray-200;
+  border-radius: 16px;
+  @include shadow-sm;
+  transition: all 0.2s ease;
+
+  &:hover {
+    @include shadow-md;
+  }
+}
+
+.glass-card {
+  @include glass-card;
+}
+
+// Transiciones globales suaves
+* {
+  transition-duration: 0.2s;
+  transition-timing-function: ease;
+}
+
+// Animaciones
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -1000px 0; }
+  100% { background-position: 1000px 0; }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease;
+}
+
+// Form Controls Premium
+.form-control,
+.form-select {
+  border: 1px solid $gray-200;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  font-size: 0.9375rem;
+  transition: all 0.2s ease;
+  color: $gray-900;
+
+  &:focus {
+    border-color: $primary;
+    box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+    outline: none;
+  }
+
+  &::placeholder {
+    color: $gray-400;
+  }
+
+  &.is-invalid {
+    border-color: $danger;
+
+    &:focus {
+      box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
+    }
+  }
+}
+
+.form-label {
+  color: $gray-700;
+  font-weight: 500;
+  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
+}
+
+.form-check-input {
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 2px solid $gray-200;
+
+  &:checked {
+    background-color: $primary;
+    border-color: $primary;
+  }
+
+  &:focus {
+    box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+  }
+}
+
+.input-group-text {
+  background: $gray-50;
+  border: 1px solid $gray-200;
+  color: $gray-500;
+  font-weight: 500;
+}
+
+.invalid-feedback {
+  color: $danger;
+  font-size: 0.875rem;
+  margin-top: 0.375rem;
+}
+
+// Radio buttons custom
+.btn-check:checked + .btn-outline-primary {
+  background: $primary;
+  border-color: $primary;
+  color: white;
 }
