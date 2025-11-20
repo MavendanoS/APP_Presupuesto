@@ -93,10 +93,13 @@
                       type="button"
                       class="color-button"
                       [class.active]="categoryForm.get('color')?.value === color"
-                      [style.background-color]="color"
+                      [class.transparent-button]="color === 'transparent'"
+                      [style.background-color]="color !== 'transparent' ? color : 'white'"
                       (click)="categoryForm.patchValue({ color: color })"
                     >
-                      @if (categoryForm.get('color')?.value === color) {
+                      @if (color === 'transparent') {
+                        <i class="bi bi-circle-slash" [class.text-primary]="categoryForm.get('color')?.value === color"></i>
+                      } @else if (categoryForm.get('color')?.value === color) {
                         <i class="bi bi-check text-white"></i>
                       }
                     </button>

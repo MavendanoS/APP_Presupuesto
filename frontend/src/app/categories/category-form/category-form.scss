@@ -79,6 +79,32 @@
       font-weight: bold;
     }
   }
+
+  &.transparent-button {
+    background: white !important;
+    border: 3px dashed $gray-400;
+    position: relative;
+
+    i {
+      color: $gray-600;
+      font-size: 2rem;
+    }
+
+    &:hover {
+      border-color: $primary;
+      i {
+        color: $primary;
+      }
+    }
+
+    &.active {
+      border-color: $primary;
+      border-style: solid;
+      i {
+        color: $primary;
+      }
+    }
+  }
 }
 
 .category-preview {
