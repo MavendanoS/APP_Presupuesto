@@ -7,6 +7,7 @@ import { hashPassword, verifyPassword } from '../utils/hash.js';
 import { createToken } from '../utils/jwt.js';
 import { isValidEmail, validatePassword, validateName, sanitizeInput } from '../utils/validators.js';
 import { createUser, findUserByEmail, findUserById } from '../db/users.js';
+import { sendPasswordResetEmail, sendPasswordChangedEmail } from './emailService.js';
 
 /**
  * Registrar un nuevo usuario
@@ -131,12 +132,14 @@ export async function getCurrentUser(db, userId) {
 }
 
 /**
- * Generar token de recuperación de contraseña
+ * Generar token de recuperación de contraseña y enviar email
  * @param {Object} db - D1 database binding
  * @param {string} email - Email del usuario
- * @returns {Promise<Object>} { token }
+ * @param {string} resendApiKey - API key de Resend
+ * @param {string} frontendUrl - URL del frontend
+ * @returns {Promise<Object>} { message }
  */
-export async function generatePasswordResetToken(db, email) {
+export async function generatePasswordResetToken(db, email, resendApiKey, frontendUrl) {
   const cleanEmail = sanitizeInput(email).toLowerCase(); // Convertir a minúsculas
   if (!isValidEmail(cleanEmail)) {
     throw new Error('Email inválido');
@@ -146,7 +149,8 @@ export async function generatePasswordResetToken(db, email) {
   const user = await findUserByEmail(db, cleanEmail);
   if (!user) {
     // Por seguridad, no revelar si el email existe o no
-    throw new Error('Si el email existe, se enviará un enlace de recuperación');
+    // Retornar mensaje genérico
+    return { message: 'Si el email existe, se enviará un enlace de recuperación' };
   }
 
   // Generar token aleatorio (32 bytes = 64 caracteres hex)
@@ -170,7 +174,15 @@ export async function generatePasswordResetToken(db, email) {
     VALUES (?, ?, ?)
   `).bind(user.id, token, expiresAt).run();
 
-  return { token, email: user.email };
+  // Enviar email con el link de recuperación
+  try {
+    await sendPasswordResetEmail(resendApiKey, user.email, token, frontendUrl);
+  } catch (error) {
+    console.error('❌ Error al enviar email de recuperación:', error);
+    // No fallar el proceso si el email falla
+  }
+
+  return { message: 'Si el email existe, se enviará un enlace de recuperación' };
 }
 
 /**
@@ -178,9 +190,10 @@ export async function generatePasswordResetToken(db, email) {
  * @param {Object} db - D1 database binding
  * @param {string} token - Token de recuperación
  * @param {string} newPassword - Nueva contraseña
+ * @param {string} resendApiKey - API key de Resend (opcional)
  * @returns {Promise<void>}
  */
-export async function resetPasswordWithToken(db, token, newPassword) {
+export async function resetPasswordWithToken(db, token, newPassword, resendApiKey) {
   // Validar nueva contraseña
   const passwordValidation = validatePassword(newPassword);
   if (!passwordValidation.isValid) {
@@ -199,6 +212,12 @@ export async function resetPasswordWithToken(db, token, newPassword) {
     throw new Error('Token inválido o expirado');
   }
 
+  // Obtener email del usuario
+  const user = await findUserById(db, resetToken.user_id);
+  if (!user) {
+    throw new Error('Usuario no encontrado');
+  }
+
   // Hashear nueva contraseña
   const password_hash = await hashPassword(newPassword);
 
@@ -215,6 +234,16 @@ export async function resetPasswordWithToken(db, token, newPassword) {
     SET used = 1
     WHERE id = ?
   `).bind(resetToken.id).run();
+
+  // Enviar email de confirmación
+  if (resendApiKey) {
+    try {
+      await sendPasswordChangedEmail(resendApiKey, user.email);
+    } catch (error) {
+      console.error('❌ Error al enviar email de confirmación:', error);
+      // No fallar el proceso si el email falla
+    }
+  }
 }
 
 /**

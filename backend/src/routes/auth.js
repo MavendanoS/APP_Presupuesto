@@ -201,15 +201,16 @@ authRouter.post('/forgot-password', withRateLimit(async (request, env) => {
       });
     }
 
-    const result = await generatePasswordResetToken(env.DB, email);
+    const result = await generatePasswordResetToken(
+      env.DB,
+      email,
+      env.RESEND_API_KEY,
+      env.FRONTEND_URL
+    );
 
-    // NOTA: En producción, aquí se enviaría un email con el token
-    // Por ahora, devolvemos el token directamente para desarrollo
     return new Response(JSON.stringify({
       success: true,
-      message: 'Si el email existe, se ha generado un token de recuperación',
-      // TODO: Remover en producción cuando se implemente envío de emails
-      data: { resetToken: result.token }
+      message: result.message
     }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' }
@@ -244,7 +245,7 @@ authRouter.post('/reset-password', async (request, env) => {
       });
     }
 
-    await resetPasswordWithToken(env.DB, token, newPassword);
+    await resetPasswordWithToken(env.DB, token, newPassword, env.RESEND_API_KEY);
 
     return new Response(JSON.stringify({
       success: true,

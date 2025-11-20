@@ -114,4 +114,24 @@ export class AuthService {
       }
     });
   }
+
+  /**
+   * Solicitar recuperación de contraseña
+   */
+  forgotPassword(email: string): Observable<{ success: boolean; message: string }> {
+    return this.http.post<{ success: boolean; message: string }>(
+      `${this.API_URL}/forgot-password`,
+      { email }
+    );
+  }
+
+  /**
+   * Restablecer contraseña con token
+   */
+  resetPassword(token: string, newPassword: string): Observable<{ success: boolean; message: string }> {
+    return this.http.post<{ success: boolean; message: string }>(
+      `${this.API_URL}/reset-password`,
+      { token, newPassword }
+    );
+  }
 }

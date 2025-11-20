@@ -28,7 +28,13 @@
       "Bash(dir \"C:\\Users\\CL163284391\\Documents\\GitHub_Projects\\APP_Presupuesto\\frontend\\dist\\frontend\\_redirects\")",
       "Bash(category.model.ts)",
       "Bash(echo:*)",
-      "Bash(\"C:\\Users\\CL163284391\\Documents\\GitHub_Projects\\APP_Presupuesto\\frontend\\src\\app\\core\\services\\category.service.ts\")"
+      "Bash(\"C:\\Users\\CL163284391\\Documents\\GitHub_Projects\\APP_Presupuesto\\frontend\\src\\app\\core\\services\\category.service.ts\")",
+      "Bash(npx wrangler pages deploy:*)",
+      "Bash(git merge:*)",
+      "Bash(npx wrangler pages deployment:*)",
+      "Bash(npx wrangler deploy)",
+      "Bash(npx wrangler tail:*)",
+      "Bash(git pull:*)"
     ],
     "deny": [],
     "ask": []
