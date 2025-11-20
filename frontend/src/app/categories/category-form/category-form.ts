@@ -33,9 +33,10 @@ export class CategoryFormComponent implements OnInit {
   ];
 
   icons: string[] = [
-    'tag', 'credit-card', 'wallet2', 'cart', 'bag', 'house',
-    'car-front', 'phone', 'laptop', 'cup', 'lightbulb', 'heart',
-    'gift', 'music-note', 'film', 'book', 'bicycle', 'briefcase'
+    'bi-tag-fill', 'bi-credit-card-fill', 'bi-wallet2', 'bi-cart-fill', 'bi-bag-fill', 'bi-house-fill',
+    'bi-car-front-fill', 'bi-phone-fill', 'bi-laptop-fill', 'bi-cup-hot-fill', 'bi-lightbulb-fill', 'bi-heart-fill',
+    'bi-gift-fill', 'bi-music-note-beamed', 'bi-film', 'bi-book-fill', 'bi-bicycle', 'bi-briefcase-fill',
+    'bi-cash-coin', 'bi-piggy-bank-fill', 'bi-receipt-cutoff', 'bi-calculator-fill', 'bi-graph-up-arrow', 'bi-currency-dollar'
   ];
 
   colors: string[] = [
@@ -66,7 +67,7 @@ export class CategoryFormComponent implements OnInit {
       name: ['', [Validators.required, Validators.maxLength(50)]],
       type: ['payment', Validators.required],
       color: ['#3B82F6', Validators.required],
-      icon: ['tag', Validators.required]
+      icon: ['bi-tag-fill', Validators.required]
     });
   }
 

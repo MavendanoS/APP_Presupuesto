@@ -148,22 +148,26 @@
                         <strong class="text-primary">{{ expense.amount | clpCurrency }}</strong>
                       </td>
                       <td class="text-center">
-                        <button
-                          type="button"
-                          class="btn btn-icon me-2"
-                          [routerLink]="['/expenses/edit', expense.id]"
-                          title="Editar gasto"
-                        >
-                          <i class="bi bi-pencil"></i>
-                        </button>
-                        <button
-                          type="button"
-                          class="btn btn-icon btn-danger"
-                          (click)="deleteExpense(expense.id)"
-                          title="Eliminar gasto"
-                        >
-                          <i class="bi bi-trash"></i>
-                        </button>
+                        <div class="btn-group btn-group-sm">
+                          <button
+                            type="button"
+                            class="btn btn-outline-primary"
+                            [routerLink]="['/expenses/edit', expense.id]"
+                            title="Editar gasto"
+                          >
+                            <i class="bi bi-pencil"></i>
+                            <span class="d-none d-md-inline ms-1">Editar</span>
+                          </button>
+                          <button
+                            type="button"
+                            class="btn btn-outline-danger"
+                            (click)="deleteExpense(expense.id)"
+                            title="Eliminar gasto"
+                          >
+                            <i class="bi bi-trash"></i>
+                            <span class="d-none d-md-inline ms-1">Eliminar</span>
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   }
