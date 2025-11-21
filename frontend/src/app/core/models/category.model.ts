@@ -7,6 +7,7 @@ export interface Category {
   type: CategoryType;
   color: string;
   icon: string;
+  is_standard: number;
   created_at: string;
   updated_at: string;
 }

@@ -29,7 +29,8 @@ export class ApiService {
 
     if (params) {
       Object.keys(params).forEach(key => {
-        if (params[key] !== null && params[key] !== undefined) {
+        // Exclude null, undefined, and empty strings from query parameters
+        if (params[key] !== null && params[key] !== undefined && params[key] !== '') {
           console.log(`  ➡️ Adding param: ${key} = ${params[key]}`);
           httpParams = httpParams.set(key, params[key].toString());
         }
@@ -79,7 +80,8 @@ export class ApiService {
 
     if (params) {
       Object.keys(params).forEach(key => {
-        if (params[key] !== null && params[key] !== undefined) {
+        // Exclude null, undefined, and empty strings from query parameters
+        if (params[key] !== null && params[key] !== undefined && params[key] !== '') {
           httpParams = httpParams.set(key, params[key].toString());
         }
       });

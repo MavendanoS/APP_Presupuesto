@@ -93,13 +93,10 @@
                       type="button"
                       class="color-button"
                       [class.active]="categoryForm.get('color')?.value === color"
-                      [class.transparent-button]="color === 'transparent'"
-                      [style.background-color]="color !== 'transparent' ? color : 'white'"
+                      [style.background-color]="color"
                       (click)="categoryForm.patchValue({ color: color })"
                     >
-                      @if (color === 'transparent') {
-                        <i class="bi bi-circle-slash" [class.text-primary]="categoryForm.get('color')?.value === color"></i>
-                      } @else if (categoryForm.get('color')?.value === color) {
+                      @if (categoryForm.get('color')?.value === color) {
                         <i class="bi bi-check text-white"></i>
                       }
                     </button>
@@ -111,13 +108,14 @@
               <div class="mb-4">
                 <label class="form-label">Vista Previa</label>
                 <div class="category-preview">
-                  <span
-                    class="badge"
-                    [style.background-color]="categoryForm.get('color')?.value"
-                  >
-                    <i class="bi bi-{{ categoryForm.get('icon')?.value }} me-1"></i>
-                    {{ categoryForm.get('name')?.value || 'Nombre de categoría' }}
-                  </span>
+                  <i
+                    class="bi bi-{{ categoryForm.get('icon')?.value }}"
+                    [style.color]="categoryForm.get('color')?.value"
+                    style="font-size: 2.5rem;"
+                  ></i>
+                  <div class="mt-2">
+                    <strong>{{ categoryForm.get('name')?.value || 'Nombre de categoría' }}</strong>
+                  </div>
                 </div>
               </div>
 

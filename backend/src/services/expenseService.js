@@ -69,10 +69,10 @@ export async function createExpenseService(db, userId, expenseData) {
  */
 export async function getExpensesService(db, userId, filters = {}) {
   const parsedFilters = {
-    type: filters.type,
+    type: filters.type || undefined,
     category_id: filters.category_id ? parseInt(filters.category_id) : undefined,
-    start_date: filters.start_date,
-    end_date: filters.end_date,
+    start_date: filters.start_date || undefined,
+    end_date: filters.end_date || undefined,
     limit: filters.limit ? Math.min(parseInt(filters.limit), 100) : 50,
     offset: filters.offset ? parseInt(filters.offset) : 0
   };

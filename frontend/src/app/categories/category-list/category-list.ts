@@ -1,7 +1,9 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { CategoryService } from '../../core/services/category.service';
+import { DataRefreshService } from '../../core/services/data-refresh.service';
 import { Category, CategoryType, CategoryWithStats } from '../../core/models/category.model';
 import { NavbarComponent } from '../../shared/components/navbar/navbar.component';
 import { LoadingComponent } from '../../shared/components/loading/loading.component';
@@ -20,7 +22,7 @@ import { ErrorMessageComponent } from '../../shared/components/error-message/err
   templateUrl: './category-list.html',
   styleUrl: './category-list.scss'
 })
-export class CategoryListComponent implements OnInit {
+export class CategoryListComponent implements OnInit, OnDestroy {
   categories = signal<CategoryWithStats[]>([]);
   loading = signal(true);
   error = signal<string | null>(null);
@@ -34,13 +36,29 @@ export class CategoryListComponent implements OnInit {
     { value: 'small_expense', label: 'Gastos Hormiga' }
   ];
 
+  // Subscription para limpieza
+  private refreshSubscription?: Subscription;
+
   constructor(
     private categoryService: CategoryService,
-    private router: Router
+    private router: Router,
+    private dataRefresh: DataRefreshService
   ) {}
 
   ngOnInit(): void {
     this.loadCategories();
+
+    // Suscribirse a cambios de categorías para actualización automática
+    this.refreshSubscription = this.dataRefresh.categoryChanged$.subscribe(() => {
+      this.loadCategories();
+    });
+  }
+
+  ngOnDestroy(): void {
+    // Limpiar suscripción para evitar memory leaks
+    if (this.refreshSubscription) {
+      this.refreshSubscription.unsubscribe();
+    }
   }
 
   loadCategories(): void {

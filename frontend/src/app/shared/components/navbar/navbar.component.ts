@@ -18,6 +18,7 @@ export class NavbarComponent {
     { path: '/expenses', label: 'Gastos', icon: 'bi-wallet2' },
     { path: '/income', label: 'Ingresos', icon: 'bi-cash-stack' },
     { path: '/categories', label: 'Categorías', icon: 'bi-tags' },
+    { path: '/savings', label: 'Ahorros', icon: 'bi-piggy-bank' },
     { path: '/analytics', label: 'Analytics', icon: 'bi-graph-up' }
   ];
 

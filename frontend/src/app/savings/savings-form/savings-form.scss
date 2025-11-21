@@ -1,0 +1,29 @@
+.color-option {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  transition: all 0.2s;
+
+  &.active {
+    border-color: #fff;
+    box-shadow: 0 0 0 2px #000;
+  }
+
+  &:hover {
+    transform: scale(1.1);
+  }
+}
+
+.icon-option {
+  width: 50px;
+  height: 50px;
+  border-radius: 8px;
+  font-size: 1.5rem;
+
+  &.active {
+    background-color: var(--bs-primary);
+    color: white;
+    border-color: var(--bs-primary);
+  }
+}

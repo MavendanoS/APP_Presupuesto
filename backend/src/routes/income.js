@@ -25,12 +25,20 @@ incomeRouter.get('/', requireAuth(async (request, env) => {
   try {
     const userId = request.user.userId;
     const url = new URL(request.url);
+
+    // Helper function to sanitize query parameters
+    const getParam = (key) => {
+      const value = url.searchParams.get(key);
+      // Convert empty strings, 'null', 'undefined' to null
+      return (value === '' || value === 'null' || value === 'undefined') ? null : value;
+    };
+
     const filters = {
-      is_recurring: url.searchParams.get('is_recurring'),
-      start_date: url.searchParams.get('start_date'),
-      end_date: url.searchParams.get('end_date'),
-      limit: url.searchParams.get('limit'),
-      offset: url.searchParams.get('offset')
+      is_recurring: getParam('is_recurring'),
+      start_date: getParam('start_date'),
+      end_date: getParam('end_date'),
+      limit: getParam('limit'),
+      offset: getParam('offset')
     };
 
     const result = await getIncomesService(env.DB, userId, filters);
@@ -92,9 +100,16 @@ incomeRouter.get('/summary', requireAuth(async (request, env) => {
   try {
     const userId = request.user.userId;
     const url = new URL(request.url);
+
+    // Helper function to sanitize query parameters
+    const getParam = (key) => {
+      const value = url.searchParams.get(key);
+      return (value === '' || value === 'null' || value === 'undefined') ? null : value;
+    };
+
     const filters = {
-      start_date: url.searchParams.get('start_date'),
-      end_date: url.searchParams.get('end_date')
+      start_date: getParam('start_date'),
+      end_date: getParam('end_date')
     };
 
     const summary = await getIncomesSummaryService(env.DB, userId, filters);

@@ -1,8 +1,10 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { NavbarComponent } from '../../shared/components/navbar/navbar.component';
 import { IncomeService } from '../../core/services/income.service';
+import { DataRefreshService } from '../../core/services/data-refresh.service';
 import { Income } from '../../core/models/income.model';
 
 @Component({
@@ -12,7 +14,7 @@ import { Income } from '../../core/models/income.model';
   templateUrl: './income-list.html',
   styleUrl: './income-list.scss'
 })
-export class IncomeListComponent implements OnInit {
+export class IncomeListComponent implements OnInit, OnDestroy {
   incomes = signal<Income[]>([]);
   loading = signal(true);
   error = signal<string | null>(null);
@@ -25,13 +27,29 @@ export class IncomeListComponent implements OnInit {
 
   totalAmount = signal(0);
 
+  // Subscription para limpieza
+  private refreshSubscription?: Subscription;
+
   constructor(
     private incomeService: IncomeService,
-    private router: Router
+    private router: Router,
+    private dataRefresh: DataRefreshService
   ) {}
 
   ngOnInit(): void {
     this.loadIncomes();
+
+    // Suscribirse a cambios de ingresos para actualización automática
+    this.refreshSubscription = this.dataRefresh.incomeChanged$.subscribe(() => {
+      this.loadIncomes();
+    });
+  }
+
+  ngOnDestroy(): void {
+    // Limpiar suscripción para evitar memory leaks
+    if (this.refreshSubscription) {
+      this.refreshSubscription.unsubscribe();
+    }
   }
 
   loadIncomes(): void {

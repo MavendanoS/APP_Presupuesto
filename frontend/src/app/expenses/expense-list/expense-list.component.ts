@@ -1,9 +1,11 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { Subscription } from 'rxjs';
 import { ExpenseService } from '../../core/services/expense.service';
 import { CategoryService } from '../../core/services/category.service';
+import { DataRefreshService } from '../../core/services/data-refresh.service';
 import { Expense, Category, ExpenseType, ExpenseFilters } from '../../core/models';
 import { LoadingComponent } from '../../shared/components/loading/loading.component';
 import { ErrorMessageComponent } from '../../shared/components/error-message/error-message.component';
@@ -27,7 +29,7 @@ import { ExpenseTypePipe } from '../../shared/pipes/expense-type.pipe';
   templateUrl: './expense-list.component.html',
   styleUrls: ['./expense-list.component.scss']
 })
-export class ExpenseListComponent implements OnInit {
+export class ExpenseListComponent implements OnInit, OnDestroy {
   expenses = signal<Expense[]>([]);
   categories = signal<Category[]>([]);
   loading = signal(false);
@@ -45,6 +47,9 @@ export class ExpenseListComponent implements OnInit {
   // Formulario de filtros
   filterForm: FormGroup;
 
+  // Subscription para limpieza
+  private refreshSubscription?: Subscription;
+
   // Tipos de gasto
   expenseTypes: { value: ExpenseType | 'all'; label: string }[] = [
     { value: 'all', label: 'Todos' },
@@ -56,7 +61,8 @@ export class ExpenseListComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private expenseService: ExpenseService,
-    private categoryService: CategoryService
+    private categoryService: CategoryService,
+    private dataRefresh: DataRefreshService
   ) {
     this.filterForm = this.fb.group({
       type: ['all'],
@@ -76,6 +82,18 @@ export class ExpenseListComponent implements OnInit {
       this.currentPage.set(1);
       this.loadExpenses();
     });
+
+    // Suscribirse a cambios de gastos para actualización automática
+    this.refreshSubscription = this.dataRefresh.expenseChanged$.subscribe(() => {
+      this.loadExpenses();
+    });
+  }
+
+  ngOnDestroy(): void {
+    // Limpiar suscripción para evitar memory leaks
+    if (this.refreshSubscription) {
+      this.refreshSubscription.unsubscribe();
+    }
   }
 
   loadCategories(): void {

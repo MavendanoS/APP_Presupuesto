@@ -73,9 +73,9 @@ export async function createIncomeService(db, userId, incomeData) {
  */
 export async function getIncomesService(db, userId, filters = {}) {
   const parsedFilters = {
-    is_recurring: filters.is_recurring !== undefined ? filters.is_recurring === 'true' : undefined,
-    start_date: filters.start_date,
-    end_date: filters.end_date,
+    is_recurring: (filters.is_recurring !== null && filters.is_recurring !== undefined) ? filters.is_recurring === 'true' : undefined,
+    start_date: filters.start_date || undefined,
+    end_date: filters.end_date || undefined,
     limit: filters.limit ? Math.min(parseInt(filters.limit), 100) : 50,
     offset: filters.offset ? parseInt(filters.offset) : 0
   };

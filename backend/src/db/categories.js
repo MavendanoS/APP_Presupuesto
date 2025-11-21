@@ -47,7 +47,7 @@ export async function createCategory(db, categoryData) {
 export async function getCategories(db, userId, filters = {}) {
   const { type } = filters;
 
-  let whereConditions = ['user_id = ?'];
+  let whereConditions = ['(is_standard = 1 OR user_id = ?)'];
   let params = [userId];
 
   if (type) {
@@ -65,6 +65,7 @@ export async function getCategories(db, userId, filters = {}) {
       type,
       color,
       icon,
+      is_standard,
       created_at
     FROM expense_categories
     WHERE ${whereClause}
@@ -90,9 +91,10 @@ export async function getCategoryById(db, categoryId, userId) {
       type,
       color,
       icon,
+      is_standard,
       created_at
     FROM expense_categories
-    WHERE id = ? AND user_id = ?
+    WHERE id = ? AND (is_standard = 1 OR user_id = ?)
   `).bind(categoryId, userId).first();
 
   return category || null;
@@ -107,6 +109,18 @@ export async function getCategoryById(db, categoryId, userId) {
  * @returns {Promise<Object>} Categoría actualizada
  */
 export async function updateCategory(db, categoryId, userId, updates) {
+  // Verificar que la categoría no es estándar
+  const category = await getCategoryById(db, categoryId, userId);
+  if (!category) {
+    throw new Error('Categoría no encontrada');
+  }
+  if (category.is_standard === 1) {
+    throw new Error('No se puede modificar una categoría estándar');
+  }
+  if (category.user_id !== userId) {
+    throw new Error('No autorizado para modificar esta categoría');
+  }
+
   const fields = [];
   const values = [];
 
@@ -132,7 +146,7 @@ export async function updateCategory(db, categoryId, userId, updates) {
 
   if (fields.length === 0) {
     // No hay cambios, retornar la categoría actual
-    return await getCategoryById(db, categoryId, userId);
+    return category;
   }
 
   values.push(categoryId, userId);
@@ -140,7 +154,7 @@ export async function updateCategory(db, categoryId, userId, updates) {
   const result = await db.prepare(`
     UPDATE expense_categories
     SET ${fields.join(', ')}
-    WHERE id = ? AND user_id = ?
+    WHERE id = ? AND user_id = ? AND is_standard = 0
   `).bind(...values).run();
 
   if (!result.success || result.meta.changes === 0) {
@@ -158,6 +172,18 @@ export async function updateCategory(db, categoryId, userId, updates) {
  * @returns {Promise<boolean>} true si se eliminó
  */
 export async function deleteCategory(db, categoryId, userId) {
+  // Verificar que la categoría no es estándar
+  const category = await getCategoryById(db, categoryId, userId);
+  if (!category) {
+    throw new Error('Categoría no encontrada');
+  }
+  if (category.is_standard === 1) {
+    throw new Error('No se puede eliminar una categoría estándar');
+  }
+  if (category.user_id !== userId) {
+    throw new Error('No autorizado para eliminar esta categoría');
+  }
+
   // Verificar si hay gastos usando esta categoría
   const expensesCount = await db.prepare(`
     SELECT COUNT(*) as count
@@ -171,7 +197,7 @@ export async function deleteCategory(db, categoryId, userId) {
 
   const result = await db.prepare(`
     DELETE FROM expense_categories
-    WHERE id = ? AND user_id = ?
+    WHERE id = ? AND user_id = ? AND is_standard = 0
   `).bind(categoryId, userId).run();
 
   if (!result.success || result.meta.changes === 0) {
@@ -191,7 +217,7 @@ export async function deleteCategory(db, categoryId, userId) {
 export async function getCategoriesWithStats(db, userId, filters = {}) {
   const { type, start_date, end_date } = filters;
 
-  let categoryWhere = ['c.user_id = ?'];
+  let categoryWhere = ['(c.is_standard = 1 OR c.user_id = ?)'];
   let categoryParams = [userId];
 
   if (type) {
@@ -220,13 +246,14 @@ export async function getCategoriesWithStats(db, userId, filters = {}) {
       c.type,
       c.color,
       c.icon,
+      c.is_standard,
       c.created_at,
       COUNT(e.id) as expense_count,
       COALESCE(SUM(e.amount), 0) as total_amount
     FROM expense_categories c
     LEFT JOIN expenses e ON c.id = e.category_id AND ${expenseWhere.join(' AND ')}
     WHERE ${categoryWhere.join(' AND ')}
-    GROUP BY c.id, c.user_id, c.name, c.type, c.color, c.icon, c.created_at
+    GROUP BY c.id, c.user_id, c.name, c.type, c.color, c.icon, c.is_standard, c.created_at
     ORDER BY c.name ASC
   `;
 

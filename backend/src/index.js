@@ -9,6 +9,7 @@ import expensesRouter from './routes/expenses.js';
 import incomeRouter from './routes/income.js';
 import categoriesRouter from './routes/categories.js';
 import analyticsRouter from './routes/analytics.js';
+import savingsRouter from './routes/savings.js';
 
 const router = Router();
 
@@ -116,6 +117,9 @@ router.all('/api/categories/*', categoriesRouter.handle);
 router.all('/api/analytics/*', analyticsRouter.handle);
 router.all('/api/exports/*', analyticsRouter.handle);
 
+// Rutas de ahorros
+router.all('/api/savings/*', savingsRouter.handle);
+
 // Ruta por defecto
 router.all('*', (request) => {
   const origin = request.headers.get('Origin');
@@ -164,7 +168,16 @@ router.all('*', (request) => {
       'GET /api/analytics/predictions',
       'GET /api/analytics/compare',
       'GET /api/exports/csv',
-      'GET /api/exports/excel'
+      'GET /api/exports/excel',
+      'GET /api/savings',
+      'POST /api/savings',
+      'GET /api/savings/summary',
+      'GET /api/savings/:id',
+      'PUT /api/savings/:id',
+      'DELETE /api/savings/:id',
+      'GET /api/savings/:id/transactions',
+      'POST /api/savings/:id/transactions',
+      'DELETE /api/savings/:id/transactions/:transactionId'
     ]
   }), {
     status: 404,

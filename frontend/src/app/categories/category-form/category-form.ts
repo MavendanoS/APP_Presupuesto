@@ -40,7 +40,6 @@ export class CategoryFormComponent implements OnInit {
   ];
 
   colors: string[] = [
-    'transparent', // Sin color
     '#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6',
     '#EC4899', '#14B8A6', '#F97316', '#6B7280', '#06B6D4'
   ];
@@ -67,7 +66,7 @@ export class CategoryFormComponent implements OnInit {
     this.categoryForm = this.fb.group({
       name: ['', [Validators.required, Validators.maxLength(50)]],
       type: ['payment', Validators.required],
-      color: ['transparent', Validators.required],
+      color: ['#3B82F6', Validators.required],
       icon: ['bi-tag-fill', Validators.required]
     });
   }

@@ -3,6 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
+import { DataRefreshService } from './data-refresh.service';
 import {
   Income,
   IncomeCreateRequest,
@@ -17,12 +18,15 @@ import {
 })
 export class IncomeService {
   private readonly API_URL = `${environment.apiUrl}/income`;
-  
+
   incomes = signal<Income[]>([]);
   totalIncomes = signal<number>(0);
   summary = signal<IncomeSummary | null>(null);
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private dataRefresh: DataRefreshService
+  ) {}
 
   getIncomes(filters?: {
     is_recurring?: boolean;
@@ -67,28 +71,19 @@ export class IncomeService {
 
   createIncome(income: IncomeCreateRequest): Observable<IncomeResponse> {
     return this.http.post<IncomeResponse>(this.API_URL, income).pipe(
-      tap(() => {
-        // Recargar lista después de crear
-        this.getIncomes().subscribe();
-      })
+      tap(() => this.dataRefresh.notifyIncomeChange())
     );
   }
 
   updateIncome(id: number, income: IncomeUpdateRequest): Observable<IncomeResponse> {
     return this.http.put<IncomeResponse>(`${this.API_URL}/${id}`, income).pipe(
-      tap(() => {
-        // Recargar lista después de actualizar
-        this.getIncomes().subscribe();
-      })
+      tap(() => this.dataRefresh.notifyIncomeChange())
     );
   }
 
   deleteIncome(id: number): Observable<any> {
     return this.http.delete(`${this.API_URL}/${id}`).pipe(
-      tap(() => {
-        // Recargar lista después de eliminar
-        this.getIncomes().subscribe();
-      })
+      tap(() => this.dataRefresh.notifyIncomeChange())
     );
   }
 

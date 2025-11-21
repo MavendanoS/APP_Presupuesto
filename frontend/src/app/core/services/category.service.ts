@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, tap } from 'rxjs';
 import { ApiService } from './api.service';
+import { DataRefreshService } from './data-refresh.service';
 import {
   Category,
   CategoryWithStats,
@@ -16,7 +17,10 @@ import {
 export class CategoryService {
   private readonly endpoint = '/categories';
 
-  constructor(private api: ApiService) {}
+  constructor(
+    private api: ApiService,
+    private dataRefresh: DataRefreshService
+  ) {}
 
   getCategories(filters?: CategoryFilters): Observable<{ categories: Category[] }> {
     const params: Record<string, string> = {};
@@ -53,14 +57,20 @@ export class CategoryService {
   }
 
   createCategory(data: CreateCategoryRequest): Observable<{ category: Category }> {
-    return this.api.post<{ category: Category }>(this.endpoint, data);
+    return this.api.post<{ category: Category }>(this.endpoint, data).pipe(
+      tap(() => this.dataRefresh.notifyCategoryChange())
+    );
   }
 
   updateCategory(id: number, data: UpdateCategoryRequest): Observable<{ category: Category }> {
-    return this.api.put<{ category: Category }>(`${this.endpoint}/${id}`, data);
+    return this.api.put<{ category: Category }>(`${this.endpoint}/${id}`, data).pipe(
+      tap(() => this.dataRefresh.notifyCategoryChange())
+    );
   }
 
   deleteCategory(id: number): Observable<{ message: string }> {
-    return this.api.delete<{ message: string }>(`${this.endpoint}/${id}`);
+    return this.api.delete<{ message: string }>(`${this.endpoint}/${id}`).pipe(
+      tap(() => this.dataRefresh.notifyCategoryChange())
+    );
   }
 }

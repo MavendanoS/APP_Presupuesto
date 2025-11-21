@@ -99,6 +99,28 @@ export const routes: Routes = [
     loadComponent: () => import('./analytics/analytics-view/analytics-view').then(m => m.AnalyticsViewComponent)
   },
   {
+    path: 'savings',
+    canActivate: [authGuard],
+    children: [
+      {
+        path: '',
+        loadComponent: () => import('./savings/savings-list/savings-list').then(m => m.SavingsListComponent)
+      },
+      {
+        path: 'new',
+        loadComponent: () => import('./savings/savings-form/savings-form').then(m => m.SavingsFormComponent)
+      },
+      {
+        path: 'edit/:id',
+        loadComponent: () => import('./savings/savings-form/savings-form').then(m => m.SavingsFormComponent)
+      },
+      {
+        path: ':id',
+        loadComponent: () => import('./savings/savings-detail/savings-detail').then(m => m.SavingsDetailComponent)
+      }
+    ]
+  },
+  {
     path: 'profile',
     canActivate: [authGuard],
     loadComponent: () => import('./user/user-profile.component').then(m => m.UserProfileComponent)

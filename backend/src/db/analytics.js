@@ -260,15 +260,60 @@ export async function getPredictions(db, userId, monthsAhead = 3) {
     GROUP BY type
   `).bind(userId).all();
 
-  // Promedio de ingresos recurrentes
-  const recurringIncome = await db.prepare(`
+  // Obtener TODOS los ingresos recurrentes activos (independiente de frecuencia)
+  const recurringIncomes = await db.prepare(`
     SELECT
-      SUM(amount) as monthly_income
+      amount,
+      frequency
     FROM income
     WHERE user_id = ?
       AND is_recurring = 1
-      AND frequency = 'monthly'
+  `).bind(userId).all();
+
+  // Calcular ingreso mensual equivalente basado en frecuencia
+  let monthlyRecurringIncome = 0;
+  for (const income of (recurringIncomes.results || [])) {
+    const amount = income.amount || 0;
+    switch (income.frequency) {
+      case 'weekly':
+        // 52 semanas / 12 meses = 4.33 semanas por mes
+        monthlyRecurringIncome += amount * 4.33;
+        break;
+      case 'biweekly':
+        // 2 pagos por mes
+        monthlyRecurringIncome += amount * 2;
+        break;
+      case 'monthly':
+        monthlyRecurringIncome += amount;
+        break;
+      case 'annual':
+        // Dividir entre 12 meses
+        monthlyRecurringIncome += amount / 12;
+        break;
+      default:
+        // 'once' o desconocido - no es realmente recurrente
+        break;
+    }
+  }
+
+  // Obtener promedio de ingresos NO recurrentes de los últimos 3 meses
+  const nonRecurringIncome = await db.prepare(`
+    SELECT
+      AVG(monthly_total) as avg_monthly_income
+    FROM (
+      SELECT
+        strftime('%Y-%m', date) as month,
+        SUM(amount) as monthly_total
+      FROM income
+      WHERE user_id = ?
+        AND is_recurring = 0
+        AND date >= date('now', '-3 months')
+      GROUP BY month
+    )
   `).bind(userId).first();
+
+  // Ingreso mensual total predicho = recurrente + promedio no recurrente
+  const totalMonthlyIncome = monthlyRecurringIncome + (nonRecurringIncome?.avg_monthly_income || 0);
 
   // Generar predicciones
   const predictions = [];
@@ -280,7 +325,7 @@ export async function getPredictions(db, userId, monthsAhead = 3) {
 
     const monthPrediction = {
       month: month,
-      predicted_income: recurringIncome?.monthly_income || 0,
+      predicted_income: totalMonthlyIncome,
       predicted_expenses: {},
       predicted_balance: 0
     };
@@ -296,10 +341,27 @@ export async function getPredictions(db, userId, monthsAhead = 3) {
     predictions.push(monthPrediction);
   }
 
+  // Calcular nivel de confianza basado en datos históricos disponibles
+  const totalMonthsWithData = Math.max(
+    ...((historicalData.results || []).map(row => row.months_with_data || 0)),
+    0
+  );
+
+  let confidence = 'low';
+  if (totalMonthsWithData >= 3) {
+    confidence = 'high'; // 3+ meses de datos consistentes
+  } else if (totalMonthsWithData >= 2) {
+    confidence = 'medium'; // 2 meses de datos
+  }
+  // Si hay ingresos recurrentes, aumenta la confianza
+  if (monthlyRecurringIncome > 0 && totalMonthsWithData >= 1) {
+    confidence = confidence === 'medium' ? 'high' : 'medium';
+  }
+
   return {
     predictions: predictions,
-    based_on_months: 3,
-    confidence: 'low' // Predicción simple, baja confianza
+    based_on_months: Math.max(totalMonthsWithData, 1),
+    confidence: confidence
   };
 }
 

@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, tap } from 'rxjs';
 import { ApiService } from './api.service';
+import { DataRefreshService } from './data-refresh.service';
 import {
   Expense,
   CreateExpenseRequest,
@@ -21,7 +22,10 @@ interface ExpensesResponse {
 export class ExpenseService {
   private readonly endpoint = '/expenses';
 
-  constructor(private api: ApiService) {}
+  constructor(
+    private api: ApiService,
+    private dataRefresh: DataRefreshService
+  ) {}
 
   /**
    * Obtener lista de gastos con filtros
@@ -41,21 +45,27 @@ export class ExpenseService {
    * Crear nuevo gasto
    */
   createExpense(expense: CreateExpenseRequest): Observable<{ expense: Expense }> {
-    return this.api.post<{ expense: Expense }>(this.endpoint, expense);
+    return this.api.post<{ expense: Expense }>(this.endpoint, expense).pipe(
+      tap(() => this.dataRefresh.notifyExpenseChange())
+    );
   }
 
   /**
    * Actualizar gasto
    */
   updateExpense(id: number, expense: Partial<CreateExpenseRequest>): Observable<{ expense: Expense }> {
-    return this.api.put<{ expense: Expense }>(`${this.endpoint}/${id}`, expense);
+    return this.api.put<{ expense: Expense }>(`${this.endpoint}/${id}`, expense).pipe(
+      tap(() => this.dataRefresh.notifyExpenseChange())
+    );
   }
 
   /**
    * Eliminar gasto
    */
   deleteExpense(id: number): Observable<{ message: string }> {
-    return this.api.delete<{ message: string }>(`${this.endpoint}/${id}`);
+    return this.api.delete<{ message: string }>(`${this.endpoint}/${id}`).pipe(
+      tap(() => this.dataRefresh.notifyExpenseChange())
+    );
   }
 
   /**

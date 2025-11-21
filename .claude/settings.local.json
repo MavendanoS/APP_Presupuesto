@@ -34,7 +34,8 @@
       "Bash(npx wrangler pages deployment:*)",
       "Bash(npx wrangler deploy)",
       "Bash(npx wrangler tail:*)",
-      "Bash(git pull:*)"
+      "Bash(git pull:*)",
+      "Bash(npm run deploy:*)"
     ],
     "deny": [],
     "ask": []

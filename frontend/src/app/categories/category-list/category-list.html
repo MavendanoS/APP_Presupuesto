@@ -78,7 +78,8 @@
                     <tr>
                       <td class="text-center">
                         <div class="category-icon-small">
-                          <i class="bi {{ category.icon }}" [style.color]="category.color"></i>
+                          <i class="bi {{ category.icon }}"
+                             [style.color]="category.color"></i>
                         </div>
                       </td>
                       <td class="align-middle">
@@ -93,24 +94,26 @@
                         </td>
                       }
                       <td class="text-end align-middle">
-                        <div class="btn-group btn-group-sm" role="group">
-                          <button
-                            class="btn btn-outline-primary"
-                            (click)="editCategory(category.id)"
-                            title="Editar categoría"
-                          >
-                            <i class="bi bi-pencil me-1"></i>
-                            Editar
-                          </button>
-                          <button
-                            class="btn btn-outline-danger"
-                            (click)="deleteCategory(category)"
-                            title="Eliminar categoría"
-                          >
-                            <i class="bi bi-trash me-1"></i>
-                            Eliminar
-                          </button>
-                        </div>
+                        @if (category.is_standard === 1) {
+                          <span class="badge bg-secondary">Estándar</span>
+                        } @else {
+                          <div class="btn-group btn-group-sm" role="group">
+                            <button
+                              class="btn btn-outline-primary"
+                              (click)="editCategory(category.id)"
+                              title="Editar categoría"
+                            >
+                              <i class="bi bi-pencil"></i>
+                            </button>
+                            <button
+                              class="btn btn-outline-danger"
+                              (click)="deleteCategory(category)"
+                              title="Eliminar categoría"
+                            >
+                              <i class="bi bi-trash"></i>
+                            </button>
+                          </div>
+                        }
                       </td>
                     </tr>
                   }

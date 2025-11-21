@@ -1,0 +1,152 @@
+<app-navbar></app-navbar>
+
+<div class="container mt-4 mb-5">
+  <div class="row justify-content-center">
+    <div class="col-12 col-lg-8">
+      <div class="card shadow-sm">
+        <div class="card-body p-4">
+          <h3 class="mb-4">
+            <i class="bi bi-piggy-bank me-2"></i>
+            {{ isEditMode() ? 'Editar Meta de Ahorro' : 'Nueva Meta de Ahorro' }}
+          </h3>
+
+          @if (error()) {
+            <div class="alert alert-danger alert-dismissible">
+              <i class="bi bi-exclamation-triangle me-2"></i>
+              {{ error() }}
+              <button type="button" class="btn-close" (click)="error.set(null)"></button>
+            </div>
+          }
+
+          <form [formGroup]="form" (ngSubmit)="onSubmit()">
+            <!-- Nombre -->
+            <div class="mb-3">
+              <label class="form-label">Nombre de la Meta *</label>
+              <input
+                type="text"
+                class="form-control"
+                formControlName="name"
+                placeholder="Ej: Vacaciones 2025"
+                [class.is-invalid]="form.get('name')?.invalid && form.get('name')?.touched"
+              >
+              @if (form.get('name')?.invalid && form.get('name')?.touched) {
+                <div class="invalid-feedback">
+                  El nombre es obligatorio (máximo 100 caracteres)
+                </div>
+              }
+            </div>
+
+            <!-- Monto Objetivo -->
+            <div class="mb-3">
+              <label class="form-label">Monto Objetivo *</label>
+              <div class="input-group">
+                <span class="input-group-text">$</span>
+                <input
+                  type="number"
+                  class="form-control"
+                  formControlName="target_amount"
+                  placeholder="1000000"
+                  [class.is-invalid]="form.get('target_amount')?.invalid && form.get('target_amount')?.touched"
+                >
+              </div>
+              @if (form.get('target_amount')?.invalid && form.get('target_amount')?.touched) {
+                <div class="invalid-feedback d-block">
+                  El monto debe ser mayor a 0
+                </div>
+              }
+            </div>
+
+            <!-- Fecha Límite -->
+            <div class="mb-3">
+              <label class="form-label">Fecha Límite (Opcional)</label>
+              <input
+                type="date"
+                class="form-control"
+                formControlName="deadline"
+              >
+              <small class="text-muted">Deja vacío si no tienes una fecha límite</small>
+            </div>
+
+            <!-- Descripción -->
+            <div class="mb-3">
+              <label class="form-label">Descripción (Opcional)</label>
+              <textarea
+                class="form-control"
+                formControlName="description"
+                rows="3"
+                placeholder="Describe tu meta de ahorro..."
+                [class.is-invalid]="form.get('description')?.invalid && form.get('description')?.touched"
+              ></textarea>
+              @if (form.get('description')?.invalid && form.get('description')?.touched) {
+                <div class="invalid-feedback">
+                  Máximo 500 caracteres
+                </div>
+              }
+            </div>
+
+            <!-- Color -->
+            <div class="mb-3">
+              <label class="form-label">Color</label>
+              <div class="d-flex gap-2 flex-wrap">
+                @for (color of colors; track color.value) {
+                  <button
+                    type="button"
+                    class="btn btn-sm color-option"
+                    [class.active]="form.get('color')?.value === color.value"
+                    [style.background-color]="color.value"
+                    [attr.aria-label]="color.label"
+                    (click)="form.patchValue({ color: color.value })"
+                  >
+                    @if (form.get('color')?.value === color.value) {
+                      <i class="bi bi-check text-white"></i>
+                    }
+                  </button>
+                }
+              </div>
+            </div>
+
+            <!-- Icono -->
+            <div class="mb-4">
+              <label class="form-label">Icono</label>
+              <div class="d-flex gap-2 flex-wrap">
+                @for (icon of icons; track icon.value) {
+                  <button
+                    type="button"
+                    class="btn btn-outline-secondary btn-sm icon-option"
+                    [class.active]="form.get('icon')?.value === icon.value"
+                    [attr.aria-label]="icon.label"
+                    (click)="form.patchValue({ icon: icon.value })"
+                  >
+                    <i class="bi bi-{{ icon.value }}"></i>
+                  </button>
+                }
+              </div>
+            </div>
+
+            <!-- Botones -->
+            <div class="d-flex gap-2 justify-content-end">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                (click)="cancel()"
+                [disabled]="loading()"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                class="btn btn-primary"
+                [disabled]="loading() || form.invalid"
+              >
+                @if (loading()) {
+                  <span class="spinner-border spinner-border-sm me-2"></span>
+                }
+                {{ isEditMode() ? 'Actualizar' : 'Crear' }} Meta
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
