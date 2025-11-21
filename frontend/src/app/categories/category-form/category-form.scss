@@ -3,9 +3,13 @@
 
 .icon-grid {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 0.75rem;
   margin-top: 0.5rem;
+
+  @include respond-to('md') {
+    grid-template-columns: repeat(6, 1fr);
+  }
 }
 
 .icon-button {
@@ -46,9 +50,13 @@
 
 .color-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 0.75rem;
   margin-top: 0.5rem;
+
+  @include respond-to('md') {
+    grid-template-columns: repeat(5, 1fr);
+  }
 }
 
 .color-button {
@@ -126,14 +134,14 @@
   }
 }
 
-@include respond-to('sm') {
-  .icon-grid,
-  .color-grid {
-    grid-template-columns: repeat(auto-fill, minmax(45px, 1fr));
-  }
-
+@include until($breakpoint-md) {
   .icon-button,
   .color-button {
+    min-height: 50px;
     font-size: 1.25rem;
+
+    i {
+      font-size: 1.25rem;
+    }
   }
 }
