@@ -35,6 +35,24 @@
         }
       </ul>
 
+      <!-- Economic Indicators -->
+      <div class="d-flex align-items-center gap-3 me-3 indicators-container">
+        @if (indicatorsService.dolar()) {
+          <div class="indicator">
+            <i class="bi bi-currency-dollar text-success"></i>
+            <span class="indicator-label">Dólar:</span>
+            <span class="indicator-value">${{ indicatorsService.dolar() }}</span>
+          </div>
+        }
+        @if (indicatorsService.uf()) {
+          <div class="indicator">
+            <i class="bi bi-bank text-primary"></i>
+            <span class="indicator-label">UF:</span>
+            <span class="indicator-value">${{ indicatorsService.uf() }}</span>
+          </div>
+        }
+      </div>
+
       <!-- User Menu -->
       <div class="d-flex align-items-center">
         @if (user()) {

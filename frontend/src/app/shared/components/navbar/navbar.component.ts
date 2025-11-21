@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
+import { IndicatorsService } from '../../../core/services/indicators.service';
 
 @Component({
   selector: 'app-navbar',
@@ -22,7 +23,10 @@ export class NavbarComponent {
     { path: '/analytics', label: 'Analytics', icon: 'bi-graph-up' }
   ];
 
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    public indicatorsService: IndicatorsService
+  ) {}
 
   get user() {
     return this.authService.currentUser;
