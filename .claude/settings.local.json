@@ -35,7 +35,8 @@
       "Bash(npx wrangler deploy)",
       "Bash(npx wrangler tail:*)",
       "Bash(git pull:*)",
-      "Bash(npm run deploy:*)"
+      "Bash(npm run deploy:*)",
+      "Bash(node scripts/generate-icon-sizes.js:*)"
     ],
     "deny": [],
     "ask": []
