@@ -50,9 +50,10 @@
         "/api/analytics/**"
       ],
       "cacheConfig": {
-        "strategy": "performance",
-        "maxSize": 100,
-        "maxAge": "1h"
+        "strategy": "freshness",
+        "maxSize": 50,
+        "maxAge": "1m",
+        "timeout": "10s"
       }
     }
   ],

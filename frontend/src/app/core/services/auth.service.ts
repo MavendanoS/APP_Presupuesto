@@ -68,6 +68,13 @@ export class AuthService {
     }).pipe(
       tap(response => {
         if (response.success) {
+          // Limpiar caché del service worker antes de establecer el nuevo usuario
+          if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+            navigator.serviceWorker.controller.postMessage({
+              action: 'clearCache'
+            });
+          }
+
           // La cookie se configura automáticamente desde el backend
           this.currentUser.set(response.data.user);
           this.isAuthenticated.set(true);
@@ -102,17 +109,30 @@ export class AuthService {
       withCredentials: true // Enviar cookie para que el backend la pueda limpiar
     }).subscribe({
       next: () => {
-        this.currentUser.set(null);
-        this.isAuthenticated.set(false);
-        this.router.navigate(['/auth/login']);
+        this.clearUserData();
       },
       error: () => {
         // Incluso si falla, limpiar el estado local
-        this.currentUser.set(null);
-        this.isAuthenticated.set(false);
-        this.router.navigate(['/auth/login']);
+        this.clearUserData();
       }
     });
+  }
+
+  /**
+   * Limpiar datos del usuario y caché del service worker
+   */
+  private clearUserData(): void {
+    this.currentUser.set(null);
+    this.isAuthenticated.set(false);
+
+    // Limpiar caché del service worker si está disponible
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage({
+        action: 'clearCache'
+      });
+    }
+
+    this.router.navigate(['/auth/login']);
   }
 
   /**
