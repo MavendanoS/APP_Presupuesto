@@ -26,6 +26,18 @@ export class PwaUpdateService {
       return;
     }
 
+    // Verificar actualizaciones INMEDIATAMENTE al iniciar
+    console.log('🔍 Verificando actualizaciones al iniciar...');
+    this.swUpdate.checkForUpdate().then(updateAvailable => {
+      if (updateAvailable) {
+        console.log('✅ Actualización encontrada al iniciar');
+      } else {
+        console.log('✅ App actualizada (sin nuevas versiones)');
+      }
+    }).catch(err => {
+      console.error('❌ Error al verificar actualizaciones iniciales:', err);
+    });
+
     // Verificar actualizaciones cada 30 segundos una vez que la app esté estable
     const appIsStable$ = this.appRef.isStable.pipe(
       first(isStable => isStable === true)
@@ -72,24 +84,19 @@ export class PwaUpdateService {
    * Muestra un mensaje al usuario y actualiza automáticamente
    */
   private promptUserToUpdate(): void {
-    const updateMessage = '🎉 ¡Nueva versión disponible!\n\nLa aplicación se actualizará automáticamente en 3 segundos...';
+    console.log('🎉 ¡Nueva versión disponible! Actualizando inmediatamente...');
 
     // Mostrar notificación nativa si está disponible
     if ('Notification' in window && Notification.permission === 'granted') {
-      new Notification('APP Presupuesto', {
+      new Notification('APP Presupuesto v3.1.0', {
         body: 'Nueva versión disponible. Actualizando...',
         icon: '/icons/icon-192x192.png',
         badge: '/icons/icon-72x72.png'
       });
-    } else {
-      // Mostrar alert si no hay permisos de notificación
-      console.log(updateMessage);
     }
 
-    // Actualizar después de 3 segundos
-    setTimeout(() => {
-      this.activateUpdate();
-    }, 3000);
+    // Actualizar INMEDIATAMENTE (sin espera de 3 segundos)
+    this.activateUpdate();
   }
 
   /**
