@@ -10,6 +10,7 @@ import incomeRouter from './routes/income.js';
 import categoriesRouter from './routes/categories.js';
 import analyticsRouter from './routes/analytics.js';
 import savingsRouter from './routes/savings.js';
+import indicatorsRouter from './routes/indicators.js';
 
 const router = Router();
 
@@ -120,6 +121,9 @@ router.all('/api/exports/*', analyticsRouter.handle);
 // Rutas de ahorros
 router.all('/api/savings/*', savingsRouter.handle);
 
+// Rutas de indicadores económicos
+router.all('/api/indicators/*', indicatorsRouter.handle);
+
 // Ruta por defecto
 router.all('*', (request) => {
   const origin = request.headers.get('Origin');
@@ -177,7 +181,8 @@ router.all('*', (request) => {
       'DELETE /api/savings/:id',
       'GET /api/savings/:id/transactions',
       'POST /api/savings/:id/transactions',
-      'DELETE /api/savings/:id/transactions/:transactionId'
+      'DELETE /api/savings/:id/transactions/:transactionId',
+      'GET /api/indicators'
     ]
   }), {
     status: 404,

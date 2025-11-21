@@ -1,25 +1,28 @@
 import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { interval, startWith } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
-export interface Indicator {
-  codigo: string;
-  nombre: string;
-  unidad_medida: string;
-  fecha: string;
+export interface IndicatorValue {
   valor: number;
+  fecha: string;
+}
+
+export interface IndicatorsData {
+  dolar: IndicatorValue | null;
+  uf: IndicatorValue | null;
 }
 
 export interface IndicatorsResponse {
-  dolar?: { codigo: string; nombre: string; unidad_medida: string; fecha: string; valor: number; };
-  uf?: { codigo: string; nombre: string; unidad_medida: string; fecha: string; valor: number; };
+  success: boolean;
+  data: IndicatorsData;
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class IndicatorsService {
-  private readonly API_URL = 'https://mindicador.cl/api';
+  private readonly API_URL = `${environment.apiUrl}/indicators`;
 
   dolar = signal<number | null>(null);
   uf = signal<number | null>(null);
@@ -41,12 +44,14 @@ export class IndicatorsService {
     this.error.set(null);
 
     this.http.get<IndicatorsResponse>(this.API_URL).subscribe({
-      next: (data) => {
-        if (data.dolar?.valor) {
-          this.dolar.set(Math.round(data.dolar.valor));
-        }
-        if (data.uf?.valor) {
-          this.uf.set(Math.round(data.uf.valor));
+      next: (response) => {
+        if (response.success && response.data) {
+          if (response.data.dolar?.valor) {
+            this.dolar.set(response.data.dolar.valor);
+          }
+          if (response.data.uf?.valor) {
+            this.uf.set(response.data.uf.valor);
+          }
         }
         this.loading.set(false);
       },
