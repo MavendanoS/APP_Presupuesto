@@ -99,7 +99,7 @@ export class TimeSeriesComponent implements OnInit {
       color: '#10B981'
     });
 
-    // 2. Agrupar gastos por categoría dentro de cada tipo
+    // 2. Agrupar gastos por tipo
     const categoryExpenses = data.distribution.by_category;
 
     // Separar por tipo
@@ -107,35 +107,40 @@ export class TimeSeriesComponent implements OnInit {
     const purchases = categoryExpenses.filter(c => c.type === 'purchase');
     const smallExpenses = categoryExpenses.filter(c => c.type === 'small_expense');
 
-    // 3. Agregar pagos por categoría
-    payments.forEach(cat => {
+    // 3. Agregar PAGOS como un solo bloque (con desglose en tooltip)
+    const totalPayments = payments.reduce((sum, cat) => sum + cat.total, 0);
+    if (totalPayments > 0) {
       waterfallPoints.push({
-        label: cat.name,
-        value: -cat.total, // Negativo porque es gasto
-        color: cat.color
+        label: 'Pagos',
+        value: -totalPayments,
+        color: '#3B82F6',
+        categories: payments.map(cat => ({ name: cat.name, total: cat.total }))
       });
-    });
+    }
 
-    // 4. Agregar compras por categoría
-    purchases.forEach(cat => {
+    // 4. Agregar COMPRAS como un solo bloque (con desglose en tooltip)
+    const totalPurchases = purchases.reduce((sum, cat) => sum + cat.total, 0);
+    if (totalPurchases > 0) {
       waterfallPoints.push({
-        label: cat.name,
-        value: -cat.total,
-        color: cat.color
+        label: 'Compras',
+        value: -totalPurchases,
+        color: '#F59E0B',
+        categories: purchases.map(cat => ({ name: cat.name, total: cat.total }))
       });
-    });
+    }
 
-    // 5. Agregar gastos hormiga como un solo bloque
+    // 5. Agregar GASTOS HORMIGA como un solo bloque (con desglose en tooltip)
     const totalSmallExpenses = smallExpenses.reduce((sum, cat) => sum + cat.total, 0);
     if (totalSmallExpenses > 0) {
       waterfallPoints.push({
         label: 'Gastos Hormiga',
         value: -totalSmallExpenses,
-        color: '#EF4444'
+        color: '#EF4444',
+        categories: smallExpenses.map(cat => ({ name: cat.name, total: cat.total }))
       });
     }
 
-    // 6. Agregar subtotal final (opcional)
+    // 6. Agregar subtotal final
     const totalExpenses = categoryExpenses.reduce((sum, c) => sum + c.total, 0);
     waterfallPoints.push({
       label: 'Balance Final',

@@ -9,6 +9,7 @@ export interface WaterfallDataPoint {
   value: number;
   color?: string;
   isSubtotal?: boolean;
+  categories?: Array<{ name: string; total: number }>;
 }
 
 @Component({
@@ -96,8 +97,23 @@ export class WaterfallChartComponent implements AfterViewInit, OnChanges {
             callbacks: {
               label: (context) => {
                 if (context.datasetIndex === 1) {
-                  const value = this.data[context.dataIndex].value;
-                  return `${context.label}: $${value.toLocaleString('es-CL', { maximumFractionDigits: 0 })}`;
+                  const dataPoint = this.data[context.dataIndex];
+                  const absValue = Math.abs(dataPoint.value);
+                  const lines: string[] = [];
+
+                  // Línea principal con el total
+                  lines.push(`${context.label}: $${absValue.toLocaleString('es-CL', { maximumFractionDigits: 0 })}`);
+
+                  // Si tiene categorías, mostrar el desglose
+                  if (dataPoint.categories && dataPoint.categories.length > 0) {
+                    lines.push(''); // Línea en blanco
+                    lines.push('Desglose:');
+                    dataPoint.categories.forEach(cat => {
+                      lines.push(`  • ${cat.name}: $${cat.total.toLocaleString('es-CL', { maximumFractionDigits: 0 })}`);
+                    });
+                  }
+
+                  return lines;
                 }
                 return '';
               }
