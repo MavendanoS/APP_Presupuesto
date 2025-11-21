@@ -4,6 +4,7 @@
  */
 
 import { Router } from 'itty-router';
+import { requireAuth } from '../middleware/auth.js';
 import {
   createSavingsGoal,
   getSavingsGoals,
@@ -22,9 +23,9 @@ const router = Router({ base: '/api/savings' });
  * GET /api/savings
  * Obtener todas las metas de ahorro
  */
-router.get('/', async (request, env) => {
+router.get('/', requireAuth(async (request, env) => {
   try {
-    const userId = request.user.id;
+    const userId = request.user.userId;
     const url = new URL(request.url);
     const status = url.searchParams.get('status');
 
@@ -45,15 +46,15 @@ router.get('/', async (request, env) => {
       headers: { 'Content-Type': 'application/json' }
     });
   }
-});
+}));
 
 /**
  * GET /api/savings/summary
  * Obtener resumen de ahorros
  */
-router.get('/summary', async (request, env) => {
+router.get('/summary', requireAuth(async (request, env) => {
   try {
-    const userId = request.user.id;
+    const userId = request.user.userId;
     const summary = await getSavingsSummary(env.DB, userId);
 
     return new Response(JSON.stringify({
@@ -71,15 +72,15 @@ router.get('/summary', async (request, env) => {
       headers: { 'Content-Type': 'application/json' }
     });
   }
-});
+}));
 
 /**
  * GET /api/savings/:id
  * Obtener una meta por ID
  */
-router.get('/:id', async (request, env) => {
+router.get('/:id', requireAuth(async (request, env) => {
   try {
-    const userId = request.user.id;
+    const userId = request.user.userId;
     const goalId = parseInt(request.params.id);
 
     if (isNaN(goalId)) {
@@ -103,15 +104,15 @@ router.get('/:id', async (request, env) => {
       headers: { 'Content-Type': 'application/json' }
     });
   }
-});
+}));
 
 /**
  * POST /api/savings
  * Crear nueva meta de ahorro
  */
-router.post('/', async (request, env) => {
+router.post('/', requireAuth(async (request, env) => {
   try {
-    const userId = request.user.id;
+    const userId = request.user.userId;
     const data = await request.json();
 
     const goal = await createSavingsGoal(env.DB, userId, data);
@@ -132,15 +133,15 @@ router.post('/', async (request, env) => {
       headers: { 'Content-Type': 'application/json' }
     });
   }
-});
+}));
 
 /**
  * PUT /api/savings/:id
  * Actualizar meta de ahorro
  */
-router.put('/:id', async (request, env) => {
+router.put('/:id', requireAuth(async (request, env) => {
   try {
-    const userId = request.user.id;
+    const userId = request.user.userId;
     const goalId = parseInt(request.params.id);
     const data = await request.json();
 
@@ -165,15 +166,15 @@ router.put('/:id', async (request, env) => {
       headers: { 'Content-Type': 'application/json' }
     });
   }
-});
+}));
 
 /**
  * DELETE /api/savings/:id
  * Eliminar meta de ahorro
  */
-router.delete('/:id', async (request, env) => {
+router.delete('/:id', requireAuth(async (request, env) => {
   try {
-    const userId = request.user.id;
+    const userId = request.user.userId;
     const goalId = parseInt(request.params.id);
 
     if (isNaN(goalId)) {
@@ -197,15 +198,15 @@ router.delete('/:id', async (request, env) => {
       headers: { 'Content-Type': 'application/json' }
     });
   }
-});
+}));
 
 /**
  * GET /api/savings/:id/transactions
  * Obtener transacciones de una meta
  */
-router.get('/:id/transactions', async (request, env) => {
+router.get('/:id/transactions', requireAuth(async (request, env) => {
   try {
-    const userId = request.user.id;
+    const userId = request.user.userId;
     const goalId = parseInt(request.params.id);
 
     if (isNaN(goalId)) {
@@ -238,15 +239,15 @@ router.get('/:id/transactions', async (request, env) => {
       headers: { 'Content-Type': 'application/json' }
     });
   }
-});
+}));
 
 /**
  * POST /api/savings/:id/transactions
  * Crear transacción (aporte o retiro)
  */
-router.post('/:id/transactions', async (request, env) => {
+router.post('/:id/transactions', requireAuth(async (request, env) => {
   try {
-    const userId = request.user.id;
+    const userId = request.user.userId;
     const goalId = parseInt(request.params.id);
     const data = await request.json();
 
@@ -272,15 +273,15 @@ router.post('/:id/transactions', async (request, env) => {
       headers: { 'Content-Type': 'application/json' }
     });
   }
-});
+}));
 
 /**
  * DELETE /api/savings/:id/transactions/:transactionId
  * Eliminar una transacción
  */
-router.delete('/:id/transactions/:transactionId', async (request, env) => {
+router.delete('/:id/transactions/:transactionId', requireAuth(async (request, env) => {
   try {
-    const userId = request.user.id;
+    const userId = request.user.userId;
     const goalId = parseInt(request.params.id);
     const transactionId = parseInt(request.params.transactionId);
 
@@ -305,6 +306,6 @@ router.delete('/:id/transactions/:transactionId', async (request, env) => {
       headers: { 'Content-Type': 'application/json' }
     });
   }
-});
+}));
 
 export default router;
