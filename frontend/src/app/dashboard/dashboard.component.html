@@ -19,8 +19,8 @@
       <div class="row mb-4">
         <div class="col-12">
           <div class="card-responsive">
-            <div class="d-flex justify-content-between align-items-start mb-3">
-              <div>
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+              <div class="flex-grow-1">
                 <h1 class="h3 mb-3">
                   <i class="bi bi-house-heart-fill me-2 text-primary"></i>
                   Bienvenido, {{ user()?.name }}!
@@ -32,15 +32,37 @@
                   Controla tus finanzas personales de manera simple y efectiva.
                 </p>
               </div>
-              <button
-                type="button"
-                class="btn btn-outline-secondary btn-sm"
-                (click)="toggleAmounts()"
-                title="{{ showAmounts() ? 'Ocultar montos' : 'Mostrar montos' }}"
-              >
-                <i class="bi" [ngClass]="showAmounts() ? 'bi-eye-slash' : 'bi-eye'"></i>
-                <span class="d-none d-md-inline ms-1">{{ showAmounts() ? 'Ocultar' : 'Mostrar' }}</span>
-              </button>
+
+              <!-- Filtros de Fecha -->
+              <div class="d-flex gap-2 align-items-end flex-wrap">
+                <div>
+                  <label class="form-label mb-1 small text-muted">Fecha Inicio</label>
+                  <input
+                    type="date"
+                    class="form-control form-control-sm"
+                    [value]="startDate()"
+                    (change)="onStartDateChange($any($event.target).value)"
+                  />
+                </div>
+                <div>
+                  <label class="form-label mb-1 small text-muted">Fecha Fin</label>
+                  <input
+                    type="date"
+                    class="form-control form-control-sm"
+                    [value]="endDate()"
+                    (change)="onEndDateChange($any($event.target).value)"
+                  />
+                </div>
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary btn-sm"
+                  (click)="toggleAmounts()"
+                  title="{{ showAmounts() ? 'Ocultar montos' : 'Mostrar montos' }}"
+                >
+                  <i class="bi" [ngClass]="showAmounts() ? 'bi-eye-slash' : 'bi-eye'"></i>
+                  <span class="d-none d-md-inline ms-1">{{ showAmounts() ? 'Ocultar' : 'Mostrar' }}</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -78,13 +100,13 @@
           </div>
         </div>
 
-        <!-- Categorías con más gastos -->
+        <!-- Ahorros -->
         <div class="col-12 col-md-6 col-lg-3">
-          <div class="card-responsive metric-card">
-            <i class="bi bi-tags metric-icon-clean text-primary"></i>
-            <h6 class="text-muted mb-1">Categorías Activas</h6>
-            <h3 class="mb-0">{{ getTotalCategories() }}</h3>
-            <small class="text-muted">Este período</small>
+          <div class="card-responsive metric-card clickable-card" routerLink="/savings">
+            <i class="bi bi-piggy-bank metric-icon-clean text-success"></i>
+            <h6 class="text-muted mb-1">Total Ahorrado</h6>
+            <h3 class="mb-0">{{ formatAmount(savingsSummary()?.total_saved || 0) }}</h3>
+            <small class="text-muted">{{ savingsSummary()?.active_goals || 0 }} metas activas</small>
           </div>
         </div>
       </div>

@@ -1,9 +1,11 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../core/services/auth.service';
 import { AnalyticsService } from '../core/services/analytics.service';
-import { DashboardMetrics } from '../core/models';
+import { SavingsService } from '../core/services/savings.service';
+import { DashboardMetrics, SavingsSummary } from '../core/models';
 import { NavbarComponent } from '../shared/components/navbar/navbar.component';
 import { LoadingComponent } from '../shared/components/loading/loading.component';
 import { ErrorMessageComponent } from '../shared/components/error-message/error-message.component';
@@ -15,6 +17,7 @@ import { ClpCurrencyPipe } from '../shared/pipes/clp-currency.pipe';
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     RouterModule,
     NavbarComponent,
     LoadingComponent,
@@ -29,11 +32,17 @@ export class DashboardComponent implements OnInit {
   loading = signal(true);
   errorMessage = signal<string | null>(null);
   metrics = signal<DashboardMetrics | null>(null);
+  savingsSummary = signal<SavingsSummary | null>(null);
   showAmounts = signal(false);
+
+  // Filtros de fecha
+  startDate = signal(this.getMonthStart());
+  endDate = signal(this.getMonthEnd());
 
   constructor(
     private authService: AuthService,
     private analyticsService: AnalyticsService,
+    private savingsService: SavingsService,
     private router: Router
   ) {
     // Load preference from localStorage (default hidden)
@@ -47,6 +56,7 @@ export class DashboardComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadMetrics();
+    this.loadSavingsSummary();
   }
 
   toggleAmounts(): void {
@@ -69,16 +79,10 @@ export class DashboardComponent implements OnInit {
     this.loading.set(true);
     this.errorMessage.set(null);
 
-    // Obtener métricas del mes actual
-    const now = new Date();
-    const startDate = new Date(now.getFullYear(), now.getMonth(), 1)
-      .toISOString()
-      .split('T')[0];
-    const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0)
-      .toISOString()
-      .split('T')[0];
-
-    this.analyticsService.getDashboardMetrics({ start_date: startDate, end_date: endDate }).subscribe({
+    this.analyticsService.getDashboardMetrics({
+      start_date: this.startDate(),
+      end_date: this.endDate()
+    }).subscribe({
       next: (data) => {
         this.metrics.set(data);
         this.loading.set(false);
@@ -88,6 +92,27 @@ export class DashboardComponent implements OnInit {
         this.loading.set(false);
       }
     });
+  }
+
+  loadSavingsSummary(): void {
+    this.savingsService.getSavingsSummary().subscribe({
+      next: (data) => {
+        this.savingsSummary.set(data);
+      },
+      error: (error) => {
+        console.error('Error al cargar resumen de ahorros:', error);
+      }
+    });
+  }
+
+  onStartDateChange(value: string): void {
+    this.startDate.set(value);
+    this.loadMetrics();
+  }
+
+  onEndDateChange(value: string): void {
+    this.endDate.set(value);
+    this.loadMetrics();
   }
 
   navigateToNewExpense(type: 'payment' | 'purchase' | 'small_expense'): void {
@@ -132,5 +157,21 @@ export class DashboardComponent implements OnInit {
       count: cat.expense_count,
       total: cat.total_amount
     }));
+  }
+
+  private getMonthStart(): string {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    return `${year}-${month}-01`;
+  }
+
+  private getMonthEnd(): string {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    const day = String(lastDay).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 }
