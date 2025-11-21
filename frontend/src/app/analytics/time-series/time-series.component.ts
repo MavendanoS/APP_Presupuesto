@@ -5,6 +5,7 @@ import { AnalyticsService } from '../../core/services/analytics.service';
 import { ChartsData } from '../../core/models';
 import { LineChartComponent, LineChartDataset } from '../../shared/components/line-chart/line-chart.component';
 import { BarChartComponent, BarChartDataset } from '../../shared/components/bar-chart/bar-chart.component';
+import { WaterfallChartComponent, WaterfallDataPoint } from '../../shared/components/waterfall-chart/waterfall-chart.component';
 import { LoadingComponent } from '../../shared/components/loading/loading.component';
 import { ErrorMessageComponent } from '../../shared/components/error-message/error-message.component';
 
@@ -16,6 +17,7 @@ import { ErrorMessageComponent } from '../../shared/components/error-message/err
     FormsModule,
     LineChartComponent,
     BarChartComponent,
+    WaterfallChartComponent,
     LoadingComponent,
     ErrorMessageComponent
   ],
@@ -32,8 +34,7 @@ export class TimeSeriesComponent implements OnInit {
   endDate = signal(this.getMonthEnd());
 
   // Chart data
-  incomeChartLabels = signal<string[]>([]);
-  incomeChartDatasets = signal<LineChartDataset[]>([]);
+  waterfallData = signal<WaterfallDataPoint[]>([]);
 
   expensesByTypeLabels = signal<string[]>([]);
   expensesByTypeDatasets = signal<LineChartDataset[]>([]);
@@ -87,18 +88,63 @@ export class TimeSeriesComponent implements OnInit {
   }
 
   private processChartData(data: ChartsData): void {
-    // Process income time series
-    const incomeData = data.time_series.income;
-    const incomeLabels = incomeData.map(i => this.formatPeriod(i.period));
-    const incomeValues = incomeData.map(i => i.total);
+    // Process waterfall chart data
+    const waterfallPoints: WaterfallDataPoint[] = [];
 
-    this.incomeChartLabels.set(incomeLabels);
-    this.incomeChartDatasets.set([{
+    // 1. Total de ingresos
+    const totalIncome = data.time_series.income.reduce((sum, i) => sum + i.total, 0);
+    waterfallPoints.push({
       label: 'Ingresos',
-      data: incomeValues,
-      borderColor: '#10B981',
-      backgroundColor: 'rgba(16, 185, 129, 0.1)'
-    }]);
+      value: totalIncome,
+      color: '#10B981'
+    });
+
+    // 2. Agrupar gastos por categoría dentro de cada tipo
+    const categoryExpenses = data.distribution.by_category;
+
+    // Separar por tipo
+    const payments = categoryExpenses.filter(c => c.type === 'payment');
+    const purchases = categoryExpenses.filter(c => c.type === 'purchase');
+    const smallExpenses = categoryExpenses.filter(c => c.type === 'small_expense');
+
+    // 3. Agregar pagos por categoría
+    payments.forEach(cat => {
+      waterfallPoints.push({
+        label: cat.name,
+        value: -cat.total, // Negativo porque es gasto
+        color: cat.color
+      });
+    });
+
+    // 4. Agregar compras por categoría
+    purchases.forEach(cat => {
+      waterfallPoints.push({
+        label: cat.name,
+        value: -cat.total,
+        color: cat.color
+      });
+    });
+
+    // 5. Agregar gastos hormiga como un solo bloque
+    const totalSmallExpenses = smallExpenses.reduce((sum, cat) => sum + cat.total, 0);
+    if (totalSmallExpenses > 0) {
+      waterfallPoints.push({
+        label: 'Gastos Hormiga',
+        value: -totalSmallExpenses,
+        color: '#EF4444'
+      });
+    }
+
+    // 6. Agregar subtotal final (opcional)
+    const totalExpenses = categoryExpenses.reduce((sum, c) => sum + c.total, 0);
+    waterfallPoints.push({
+      label: 'Balance Final',
+      value: totalIncome - totalExpenses,
+      color: totalIncome - totalExpenses >= 0 ? '#10B981' : '#EF4444',
+      isSubtotal: true
+    });
+
+    this.waterfallData.set(waterfallPoints);
 
     // Process expenses by type time series
     const expensesData = data.time_series.expenses;
@@ -136,6 +182,7 @@ export class TimeSeriesComponent implements OnInit {
     );
 
     // Process combined (income vs total expenses)
+    const incomeData = data.time_series.income;
     const totalExpensesByPeriod = expensesPeriods.map(period => {
       return expensesData
         .filter(e => e.period === period)
