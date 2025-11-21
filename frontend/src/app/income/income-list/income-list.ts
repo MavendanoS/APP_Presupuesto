@@ -27,6 +27,15 @@ export class IncomeListComponent implements OnInit, OnDestroy {
 
   totalAmount = signal(0);
 
+  // Paginación
+  currentPage = signal(1);
+  itemsPerPage = signal(10);
+  totalItems = signal(0);
+  totalPages = signal(0);
+
+  // Math para template
+  Math = Math;
+
   // Subscription para limpieza
   private refreshSubscription?: Subscription;
 
@@ -56,10 +65,18 @@ export class IncomeListComponent implements OnInit, OnDestroy {
     this.loading.set(true);
     this.error.set(null);
 
-    this.incomeService.getIncomes(this.filters()).subscribe({
+    const filtersWithPagination = {
+      ...this.filters(),
+      limit: this.itemsPerPage(),
+      offset: (this.currentPage() - 1) * this.itemsPerPage()
+    };
+
+    this.incomeService.getIncomes(filtersWithPagination).subscribe({
       next: (response) => {
         if (response.success) {
           this.incomes.set(response.data.incomes);
+          this.totalItems.set(response.data.total || response.data.incomes.length);
+          this.totalPages.set(Math.ceil(this.totalItems() / this.itemsPerPage()));
           this.calculateTotal();
         }
         this.loading.set(false);
@@ -78,18 +95,35 @@ export class IncomeListComponent implements OnInit, OnDestroy {
 
   onStartDateChange(value: string): void {
     this.filters.set({ ...this.filters(), start_date: value });
+    this.currentPage.set(1);
     this.loadIncomes();
   }
 
   onEndDateChange(value: string): void {
     this.filters.set({ ...this.filters(), end_date: value });
+    this.currentPage.set(1);
     this.loadIncomes();
   }
 
   onTypeChange(value: string): void {
     const isRecurring = value === '' ? undefined : value === 'true';
     this.filters.set({ ...this.filters(), is_recurring: isRecurring });
+    this.currentPage.set(1);
     this.loadIncomes();
+  }
+
+  onItemsPerPageChange(value: number): void {
+    this.itemsPerPage.set(value);
+    this.currentPage.set(1);
+    this.loadIncomes();
+  }
+
+  onPageChange(page: number): void {
+    if (page >= 1 && page <= this.totalPages()) {
+      this.currentPage.set(page);
+      this.loadIncomes();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   }
 
   deleteIncome(income: Income): void {
@@ -118,6 +152,30 @@ export class IncomeListComponent implements OnInit, OnDestroy {
       'annual': 'Anual'
     };
     return labels[frequency] || frequency;
+  }
+
+  getPageNumbers(): number[] {
+    const total = this.totalPages();
+    const current = this.currentPage();
+    const pages: number[] = [];
+
+    if (total <= 7) {
+      // Mostrar todas las páginas
+      for (let i = 1; i <= total; i++) {
+        pages.push(i);
+      }
+    } else {
+      // Mostrar páginas con ellipsis
+      if (current <= 4) {
+        pages.push(1, 2, 3, 4, 5, -1, total);
+      } else if (current >= total - 3) {
+        pages.push(1, -1, total - 4, total - 3, total - 2, total - 1, total);
+      } else {
+        pages.push(1, -1, current - 1, current, current + 1, -1, total);
+      }
+    }
+
+    return pages;
   }
 
   private getFirstDayOfMonth(): string {

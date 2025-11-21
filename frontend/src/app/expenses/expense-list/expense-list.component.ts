@@ -37,9 +37,12 @@ export class ExpenseListComponent implements OnInit, OnDestroy {
 
   // Paginación
   currentPage = signal(1);
-  itemsPerPage = 10;
+  itemsPerPage = signal(10);
   totalItems = signal(0);
   totalPages = signal(0);
+
+  // Total del período actual
+  totalAmount = signal(0);
 
   // Math para template
   Math = Math;
@@ -117,7 +120,8 @@ export class ExpenseListComponent implements OnInit, OnDestroy {
       next: (response) => {
         this.expenses.set(response.expenses);
         this.totalItems.set(response.total);
-        this.totalPages.set(Math.ceil(response.total / this.itemsPerPage));
+        this.totalPages.set(Math.ceil(response.total / this.itemsPerPage()));
+        this.calculateTotal();
         this.loading.set(false);
       },
       error: (error) => {
@@ -127,11 +131,16 @@ export class ExpenseListComponent implements OnInit, OnDestroy {
     });
   }
 
+  calculateTotal(): void {
+    const total = this.expenses().reduce((sum, expense) => sum + expense.amount, 0);
+    this.totalAmount.set(total);
+  }
+
   buildFilters(): ExpenseFilters {
     const formValue = this.filterForm.value;
     const filters: ExpenseFilters = {
-      limit: this.itemsPerPage,
-      offset: (this.currentPage() - 1) * this.itemsPerPage
+      limit: this.itemsPerPage(),
+      offset: (this.currentPage() - 1) * this.itemsPerPage()
     };
 
     if (formValue.type && formValue.type !== 'all') {
@@ -186,6 +195,12 @@ export class ExpenseListComponent implements OnInit, OnDestroy {
         }
       });
     }
+  }
+
+  onItemsPerPageChange(value: number): void {
+    this.itemsPerPage.set(value);
+    this.currentPage.set(1);
+    this.loadExpenses();
   }
 
   getPageNumbers(): number[] {
