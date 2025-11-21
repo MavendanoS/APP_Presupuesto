@@ -45,6 +45,27 @@
   }
 }
 
+// Clickable card styles
+.clickable-card {
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+    border-color: $primary;
+
+    .metric-icon-clean {
+      transform: scale(1.1);
+      transition: transform 0.3s ease;
+    }
+  }
+
+  &:active {
+    transform: translateY(-2px) scale(1.01);
+  }
+}
+
 .metric-card-small {
   background: white;
   border: 1px solid $gray-200;

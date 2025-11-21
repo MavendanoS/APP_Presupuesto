@@ -50,7 +50,7 @@
       <div class="row g-4 mb-4">
         <!-- Ingresos -->
         <div class="col-12 col-md-6 col-lg-3">
-          <div class="card-responsive metric-card">
+          <div class="card-responsive metric-card clickable-card" routerLink="/income">
             <i class="bi bi-wallet2 metric-icon-clean text-success"></i>
             <h6 class="text-muted mb-1">Ingresos</h6>
             <h3 class="mb-0">{{ formatAmount(metrics()!.income.total) }}</h3>
@@ -60,7 +60,7 @@
 
         <!-- Gastos Totales -->
         <div class="col-12 col-md-6 col-lg-3">
-          <div class="card-responsive metric-card">
+          <div class="card-responsive metric-card clickable-card" routerLink="/expenses">
             <i class="bi bi-cash-stack metric-icon-clean text-danger"></i>
             <h6 class="text-muted mb-1">Gastos Totales</h6>
             <h3 class="mb-0">{{ formatAmount(metrics()!.expenses.total) }}</h3>
@@ -70,7 +70,7 @@
 
         <!-- Balance -->
         <div class="col-12 col-md-6 col-lg-3">
-          <div class="card-responsive metric-card">
+          <div class="card-responsive metric-card clickable-card" routerLink="/analytics">
             <i class="bi metric-icon-clean" [ngClass]="[getBalanceIcon(), metrics()!.balance >= 0 ? 'text-primary' : 'text-warning']"></i>
             <h6 class="text-muted mb-1">Balance</h6>
             <h3 class="mb-0" [ngClass]="getBalanceClass()">{{ formatAmount(metrics()!.balance) }}</h3>
