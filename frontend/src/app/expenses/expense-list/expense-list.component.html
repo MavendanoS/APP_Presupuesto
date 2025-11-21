@@ -143,7 +143,7 @@
             </div>
 
             <div class="table-responsive">
-              <table class="table-modern">
+              <table class="table table-hover align-middle">
                 <thead>
                   <tr>
                     <th>Fecha</th>
@@ -176,13 +176,16 @@
                         <div>
                           <strong>{{ expense.description }}</strong>
                           @if (expense.notes) {
-                            <br><small class="text-muted">{{ expense.notes }}</small>
+                            <br>
+                            <small class="text-muted">{{ expense.notes }}</small>
                           }
                         </div>
                       </td>
                       <td>{{ expense.category_name || 'Sin categoría' }}</td>
                       <td class="text-end">
-                        <strong class="text-primary">{{ expense.amount | clpCurrency }}</strong>
+                        <strong class="text-danger">
+                          ${{ expense.amount | number:'1.0-0' }}
+                        </strong>
                       </td>
                       <td class="text-center">
                         <div class="btn-group btn-group-sm">

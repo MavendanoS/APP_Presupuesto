@@ -10,7 +10,6 @@ import { Expense, Category, ExpenseType, ExpenseFilters } from '../../core/model
 import { LoadingComponent } from '../../shared/components/loading/loading.component';
 import { ErrorMessageComponent } from '../../shared/components/error-message/error-message.component';
 import { NavbarComponent } from '../../shared/components/navbar/navbar.component';
-import { ClpCurrencyPipe } from '../../shared/pipes/clp-currency.pipe';
 import { ExpenseTypePipe } from '../../shared/pipes/expense-type.pipe';
 
 @Component({
@@ -23,7 +22,6 @@ import { ExpenseTypePipe } from '../../shared/pipes/expense-type.pipe';
     LoadingComponent,
     ErrorMessageComponent,
     NavbarComponent,
-    ClpCurrencyPipe,
     ExpenseTypePipe
   ],
   templateUrl: './expense-list.component.html',
