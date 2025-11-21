@@ -54,9 +54,6 @@ export async function registerUser(db, userData, jwtSecret) {
     name: cleanName
   });
 
-  // Crear categorías predeterminadas para el nuevo usuario
-  await createDefaultCategories(db, user.id);
-
   // Generar token JWT
   const token = await createToken(
     { userId: user.id, email: user.email },
@@ -327,36 +324,3 @@ export async function changeUserPassword(db, userId, passwordData) {
   `).bind(password_hash, userId).run();
 }
 
-/**
- * Crear categorías predeterminadas para un nuevo usuario
- * @param {Object} db - D1 database binding
- * @param {number} userId - ID del usuario
- */
-async function createDefaultCategories(db, userId) {
-  const defaultCategories = [
-    // Pagos (payments)
-    { name: 'Arriendo', type: 'payment', color: '#EF4444', icon: 'home' },
-    { name: 'Servicios Básicos', type: 'payment', color: '#F59E0B', icon: 'bolt' },
-    { name: 'Internet/Teléfono', type: 'payment', color: '#3B82F6', icon: 'wifi' },
-    { name: 'Transporte', type: 'payment', color: '#8B5CF6', icon: 'car' },
-
-    // Compras (purchases)
-    { name: 'Supermercado', type: 'purchase', color: '#10B981', icon: 'shopping-cart' },
-    { name: 'Farmacia', type: 'purchase', color: '#EC4899', icon: 'heart' },
-    { name: 'Ropa', type: 'purchase', color: '#6366F1', icon: 'shirt' },
-    { name: 'Electrónica', type: 'purchase', color: '#14B8A6', icon: 'laptop' },
-
-    // Gastos hormiga (small_expense)
-    { name: 'Café', type: 'small_expense', color: '#92400E', icon: 'coffee' },
-    { name: 'Snacks', type: 'small_expense', color: '#F97316', icon: 'cookie' },
-    { name: 'Transporte público', type: 'small_expense', color: '#06B6D4', icon: 'bus' },
-    { name: 'Otros gastos menores', type: 'small_expense', color: '#64748B', icon: 'dots' }
-  ];
-
-  for (const category of defaultCategories) {
-    await db.prepare(`
-      INSERT INTO expense_categories (user_id, name, type, color, icon)
-      VALUES (?, ?, ?, ?, ?)
-    `).bind(userId, category.name, category.type, category.color, category.icon).run();
-  }
-}
