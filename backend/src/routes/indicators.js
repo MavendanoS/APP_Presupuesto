@@ -11,6 +11,7 @@ const indicatorsRouter = Router({ base: '/api/indicators' });
  * GET /api/indicators
  * Obtener indicadores económicos (Dólar y UF) desde mindicador.cl
  * Proxy para evitar problemas de CORS en el frontend
+ * Usa caché en D1 para mostrar valores del día anterior si la API falla
  */
 indicatorsRouter.get('/', async (request, env) => {
   try {
@@ -47,6 +48,29 @@ indicatorsRouter.get('/', async (request, env) => {
       } : null
     };
 
+    // Guardar en caché para uso futuro
+    if (indicators.dolar) {
+      await env.DB.prepare(`
+        INSERT INTO indicators_cache (indicator_name, value, fecha, updated_at)
+        VALUES (?, ?, ?, unixepoch())
+        ON CONFLICT(indicator_name) DO UPDATE SET
+          value = excluded.value,
+          fecha = excluded.fecha,
+          updated_at = excluded.updated_at
+      `).bind('dolar', indicators.dolar.valor, indicators.dolar.fecha).run();
+    }
+
+    if (indicators.uf) {
+      await env.DB.prepare(`
+        INSERT INTO indicators_cache (indicator_name, value, fecha, updated_at)
+        VALUES (?, ?, ?, unixepoch())
+        ON CONFLICT(indicator_name) DO UPDATE SET
+          value = excluded.value,
+          fecha = excluded.fecha,
+          updated_at = excluded.updated_at
+      `).bind('uf', indicators.uf.valor, indicators.uf.fecha).run();
+    }
+
     return new Response(JSON.stringify({
       success: true,
       data: indicators
@@ -61,24 +85,39 @@ indicatorsRouter.get('/', async (request, env) => {
   } catch (error) {
     console.error('❌ Error al obtener indicadores económicos:', error);
 
-    // Si es timeout o error de red, retornar valores por defecto
+    // Si es timeout o error de red, usar valores cacheados del día anterior
     if (error.name === 'AbortError' || error.message.includes('fetch')) {
-      console.log('⚠️ Timeout o error de red - usando valores por defecto');
+      console.log('⚠️ Timeout o error de red - usando valores cacheados');
 
-      return new Response(JSON.stringify({
-        success: true,
-        data: {
-          dolar: { valor: 950, fecha: new Date().toISOString() }, // Valor aproximado
-          uf: { valor: 39000, fecha: new Date().toISOString() }   // Valor aproximado
-        },
-        fallback: true // Indica que son valores de respaldo
-      }), {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-          'Cache-Control': 'public, max-age=300' // Cache solo 5 minutos
+      try {
+        // Obtener valores del caché
+        const cachedDolar = await env.DB.prepare(`
+          SELECT value, fecha FROM indicators_cache WHERE indicator_name = ?
+        `).bind('dolar').first();
+
+        const cachedUF = await env.DB.prepare(`
+          SELECT value, fecha FROM indicators_cache WHERE indicator_name = ?
+        `).bind('uf').first();
+
+        if (cachedDolar || cachedUF) {
+          return new Response(JSON.stringify({
+            success: true,
+            data: {
+              dolar: cachedDolar ? { valor: cachedDolar.value, fecha: cachedDolar.fecha } : null,
+              uf: cachedUF ? { valor: cachedUF.value, fecha: cachedUF.fecha } : null
+            },
+            cached: true // Indica que son valores cacheados
+          }), {
+            status: 200,
+            headers: {
+              'Content-Type': 'application/json',
+              'Cache-Control': 'public, max-age=300' // Cache solo 5 minutos
+            }
+          });
         }
-      });
+      } catch (cacheError) {
+        console.error('❌ Error al obtener valores del caché:', cacheError);
+      }
     }
 
     return new Response(JSON.stringify({

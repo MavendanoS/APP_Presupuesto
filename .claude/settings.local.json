@@ -36,7 +36,12 @@
       "Bash(npx wrangler tail:*)",
       "Bash(git pull:*)",
       "Bash(npm run deploy:*)",
-      "Bash(node scripts/generate-icon-sizes.js:*)"
+      "Bash(node scripts/generate-icon-sizes.js:*)",
+      "Bash(claude mcp add --transport stdio memory --scope user -- npx -y @modelcontextprotocol/server-memory --memory-path ~/.claude/memory.db)",
+      "Bash(claude mcp list:*)",
+      "Bash(node -e:*)",
+      "Bash(git restore:*)",
+      "mcp__sequential-thinking__sequentialthinking"
     ],
     "deny": [],
     "ask": []
