@@ -122,7 +122,7 @@ router.all('/api/exports/*', analyticsRouter.handle);
 router.all('/api/savings/*', savingsRouter.handle);
 
 // Rutas de indicadores económicos
-router.all('/api/indicators/*', indicatorsRouter.handle);
+router.all('/api/indicators*', indicatorsRouter.handle);
 
 // Ruta por defecto
 router.all('*', (request) => {
