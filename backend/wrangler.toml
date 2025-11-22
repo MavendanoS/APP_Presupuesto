@@ -9,7 +9,7 @@ FRONTEND_URL = "https://app-presupuesto.pages.dev"
 # ⚠️ SOLO PARA DESARROLLO LOCAL - Reemplazar con secret en producción
 # Este valor temporal permite desarrollo local, pero DEBE configurarse
 # como Worker Secret en producción usando el dashboard de Cloudflare
-JWT_SECRET = "dev-only-change-in-production-via-dashboard"
+
 
 # Base de datos D1
 [[d1_databases]]

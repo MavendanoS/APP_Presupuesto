@@ -83,12 +83,14 @@ export function buildExpenseWhereClause(userId, filters = {}) {
   const whereConditions = ['e.user_id = ?'];
   const params = [userId];
 
-  // Validar y agregar solo filtros permitidos
+  // Validar y agregar solo filtros permitidos con valores válidos
   Object.keys(filters).forEach(filterKey => {
-    if (isValidFilter(filterKey, ALLOWED_EXPENSE_FILTERS)) {
+    const value = filters[filterKey];
+    // Solo agregar si el filtro es válido Y el valor no es undefined/null
+    if (isValidFilter(filterKey, ALLOWED_EXPENSE_FILTERS) && value !== undefined && value !== null) {
       const { field, operator } = ALLOWED_EXPENSE_FILTERS[filterKey];
       whereConditions.push(`${field} ${operator} ?`);
-      params.push(filters[filterKey]);
+      params.push(value);
     }
   });
 
@@ -107,11 +109,13 @@ export function buildExpenseSetClause(updates) {
   const fields = [];
   const values = [];
 
-  // Validar y agregar solo campos permitidos
+  // Validar y agregar solo campos permitidos con valores válidos
   Object.keys(updates).forEach(fieldName => {
-    if (isValidUpdateField(fieldName, ALLOWED_EXPENSE_UPDATE_FIELDS)) {
+    const value = updates[fieldName];
+    // Solo agregar si el campo es válido Y el valor no es undefined (null está permitido para algunos campos)
+    if (isValidUpdateField(fieldName, ALLOWED_EXPENSE_UPDATE_FIELDS) && value !== undefined) {
       fields.push(`${fieldName} = ?`);
-      values.push(updates[fieldName]);
+      values.push(value);
     }
   });
 
@@ -136,15 +140,17 @@ export function buildIncomeWhereClause(userId, filters = {}) {
   const params = [userId];
 
   Object.keys(filters).forEach(filterKey => {
-    if (isValidFilter(filterKey, ALLOWED_INCOME_FILTERS)) {
+    const value = filters[filterKey];
+    // Solo agregar si el filtro es válido Y el valor no es undefined/null
+    if (isValidFilter(filterKey, ALLOWED_INCOME_FILTERS) && value !== undefined && value !== null) {
       const { field, operator } = ALLOWED_INCOME_FILTERS[filterKey];
       whereConditions.push(`${field} ${operator} ?`);
       // Convertir is_recurring booleano a entero para la base de datos
-      let value = filters[filterKey];
+      let finalValue = value;
       if (filterKey === 'is_recurring') {
-        value = value ? 1 : 0;
+        finalValue = value ? 1 : 0;
       }
-      params.push(value);
+      params.push(finalValue);
     }
   });
 
@@ -164,14 +170,16 @@ export function buildIncomeSetClause(updates) {
   const values = [];
 
   Object.keys(updates).forEach(fieldName => {
-    if (isValidUpdateField(fieldName, ALLOWED_INCOME_UPDATE_FIELDS)) {
+    const value = updates[fieldName];
+    // Solo agregar si el campo es válido Y el valor no es undefined
+    if (isValidUpdateField(fieldName, ALLOWED_INCOME_UPDATE_FIELDS) && value !== undefined) {
       fields.push(`${fieldName} = ?`);
       // Convertir is_recurring booleano a entero para la base de datos
-      let value = updates[fieldName];
-      if (fieldName === 'is_recurring' && value !== undefined) {
-        value = value ? 1 : 0;
+      let finalValue = value;
+      if (fieldName === 'is_recurring') {
+        finalValue = value ? 1 : 0;
       }
-      values.push(value);
+      values.push(finalValue);
     }
   });
 
@@ -197,10 +205,12 @@ export function buildCategoryWhereClause(userId, filters = {}) {
   const params = [userId];
 
   Object.keys(filters).forEach(filterKey => {
-    if (isValidFilter(filterKey, ALLOWED_CATEGORY_FILTERS)) {
+    const value = filters[filterKey];
+    // Solo agregar si el filtro es válido Y el valor no es undefined/null
+    if (isValidFilter(filterKey, ALLOWED_CATEGORY_FILTERS) && value !== undefined && value !== null) {
       const { field, operator } = ALLOWED_CATEGORY_FILTERS[filterKey];
       whereConditions.push(`${field} ${operator} ?`);
-      params.push(filters[filterKey]);
+      params.push(value);
     }
   });
 
