@@ -99,3 +99,21 @@ export async function updateUser(db, userId, updates) {
 
   return await findUserById(db, userId);
 }
+
+/**
+ * Actualizar el password hash de un usuario
+ * @param {Object} db - Binding de D1
+ * @param {number} userId
+ * @param {string} newPasswordHash - Nuevo hash del password
+ * @returns {Promise<boolean>} True si se actualizó correctamente
+ */
+export async function updateUserPasswordHash(db, userId, newPasswordHash) {
+  const result = await db.prepare(`
+    UPDATE users
+    SET password_hash = ?,
+        updated_at = CURRENT_TIMESTAMP
+    WHERE id = ?
+  `).bind(newPasswordHash, userId).run();
+
+  return result.success;
+}

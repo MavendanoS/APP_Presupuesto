@@ -6,7 +6,7 @@
 import { hashPassword, verifyPassword } from '../utils/hash.js';
 import { createToken } from '../utils/jwt.js';
 import { isValidEmail, validatePassword, validateName, sanitizeInput } from '../utils/validators.js';
-import { createUser, findUserByEmail, findUserById } from '../db/users.js';
+import { createUser, findUserByEmail, findUserById, updateUserPasswordHash } from '../db/users.js';
 import { sendPasswordResetEmail, sendPasswordChangedEmail } from './emailService.js';
 
 /**
@@ -92,9 +92,21 @@ export async function loginUser(db, credentials, jwtSecret) {
   }
 
   // Verificar password
-  const isValidPassword = await verifyPassword(password, user.password_hash);
-  if (!isValidPassword) {
+  const { isValid, needsRehash } = await verifyPassword(password, user.password_hash);
+  if (!isValid) {
     throw new Error('Credenciales inválidas');
+  }
+
+  // Si el password usa formato legacy SHA-256, actualizar a bcrypt
+  if (needsRehash) {
+    try {
+      const newHash = await hashPassword(password);
+      await updateUserPasswordHash(db, user.id, newHash);
+      console.log(`✅ Password actualizado a bcrypt para usuario ${user.id}`);
+    } catch (error) {
+      // No fallar el login si falla la actualización, solo loguear
+      console.error(`⚠️ Error al actualizar password a bcrypt para usuario ${user.id}:`, error);
+    }
   }
 
   // Generar token JWT

@@ -1,6 +1,11 @@
 /**
  * Queries de base de datos para gastos
+ *
+ * SEGURIDAD: Todos los queries usan prepared statements con parámetros
+ * y validación de campos mediante whitelist para prevenir SQL injection
  */
+
+import { buildExpenseWhereClause, buildExpenseSetClause } from '../utils/queryValidators.js';
 
 /**
  * Crear un nuevo gasto
@@ -52,32 +57,10 @@ export async function createExpense(db, expenseData) {
  * @returns {Promise<Object>} { expenses, total }
  */
 export async function getExpenses(db, userId, filters = {}) {
-  const { type, category_id, start_date, end_date, limit = 50, offset = 0 } = filters;
+  const { limit = 50, offset = 0 } = filters;
 
-  let whereConditions = ['e.user_id = ?'];
-  let params = [userId];
-
-  if (type) {
-    whereConditions.push('e.type = ?');
-    params.push(type);
-  }
-
-  if (category_id) {
-    whereConditions.push('e.category_id = ?');
-    params.push(category_id);
-  }
-
-  if (start_date) {
-    whereConditions.push('e.date >= ?');
-    params.push(start_date);
-  }
-
-  if (end_date) {
-    whereConditions.push('e.date <= ?');
-    params.push(end_date);
-  }
-
-  const whereClause = whereConditions.join(' AND ');
+  // Construir WHERE clause de forma segura con whitelist de campos
+  const { whereClause, params } = buildExpenseWhereClause(userId, filters);
 
   // Obtener total de registros
   const countResult = await db.prepare(`
@@ -157,50 +140,20 @@ export async function getExpenseById(db, expenseId, userId) {
  * @returns {Promise<Object>} Gasto actualizado
  */
 export async function updateExpense(db, expenseId, userId, updates) {
-  const fields = [];
-  const values = [];
+  // Construir SET clause de forma segura con whitelist de campos
+  const { setClause, values } = buildExpenseSetClause(updates);
 
-  if (updates.category_id !== undefined) {
-    fields.push('category_id = ?');
-    values.push(updates.category_id);
-  }
-
-  if (updates.type) {
-    fields.push('type = ?');
-    values.push(updates.type);
-  }
-
-  if (updates.amount !== undefined) {
-    fields.push('amount = ?');
-    values.push(updates.amount);
-  }
-
-  if (updates.description !== undefined) {
-    fields.push('description = ?');
-    values.push(updates.description);
-  }
-
-  if (updates.date) {
-    fields.push('date = ?');
-    values.push(updates.date);
-  }
-
-  if (updates.notes !== undefined) {
-    fields.push('notes = ?');
-    values.push(updates.notes);
-  }
-
-  if (fields.length === 0) {
-    // No hay cambios, retornar el gasto actual
+  if (values.length === 0) {
+    // No hay cambios válidos, retornar el gasto actual
     return await getExpenseById(db, expenseId, userId);
   }
 
-  fields.push('updated_at = CURRENT_TIMESTAMP');
+  // Agregar ID y userId para la cláusula WHERE
   values.push(expenseId, userId);
 
   const result = await db.prepare(`
     UPDATE expenses
-    SET ${fields.join(', ')}
+    SET ${setClause}
     WHERE id = ? AND user_id = ?
   `).bind(...values).run();
 
@@ -239,22 +192,11 @@ export async function deleteExpense(db, expenseId, userId) {
  * @returns {Promise<Array>} Resumen por tipo
  */
 export async function getExpensesSummaryByType(db, userId, filters = {}) {
-  const { start_date, end_date } = filters;
+  // Construir WHERE clause de forma segura
+  const { whereClause, params } = buildExpenseWhereClause(userId, filters);
 
-  let whereConditions = ['user_id = ?'];
-  let params = [userId];
-
-  if (start_date) {
-    whereConditions.push('date >= ?');
-    params.push(start_date);
-  }
-
-  if (end_date) {
-    whereConditions.push('date <= ?');
-    params.push(end_date);
-  }
-
-  const whereClause = whereConditions.join(' AND ');
+  // Remover el alias 'e.' ya que esta query no usa JOIN
+  const simpleWhereClause = whereClause.replace(/e\./g, '');
 
   const summary = await db.prepare(`
     SELECT
@@ -265,7 +207,7 @@ export async function getExpensesSummaryByType(db, userId, filters = {}) {
       MIN(amount) as min_amount,
       MAX(amount) as max_amount
     FROM expenses
-    WHERE ${whereClause}
+    WHERE ${simpleWhereClause}
     GROUP BY type
     ORDER BY total_amount DESC
   `).bind(...params).all();
@@ -281,27 +223,8 @@ export async function getExpensesSummaryByType(db, userId, filters = {}) {
  * @returns {Promise<Array>} Resumen por categoría
  */
 export async function getExpensesSummaryByCategory(db, userId, filters = {}) {
-  const { type, start_date, end_date } = filters;
-
-  let whereConditions = ['e.user_id = ?'];
-  let params = [userId];
-
-  if (type) {
-    whereConditions.push('e.type = ?');
-    params.push(type);
-  }
-
-  if (start_date) {
-    whereConditions.push('e.date >= ?');
-    params.push(start_date);
-  }
-
-  if (end_date) {
-    whereConditions.push('e.date <= ?');
-    params.push(end_date);
-  }
-
-  const whereClause = whereConditions.join(' AND ');
+  // Construir WHERE clause de forma segura
+  const { whereClause, params } = buildExpenseWhereClause(userId, filters);
 
   const summary = await db.prepare(`
     SELECT

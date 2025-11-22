@@ -2,10 +2,14 @@ name = "app-presupuesto-api"
 main = "src/index.js"
 compatibility_date = "2024-01-01"
 
-# Variables de entorno
+# Variables de entorno públicas (se pueden incluir en git)
 [vars]
-JWT_SECRET = "CHANGE_THIS_IN_PRODUCTION"
 FRONTEND_URL = "https://app-presupuesto.pages.dev"
+
+# ⚠️ SOLO PARA DESARROLLO LOCAL - Reemplazar con secret en producción
+# Este valor temporal permite desarrollo local, pero DEBE configurarse
+# como Worker Secret en producción usando el dashboard de Cloudflare
+JWT_SECRET = "dev-only-change-in-production-via-dashboard"
 
 # Base de datos D1
 [[d1_databases]]
@@ -16,4 +20,5 @@ database_id = "80c6f652-11b8-4a8e-a8ca-672b0008e6c0"
 # CORS headers
 [env.production.vars]
 FRONTEND_URL = "https://app-presupuesto.pages.dev"
-JWT_SECRET = "CHANGE_THIS_TO_SECURE_RANDOM_SECRET"
+
+# ⚠️ JWT_SECRET configurado como Worker Secret - NO incluir aquí

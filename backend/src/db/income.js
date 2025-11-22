@@ -1,6 +1,11 @@
 /**
  * Queries de base de datos para ingresos
+ *
+ * SEGURIDAD: Todos los queries usan prepared statements con parámetros
+ * y validación de campos mediante whitelist para prevenir SQL injection
  */
+
+import { buildIncomeWhereClause, buildIncomeSetClause } from '../utils/queryValidators.js';
 
 /**
  * Crear un nuevo ingreso
@@ -56,27 +61,10 @@ export async function createIncome(db, incomeData) {
  * @returns {Promise<Object>} { incomes, total }
  */
 export async function getIncomes(db, userId, filters = {}) {
-  const { is_recurring, start_date, end_date, limit = 50, offset = 0 } = filters;
+  const { limit = 50, offset = 0 } = filters;
 
-  let whereConditions = ['user_id = ?'];
-  let params = [userId];
-
-  if (is_recurring !== undefined) {
-    whereConditions.push('is_recurring = ?');
-    params.push(is_recurring ? 1 : 0);
-  }
-
-  if (start_date) {
-    whereConditions.push('date >= ?');
-    params.push(start_date);
-  }
-
-  if (end_date) {
-    whereConditions.push('date <= ?');
-    params.push(end_date);
-  }
-
-  const whereClause = whereConditions.join(' AND ');
+  // Construir WHERE clause de forma segura con whitelist de campos
+  const { whereClause, params } = buildIncomeWhereClause(userId, filters);
 
   // Obtener total de registros
   const countResult = await db.prepare(`
@@ -148,50 +136,20 @@ export async function getIncomeById(db, incomeId, userId) {
  * @returns {Promise<Object>} Ingreso actualizado
  */
 export async function updateIncome(db, incomeId, userId, updates) {
-  const fields = [];
-  const values = [];
+  // Construir SET clause de forma segura con whitelist de campos
+  const { setClause, values } = buildIncomeSetClause(updates);
 
-  if (updates.source) {
-    fields.push('source = ?');
-    values.push(updates.source);
-  }
-
-  if (updates.amount !== undefined) {
-    fields.push('amount = ?');
-    values.push(updates.amount);
-  }
-
-  if (updates.date) {
-    fields.push('date = ?');
-    values.push(updates.date);
-  }
-
-  if (updates.is_recurring !== undefined) {
-    fields.push('is_recurring = ?');
-    values.push(updates.is_recurring ? 1 : 0);
-  }
-
-  if (updates.frequency) {
-    fields.push('frequency = ?');
-    values.push(updates.frequency);
-  }
-
-  if (updates.notes !== undefined) {
-    fields.push('notes = ?');
-    values.push(updates.notes);
-  }
-
-  if (fields.length === 0) {
-    // No hay cambios, retornar el ingreso actual
+  if (values.length === 0) {
+    // No hay cambios válidos, retornar el ingreso actual
     return await getIncomeById(db, incomeId, userId);
   }
 
-  fields.push('updated_at = CURRENT_TIMESTAMP');
+  // Agregar ID y userId para la cláusula WHERE
   values.push(incomeId, userId);
 
   const result = await db.prepare(`
     UPDATE income
-    SET ${fields.join(', ')}
+    SET ${setClause}
     WHERE id = ? AND user_id = ?
   `).bind(...values).run();
 
@@ -230,22 +188,8 @@ export async function deleteIncome(db, incomeId, userId) {
  * @returns {Promise<Object>} Resumen de ingresos
  */
 export async function getIncomesSummary(db, userId, filters = {}) {
-  const { start_date, end_date } = filters;
-
-  let whereConditions = ['user_id = ?'];
-  let params = [userId];
-
-  if (start_date) {
-    whereConditions.push('date >= ?');
-    params.push(start_date);
-  }
-
-  if (end_date) {
-    whereConditions.push('date <= ?');
-    params.push(end_date);
-  }
-
-  const whereClause = whereConditions.join(' AND ');
+  // Construir WHERE clause de forma segura
+  const { whereClause, params } = buildIncomeWhereClause(userId, filters);
 
   const summary = await db.prepare(`
     SELECT
