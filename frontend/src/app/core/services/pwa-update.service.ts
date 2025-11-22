@@ -88,7 +88,7 @@ export class PwaUpdateService {
 
     // Mostrar notificación nativa si está disponible
     if ('Notification' in window && Notification.permission === 'granted') {
-      new Notification('APP Presupuesto v3.2.2', {
+      new Notification('APP Presupuesto v3.2.3', {
         body: 'Nueva versión disponible. Actualizando...',
         icon: '/icons/icon-192x192.png',
         badge: '/icons/icon-72x72.png'
