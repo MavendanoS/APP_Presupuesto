@@ -4,10 +4,10 @@
   <!-- Header -->
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h2 class="h4 mb-0">
-      <i class="bi bi-cash-stack text-success"></i> Mis Ingresos
+      <i class="bi bi-cash-stack text-success"></i> {{ 'income.title' | transloco }}
     </h2>
     <button class="btn btn-success" routerLink="/income/new">
-      <i class="bi bi-plus-lg"></i> Nuevo Ingreso
+      <i class="bi bi-plus-lg"></i> {{ 'income.newIncome' | transloco }}
     </button>
   </div>
 
@@ -18,11 +18,11 @@
         <div class="card-body">
           <div class="d-flex justify-content-between align-items-center">
             <div>
-              <p class="text-muted mb-1">Total del Periodo</p>
+              <p class="text-muted mb-1">{{ 'expenses.totalPeriod' | transloco }}</p>
               <h3 class="mb-0 text-success">
                 ${{ totalAmount() | number:'1.0-0' }}
               </h3>
-              <small class="text-muted">{{ incomes().length }} ingresos</small>
+              <small class="text-muted">{{ incomes().length }} {{ 'dashboard.records' | transloco }}</small>
             </div>
             <i class="bi bi-cash-coin display-4 text-success opacity-25"></i>
           </div>
@@ -36,7 +36,7 @@
     <div class="card-body">
       <div class="row g-3">
         <div class="col-12 col-md-4">
-          <label class="form-label fw-bold">Fecha Inicio</label>
+          <label class="form-label fw-bold">{{ 'dashboard.startDate' | transloco }}</label>
           <input
             type="date"
             class="form-control"
@@ -45,7 +45,7 @@
           />
         </div>
         <div class="col-12 col-md-4">
-          <label class="form-label fw-bold">Fecha Fin</label>
+          <label class="form-label fw-bold">{{ 'dashboard.endDate' | transloco }}</label>
           <input
             type="date"
             class="form-control"
@@ -54,14 +54,14 @@
           />
         </div>
         <div class="col-12 col-md-4">
-          <label class="form-label fw-bold">Tipo</label>
+          <label class="form-label fw-bold">{{ 'expenses.type' | transloco }}</label>
           <select
             class="form-select"
             (change)="onTypeChange($any($event.target).value)"
           >
-            <option value="">Todos</option>
-            <option value="true">Recurrentes</option>
-            <option value="false">Una vez</option>
+            <option value="">{{ 'expenses.allCategories' | transloco }}</option>
+            <option value="true">{{ 'income.isRecurring' | transloco }}</option>
+            <option value="false">{{ 'income.once' | transloco }}</option>
           </select>
         </div>
       </div>
@@ -82,33 +82,33 @@
       @if (loading()) {
         <div class="text-center py-5">
           <div class="spinner-border text-success" role="status">
-            <span class="visually-hidden">Cargando...</span>
+            <span class="visually-hidden">{{ 'common.loading' | transloco }}</span>
           </div>
-          <p class="mt-3 text-muted">Cargando ingresos...</p>
+          <p class="mt-3 text-muted">{{ 'expenses.loadingExpenses' | transloco }}</p>
         </div>
       } @else if (totalItems() === 0) {
         <div class="text-center py-5">
           <i class="bi bi-inbox display-1 text-muted mb-3"></i>
-          <h5 class="text-muted">No hay ingresos registrados</h5>
-          <p class="text-muted">Comienza agregando tu primer ingreso</p>
+          <h5 class="text-muted">{{ 'income.noIncome' | transloco }}</h5>
+          <p class="text-muted">{{ 'expenses.startAdding' | transloco }}</p>
           <button class="btn btn-success mt-3" routerLink="/income/new">
-            <i class="bi bi-plus-lg"></i> Agregar Ingreso
+            <i class="bi bi-plus-lg"></i> {{ 'income.add' | transloco }}
           </button>
         </div>
       } @else {
         <!-- Selector de entradas por página -->
         <div class="d-flex justify-content-between align-items-center mb-3">
           <div class="d-flex align-items-center gap-2">
-            <label class="mb-0 text-muted">Mostrar:</label>
+            <label class="mb-0 text-muted">{{ 'expenses.show' | transloco }}</label>
             <select
               class="form-select form-select-sm"
               style="width: auto;"
               [value]="itemsPerPage()"
               (change)="onItemsPerPageChange(+$any($event.target).value)"
             >
-              <option [value]="10">10 entradas</option>
-              <option [value]="50">50 entradas</option>
-              <option [value]="100">100 entradas</option>
+              <option [value]="10">10 {{ 'expenses.entries' | transloco }}</option>
+              <option [value]="50">50 {{ 'expenses.entries' | transloco }}</option>
+              <option [value]="100">100 {{ 'expenses.entries' | transloco }}</option>
             </select>
           </div>
         </div>
@@ -118,18 +118,18 @@
             <thead>
               <tr>
                 <th class="sortable" (click)="sortBy('date')" style="cursor: pointer;">
-                  Fecha <i class="bi" [ngClass]="getSortIcon('date')"></i>
+                  {{ 'expenses.date' | transloco }} <i class="bi" [ngClass]="getSortIcon('date')"></i>
                 </th>
                 <th class="sortable" (click)="sortBy('source')" style="cursor: pointer;">
-                  Fuente <i class="bi" [ngClass]="getSortIcon('source')"></i>
+                  {{ 'income.source' | transloco }} <i class="bi" [ngClass]="getSortIcon('source')"></i>
                 </th>
                 <th class="sortable text-end" (click)="sortBy('amount')" style="cursor: pointer;">
-                  Monto <i class="bi" [ngClass]="getSortIcon('amount')"></i>
+                  {{ 'expenses.amount' | transloco }} <i class="bi" [ngClass]="getSortIcon('amount')"></i>
                 </th>
                 <th class="sortable text-center" (click)="sortBy('frequency')" style="cursor: pointer;">
-                  Tipo <i class="bi" [ngClass]="getSortIcon('frequency')"></i>
+                  {{ 'expenses.type' | transloco }} <i class="bi" [ngClass]="getSortIcon('frequency')"></i>
                 </th>
-                <th class="text-center">Acciones</th>
+                <th class="text-center">{{ 'expenses.actions' | transloco }}</th>
               </tr>
             </thead>
             <tbody>
@@ -171,18 +171,18 @@
                       <button
                         class="btn btn-outline-primary"
                         (click)="editIncome(income.id)"
-                        title="Editar ingreso"
+                        [title]="'income.edit' | transloco"
                       >
                         <i class="bi bi-pencil"></i>
-                        <span class="d-none d-md-inline ms-1">Editar</span>
+                        <span class="d-none d-md-inline ms-1">{{ 'common.edit' | transloco }}</span>
                       </button>
                       <button
                         class="btn btn-outline-danger"
                         (click)="deleteIncome(income)"
-                        title="Eliminar ingreso"
+                        [title]="'income.delete' | transloco"
                       >
                         <i class="bi bi-trash"></i>
-                        <span class="d-none d-md-inline ms-1">Eliminar</span>
+                        <span class="d-none d-md-inline ms-1">{{ 'common.delete' | transloco }}</span>
                       </button>
                     </div>
                   </td>
@@ -232,9 +232,11 @@
         <!-- Resumen de resultados -->
         <div class="text-center text-muted mt-3">
           <small>
-            Mostrando {{ (currentPage() - 1) * itemsPerPage() + 1 }} -
-            {{ Math.min(currentPage() * itemsPerPage(), totalItems()) }}
-            de {{ totalItems() }} ingresos
+            {{ 'expenses.showingResults' | transloco: {
+              from: (currentPage() - 1) * itemsPerPage() + 1,
+              to: Math.min(currentPage() * itemsPerPage(), totalItems()),
+              total: totalItems()
+            } }}
           </small>
         </div>
       }

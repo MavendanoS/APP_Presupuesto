@@ -1,7 +1,8 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { ExpenseService } from '../../core/services/expense.service';
 import { CategoryService } from '../../core/services/category.service';
 import { Category, ExpenseType } from '../../core/models';
@@ -11,7 +12,7 @@ import { NavbarComponent } from '../../shared/components/navbar/navbar.component
 @Component({
   selector: 'app-expense-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule, ErrorMessageComponent, NavbarComponent],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, TranslocoPipe, ErrorMessageComponent, NavbarComponent],
   templateUrl: './expense-form.component.html',
   styleUrls: ['./expense-form.component.scss']
 })
@@ -21,10 +22,12 @@ export class ExpenseFormComponent implements OnInit {
   loading = signal(false);
   errorMessage = signal<string | null>(null);
 
+  private translocoService = inject(TranslocoService);
+
   expenseTypes: { value: ExpenseType; label: string; icon: string }[] = [
-    { value: 'payment', label: 'Pago', icon: 'bi-calendar-check' },
-    { value: 'purchase', label: 'Compra', icon: 'bi-cart' },
-    { value: 'small_expense', label: 'Gasto Hormiga', icon: 'bi-cup-hot' }
+    { value: 'payment', label: this.translocoService.translate('expenses.payment'), icon: 'bi-calendar-check' },
+    { value: 'purchase', label: this.translocoService.translate('expenses.purchase'), icon: 'bi-cart' },
+    { value: 'small_expense', label: this.translocoService.translate('expenses.smallExpense'), icon: 'bi-cup-hot' }
   ];
 
   constructor(

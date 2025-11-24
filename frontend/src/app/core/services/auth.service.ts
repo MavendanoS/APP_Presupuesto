@@ -1,7 +1,8 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap, map, BehaviorSubject } from 'rxjs';
 import { Router } from '@angular/router';
+import { TranslocoService } from '@jsverse/transloco';
 import { User, LoginRequest, RegisterRequest, AuthResponse } from '../models';
 import { environment } from '../../../environments/environment';
 
@@ -10,6 +11,7 @@ import { environment } from '../../../environments/environment';
 })
 export class AuthService {
   private readonly API_URL = `${environment.apiUrl}/auth`;
+  private translocoService = inject(TranslocoService);
 
   // Signals para estado reactivo
   currentUser = signal<User | null>(null);
@@ -33,6 +35,8 @@ export class AuthService {
       next: (user) => {
         this.currentUser.set(user);
         this.isAuthenticated.set(true);
+        // Aplicar preferencia de idioma del usuario
+        this.applyUserLanguagePreference(user);
       },
       error: () => {
         // No hay sesión activa, esto es normal en la primera carga
@@ -40,6 +44,16 @@ export class AuthService {
         this.isAuthenticated.set(false);
       }
     });
+  }
+
+  /**
+   * Aplicar la preferencia de idioma del usuario a Transloco
+   */
+  private applyUserLanguagePreference(user: User): void {
+    if (user.language) {
+      console.log(`🌐 Aplicando preferencia de idioma del usuario: ${user.language}`);
+      this.translocoService.setActiveLang(user.language);
+    }
   }
 
   /**
@@ -54,6 +68,8 @@ export class AuthService {
           // La cookie se configura automáticamente desde el backend
           this.currentUser.set(response.data.user);
           this.isAuthenticated.set(true);
+          // Aplicar preferencia de idioma del usuario
+          this.applyUserLanguagePreference(response.data.user);
         }
       })
     );
@@ -78,6 +94,8 @@ export class AuthService {
           // La cookie se configura automáticamente desde el backend
           this.currentUser.set(response.data.user);
           this.isAuthenticated.set(true);
+          // Aplicar preferencia de idioma del usuario
+          this.applyUserLanguagePreference(response.data.user);
         }
       })
     );
@@ -94,6 +112,8 @@ export class AuthService {
         if (response.success) {
           this.currentUser.set(response.data.user);
           this.isAuthenticated.set(true);
+          // Aplicar preferencia de idioma del usuario
+          this.applyUserLanguagePreference(response.data.user);
         }
       }),
       // Extraer solo el usuario
