@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
@@ -38,6 +38,18 @@ export class DashboardComponent implements OnInit {
   // Filtros de fecha
   startDate = signal(this.getMonthStart());
   endDate = signal(this.getMonthEnd());
+
+  // Computed signal para datos del gráfico - solo se recalcula cuando metrics cambia
+  topCategoriesChartData = computed(() => {
+    const categories = this.metrics()?.top_categories || [];
+    return categories.map(cat => ({
+      category_id: cat.id,
+      category_name: cat.name,
+      type: 'payment' as const,
+      count: cat.expense_count,
+      total: cat.total_amount
+    }));
+  });
 
   constructor(
     private authService: AuthService,
@@ -146,17 +158,6 @@ export class DashboardComponent implements OnInit {
   getTotalExpenseCount(): number {
     const byType = this.metrics()?.expenses.by_type || [];
     return byType.reduce((sum, t) => sum + t.count, 0);
-  }
-
-  getTopCategoriesAsChartData() {
-    const categories = this.metrics()?.top_categories || [];
-    return categories.map(cat => ({
-      category_id: cat.id,
-      category_name: cat.name,
-      type: 'payment' as const, // Tipo por defecto, ya que top_categories no tiene type
-      count: cat.expense_count,
-      total: cat.total_amount
-    }));
   }
 
   private getMonthStart(): string {
