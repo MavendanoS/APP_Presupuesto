@@ -15,8 +15,12 @@ export class InactivityService {
   private deviceDetection = inject(DeviceDetectionService);
 
   private lastActivityTime: number = Date.now();
+  private lastUpdateTime: number = Date.now(); // Para throttling
   private checkIntervalId?: number;
   private isMonitoring = false;
+
+  // Throttle: solo actualizar cada 30 segundos para evitar updates constantes
+  private readonly UPDATE_THROTTLE_MS = 30000; // 30 segundos
 
   // Eventos que indican actividad del usuario
   private readonly ACTIVITY_EVENTS = [
@@ -143,10 +147,19 @@ export class InactivityService {
   }
 
   /**
-   * Manejar actividad del usuario
+   * Manejar actividad del usuario (con throttling para evitar updates constantes)
    */
   private handleActivity = (): void => {
-    this.resetTimer();
+    const now = Date.now();
+
+    // Solo actualizar si han pasado más de UPDATE_THROTTLE_MS desde la última actualización
+    if (now - this.lastUpdateTime >= this.UPDATE_THROTTLE_MS) {
+      this.resetTimer();
+      this.lastUpdateTime = now;
+    } else {
+      // Actualizar solo en memoria, sin escribir a localStorage
+      this.lastActivityTime = now;
+    }
   };
 
   /**
