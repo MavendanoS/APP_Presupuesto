@@ -1,2 +1,15 @@
-# SPA routing - redirect all requests to index.html
+# Don't redirect static files
+/*.js 200
+/*.css 200
+/*.png 200
+/*.jpg 200
+/*.jpeg 200
+/*.svg 200
+/*.ico 200
+/*.woff2 200
+/*.woff 200
+/*.ttf 200
+/*.webmanifest 200
+
+# SPA routing - redirect navigation requests to index.html
 /* /index.html 200
