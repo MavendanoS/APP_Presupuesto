@@ -1,7 +1,8 @@
-import { Component, OnInit, OnDestroy, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { NavbarComponent } from '../../shared/components/navbar/navbar.component';
 import { IncomeService } from '../../core/services/income.service';
 import { DataRefreshService } from '../../core/services/data-refresh.service';
@@ -10,7 +11,7 @@ import { Income } from '../../core/models/income.model';
 @Component({
   selector: 'app-income-list',
   standalone: true,
-  imports: [CommonModule, RouterLink, NavbarComponent],
+  imports: [CommonModule, RouterLink, TranslocoPipe, NavbarComponent],
   templateUrl: './income-list.html',
   styleUrl: './income-list.scss'
 })
@@ -42,6 +43,8 @@ export class IncomeListComponent implements OnInit, OnDestroy {
 
   // Subscription para limpieza
   private refreshSubscription?: Subscription;
+
+  private translocoService = inject(TranslocoService);
 
   constructor(
     private incomeService: IncomeService,
@@ -150,11 +153,11 @@ export class IncomeListComponent implements OnInit, OnDestroy {
 
   getFrequencyLabel(frequency: string): string {
     const labels: Record<string, string> = {
-      'once': 'Una vez',
-      'weekly': 'Semanal',
-      'biweekly': 'Quincenal',
-      'monthly': 'Mensual',
-      'annual': 'Anual'
+      'once': this.translocoService.translate('income.once'),
+      'weekly': this.translocoService.translate('income.weekly'),
+      'biweekly': this.translocoService.translate('income.biweekly'),
+      'monthly': this.translocoService.translate('income.monthly'),
+      'annual': this.translocoService.translate('income.yearly')
     };
     return labels[frequency] || frequency;
   }

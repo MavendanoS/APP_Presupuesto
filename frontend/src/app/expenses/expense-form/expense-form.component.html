@@ -8,10 +8,10 @@
         <div class="d-flex justify-content-between align-items-center mb-4">
           <h2 class="h4 mb-0">
             <i class="bi bi-plus-circle-fill me-2 text-primary"></i>
-            Nuevo Gasto
+            {{ 'expenses.newExpense' | transloco }}
           </h2>
           <button type="button" class="btn btn-outline-secondary btn-sm" routerLink="/expenses">
-            <i class="bi bi-x-lg"></i> Cancelar
+            <i class="bi bi-x-lg"></i> {{ 'expenses.cancel' | transloco }}
           </button>
         </div>
 
@@ -27,7 +27,7 @@
         <form [formGroup]="expenseForm" (ngSubmit)="onSubmit()">
           <!-- Tipo de Gasto -->
           <div class="mb-4">
-            <label class="form-label fw-bold">Tipo de Gasto</label>
+            <label class="form-label fw-bold">{{ 'expenses.type' | transloco }}</label>
             <div class="row g-3">
               @for (expenseType of expenseTypes; track expenseType.value) {
                 <div class="col-12 col-md-4">
@@ -56,7 +56,7 @@
           <div class="row g-3">
             <!-- Categoría -->
             <div class="col-12 col-md-6">
-              <label for="category" class="form-label">Categoría</label>
+              <label for="category" class="form-label">{{ 'expenses.category' | transloco }}</label>
               <select
                 id="category"
                 class="form-select"
@@ -72,7 +72,7 @@
 
             <!-- Monto -->
             <div class="col-12 col-md-6">
-              <label for="amount" class="form-label">Monto (CLP)</label>
+              <label for="amount" class="form-label">{{ 'expenses.amount' | transloco }}</label>
               <div class="input-group">
                 <span class="input-group-text">$</span>
                 <input
@@ -81,17 +81,17 @@
                   class="form-control"
                   formControlName="amount"
                   [class.is-invalid]="amount?.invalid && amount?.touched"
-                  placeholder="Ingrese el monto del gasto"
+                  [placeholder]="'income.amountPlaceholder' | transloco"
                   min="1"
                   step="1"
                 />
                 @if (amount?.invalid && amount?.touched) {
                   <div class="invalid-feedback">
                     @if (amount?.errors?.['required']) {
-                      El monto es requerido
+                      {{ 'income.amountRequired' | transloco }}
                     }
                     @if (amount?.errors?.['min']) {
-                      El monto debe ser mayor a 0
+                      {{ 'income.amountRequired' | transloco }}
                     }
                   </div>
                 }
@@ -100,22 +100,22 @@
 
             <!-- Descripción -->
             <div class="col-12">
-              <label for="description" class="form-label">Descripción</label>
+              <label for="description" class="form-label">{{ 'expenses.description' | transloco }}</label>
               <input
                 type="text"
                 id="description"
                 class="form-control"
                 formControlName="description"
                 [class.is-invalid]="description?.invalid && description?.touched"
-                placeholder="Ej: Arriendo mes de Enero"
+                [placeholder]="'expenses.searchPlaceholder' | transloco"
               />
               @if (description?.invalid && description?.touched) {
                 <div class="invalid-feedback">
                   @if (description?.errors?.['required']) {
-                    La descripción es requerida
+                    {{ 'income.sourceRequired' | transloco }}
                   }
                   @if (description?.errors?.['minlength']) {
-                    Mínimo 3 caracteres
+                    {{ 'income.sourceRequired' | transloco }}
                   }
                 </div>
               }
@@ -123,7 +123,7 @@
 
             <!-- Fecha -->
             <div class="col-12 col-md-6">
-              <label for="date" class="form-label">Fecha</label>
+              <label for="date" class="form-label">{{ 'expenses.date' | transloco }}</label>
               <input
                 type="date"
                 id="date"
@@ -133,20 +133,20 @@
               />
               @if (date?.invalid && date?.touched) {
                 <div class="invalid-feedback">
-                  La fecha es requerida
+                  {{ 'income.dateRequired' | transloco }}
                 </div>
               }
             </div>
 
             <!-- Notas (opcional) -->
             <div class="col-12">
-              <label for="notes" class="form-label">Notas (opcional)</label>
+              <label for="notes" class="form-label">{{ 'income.notes' | transloco }}</label>
               <textarea
                 id="notes"
                 class="form-control"
                 formControlName="notes"
                 rows="3"
-                placeholder="Notas adicionales..."
+                [placeholder]="'income.notesPlaceholder' | transloco"
               ></textarea>
             </div>
           </div>
@@ -161,7 +161,7 @@
               @if (loading()) {
                 <span class="spinner-border spinner-border-sm me-2"></span>
               }
-              <i class="bi bi-check-lg"></i> Guardar Gasto
+              <i class="bi bi-check-lg"></i> {{ 'expenses.save' | transloco }}
             </button>
           </div>
         </form>

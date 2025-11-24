@@ -2,12 +2,13 @@ import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, TranslocoPipe],
   templateUrl: './register.component.html',
   styleUrls: ['./register.component.scss']
 })

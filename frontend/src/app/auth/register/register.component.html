@@ -5,8 +5,8 @@
         <div class="card-responsive register-card">
           <!-- Header -->
           <div class="text-center mb-4">
-            <h1 class="h3 mb-2">Crear Cuenta</h1>
-            <p class="text-muted">Regístrate para comenzar a gestionar tus gastos</p>
+            <h1 class="h3 mb-2">{{ 'auth.register' | transloco }}</h1>
+            <p class="text-muted">{{ 'dashboard.financesIntro' | transloco }}</p>
           </div>
 
           <!-- Error Alert -->
@@ -21,7 +21,7 @@
           <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
             <!-- Name -->
             <div class="mb-3">
-              <label for="name" class="form-label">Nombre Completo</label>
+              <label for="name" class="form-label">{{ 'auth.name' | transloco }}</label>
               <input
                 type="text"
                 class="form-control"
@@ -34,10 +34,10 @@
               @if (name?.invalid && name?.touched) {
                 <div class="invalid-feedback">
                   @if (name?.errors?.['required']) {
-                    El nombre es requerido
+                    {{ 'messages.requiredField' | transloco }}
                   }
                   @if (name?.errors?.['minlength']) {
-                    Mínimo 3 caracteres
+                    {{ 'income.sourceRequired' | transloco }}
                   }
                 </div>
               }
@@ -45,7 +45,7 @@
 
             <!-- Email -->
             <div class="mb-3">
-              <label for="email" class="form-label">Email</label>
+              <label for="email" class="form-label">{{ 'auth.email' | transloco }}</label>
               <input
                 type="email"
                 class="form-control"
@@ -58,10 +58,10 @@
               @if (email?.invalid && email?.touched) {
                 <div class="invalid-feedback">
                   @if (email?.errors?.['required']) {
-                    El email es requerido
+                    {{ 'messages.requiredField' | transloco }}
                   }
                   @if (email?.errors?.['email']) {
-                    Ingresa un email válido
+                    {{ 'messages.invalidData' | transloco }}
                   }
                 </div>
               }
@@ -69,7 +69,7 @@
 
             <!-- Password -->
             <div class="mb-3">
-              <label for="password" class="form-label">Contraseña</label>
+              <label for="password" class="form-label">{{ 'auth.password' | transloco }}</label>
               <input
                 type="password"
                 class="form-control"
@@ -82,10 +82,10 @@
               @if (password?.invalid && password?.touched) {
                 <div class="invalid-feedback">
                   @if (password?.errors?.['required']) {
-                    La contraseña es requerida
+                    {{ 'messages.requiredField' | transloco }}
                   }
                   @if (password?.errors?.['minlength']) {
-                    Mínimo 6 caracteres
+                    {{ 'income.sourceRequired' | transloco }}
                   }
                 </div>
               }
@@ -93,7 +93,7 @@
 
             <!-- Confirm Password -->
             <div class="mb-3">
-              <label for="confirmPassword" class="form-label">Confirmar Contraseña</label>
+              <label for="confirmPassword" class="form-label">{{ 'auth.confirmPassword' | transloco }}</label>
               <input
                 type="password"
                 class="form-control"
@@ -105,7 +105,7 @@
               />
               @if (passwordMismatch) {
                 <div class="invalid-feedback">
-                  Las contraseñas no coinciden
+                  {{ 'messages.invalidData' | transloco }}
                 </div>
               }
             </div>
@@ -118,17 +118,17 @@
             >
               @if (loading()) {
                 <span class="spinner-border spinner-border-sm me-2"></span>
-                Registrando...
+                {{ 'common.loading' | transloco }}
               } @else {
-                Crear Cuenta
+                {{ 'auth.registerButton' | transloco }}
               }
             </button>
 
             <!-- Login Link -->
             <div class="text-center">
               <p class="mb-0">
-                ¿Ya tienes cuenta?
-                <a routerLink="/auth/login" class="text-decoration-none">Inicia sesión</a>
+                {{ 'auth.alreadyHaveAccount' | transloco }}
+                <a routerLink="/auth/login" class="text-decoration-none">{{ 'auth.login' | transloco }}</a>
               </p>
             </div>
           </form>

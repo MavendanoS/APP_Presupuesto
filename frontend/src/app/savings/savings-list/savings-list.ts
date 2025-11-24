@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { NavbarComponent } from '../../shared/components/navbar/navbar.component';
 import { SavingsService } from '../../core/services/savings.service';
 import { DataRefreshService } from '../../core/services/data-refresh.service';
@@ -10,7 +11,7 @@ import { SavingsGoal, SavingsGoalWithProgress } from '../../core/models/savings.
 @Component({
   selector: 'app-savings-list',
   standalone: true,
-  imports: [CommonModule, RouterLink, NavbarComponent],
+  imports: [CommonModule, RouterLink, TranslocoPipe, NavbarComponent],
   templateUrl: './savings-list.html',
   styleUrl: './savings-list.scss'
 })

@@ -6,7 +6,7 @@
           <!-- Header -->
           <div class="text-center mb-4">
             <h1 class="h3 mb-2">APP Presupuesto</h1>
-            <p class="text-muted">Inicia sesión para gestionar tus gastos</p>
+            <p class="text-muted">{{ 'dashboard.financesIntro' | transloco }}</p>
           </div>
 
           <!-- Error Alert -->
@@ -21,7 +21,7 @@
           <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
             <!-- Email -->
             <div class="mb-3">
-              <label for="email" class="form-label">Email</label>
+              <label for="email" class="form-label">{{ 'auth.email' | transloco }}</label>
               <input
                 type="email"
                 class="form-control"
@@ -34,10 +34,10 @@
               @if (email?.invalid && email?.touched) {
                 <div class="invalid-feedback">
                   @if (email?.errors?.['required']) {
-                    El email es requerido
+                    {{ 'messages.requiredField' | transloco }}
                   }
                   @if (email?.errors?.['email']) {
-                    Ingresa un email válido
+                    {{ 'messages.invalidData' | transloco }}
                   }
                 </div>
               }
@@ -45,7 +45,7 @@
 
             <!-- Password -->
             <div class="mb-3">
-              <label for="password" class="form-label">Contraseña</label>
+              <label for="password" class="form-label">{{ 'auth.password' | transloco }}</label>
               <input
                 type="password"
                 class="form-control"
@@ -58,10 +58,10 @@
               @if (password?.invalid && password?.touched) {
                 <div class="invalid-feedback">
                   @if (password?.errors?.['required']) {
-                    La contraseña es requerida
+                    {{ 'messages.requiredField' | transloco }}
                   }
                   @if (password?.errors?.['minlength']) {
-                    Mínimo 6 caracteres
+                    {{ 'income.sourceRequired' | transloco }}
                   }
                 </div>
               }
@@ -75,24 +75,24 @@
             >
               @if (loading()) {
                 <span class="spinner-border spinner-border-sm me-2"></span>
-                Iniciando sesión...
+                {{ 'common.loading' | transloco }}
               } @else {
-                Iniciar Sesión
+                {{ 'auth.loginButton' | transloco }}
               }
             </button>
 
             <!-- Forgot Password Link -->
             <div class="text-center mb-3">
               <a routerLink="/auth/forgot-password" class="text-decoration-none small">
-                ¿Olvidaste tu contraseña?
+                {{ 'auth.forgotPassword' | transloco }}
               </a>
             </div>
 
             <!-- Register Link -->
             <div class="text-center">
               <p class="mb-0">
-                ¿No tienes cuenta?
-                <a routerLink="/auth/register" class="text-decoration-none">Regístrate aquí</a>
+                {{ 'auth.dontHaveAccount' | transloco }}
+                <a routerLink="/auth/register" class="text-decoration-none">{{ 'auth.register' | transloco }}</a>
               </p>
             </div>
 
