@@ -1,7 +1,7 @@
 {
   "name": "APP Presupuesto - Gestión de Gastos Personales",
   "short_name": "Presupuesto",
-  "version": "3.3.0-dev",
+  "version": "3.3.1-dev",
   "description": "Aplicación PWA para gestión de gastos personales, pagos, compras y gastos hormiga con estadísticas y gráficos.",
   "theme_color": "#10B981",
   "background_color": "#ffffff",

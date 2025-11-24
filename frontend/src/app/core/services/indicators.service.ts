@@ -43,7 +43,9 @@ export class IndicatorsService {
     this.loading.set(true);
     this.error.set(null);
 
-    this.http.get<IndicatorsResponse>(this.API_URL).subscribe({
+    // Cache buster para evitar cache de Cloudflare con headers CORS antiguos
+    const cacheBuster = `?_t=${Date.now()}`;
+    this.http.get<IndicatorsResponse>(`${this.API_URL}${cacheBuster}`).subscribe({
       next: (response) => {
         if (response.success && response.data) {
           if (response.data.dolar?.valor) {
