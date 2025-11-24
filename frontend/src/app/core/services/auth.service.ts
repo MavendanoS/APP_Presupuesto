@@ -182,4 +182,23 @@ export class AuthService {
       { withCredentials: true }
     );
   }
+
+  /**
+   * Re-autenticar usuario después de inactividad
+   * Valida la contraseña sin cerrar la sesión actual
+   */
+  async reAuthenticate(password: string): Promise<boolean> {
+    try {
+      const response = await this.http.post<{ success: boolean; message?: string }>(
+        `${this.API_URL}/re-authenticate`,
+        { password },
+        { withCredentials: true }
+      ).toPromise();
+
+      return response?.success ?? false;
+    } catch (error) {
+      console.error('Error en re-autenticación:', error);
+      return false;
+    }
+  }
 }

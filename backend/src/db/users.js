@@ -38,7 +38,7 @@ export async function createUser(db, userData) {
  */
 export async function findUserByEmail(db, email) {
   const user = await db.prepare(`
-    SELECT id, email, password_hash, name, created_at
+    SELECT id, email, password_hash, name, language, currency, created_at
     FROM users
     WHERE LOWER(email) = LOWER(?)
   `).bind(email).first();
@@ -54,7 +54,7 @@ export async function findUserByEmail(db, email) {
  */
 export async function findUserById(db, userId) {
   const user = await db.prepare(`
-    SELECT id, email, name, created_at
+    SELECT id, email, name, language, currency, created_at
     FROM users
     WHERE id = ?
   `).bind(userId).first();
@@ -116,4 +116,50 @@ export async function updateUserPasswordHash(db, userId, newPasswordHash) {
   `).bind(newPasswordHash, userId).run();
 
   return result.success;
+}
+
+/**
+ * Actualizar preferencias del usuario (idioma y moneda)
+ * @param {Object} db - Binding de D1
+ * @param {number} userId
+ * @param {Object} preferences - { language?, currency? }
+ * @returns {Promise<Object>} Usuario actualizado
+ */
+export async function updateUserPreferences(db, userId, preferences) {
+  const fields = [];
+  const values = [];
+
+  if (preferences.language) {
+    // Validar idioma
+    if (!['es', 'en'].includes(preferences.language)) {
+      throw new Error('Idioma inválido. Debe ser "es" o "en"');
+    }
+    fields.push('language = ?');
+    values.push(preferences.language);
+  }
+
+  if (preferences.currency) {
+    // Validar moneda
+    if (!['CLP', 'USD'].includes(preferences.currency)) {
+      throw new Error('Moneda inválida. Debe ser "CLP" o "USD"');
+    }
+    fields.push('currency = ?');
+    values.push(preferences.currency);
+  }
+
+  if (fields.length === 0) {
+    // No hay preferencias para actualizar
+    return await findUserById(db, userId);
+  }
+
+  fields.push('updated_at = CURRENT_TIMESTAMP');
+  values.push(userId);
+
+  await db.prepare(`
+    UPDATE users
+    SET ${fields.join(', ')}
+    WHERE id = ?
+  `).bind(...values).run();
+
+  return await findUserById(db, userId);
 }

@@ -91,7 +91,9 @@ export class TrendsComponent implements OnInit {
   }
 
   private formatMonth(month: string): string {
-    const date = new Date(month + '-01');
+    // Evitar problema de timezone parseando manualmente
+    const [year, monthNum] = month.split('-');
+    const date = new Date(parseInt(year), parseInt(monthNum) - 1, 1);
     return date.toLocaleDateString('es-CL', { month: 'short', year: 'numeric' });
   }
 

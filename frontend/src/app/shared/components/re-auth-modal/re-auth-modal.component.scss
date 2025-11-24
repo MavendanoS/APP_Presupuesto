@@ -1,0 +1,73 @@
+// Estilos para el modal de re-autenticación
+.modal {
+  &.show {
+    display: block !important;
+  }
+}
+
+.modal-content {
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+  padding: 1.5rem;
+
+  .modal-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #212529;
+  }
+}
+
+.modal-body {
+  padding: 0 1.5rem 1.5rem;
+}
+
+.alert {
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+
+.form-control {
+  border-radius: 8px;
+  padding: 0.75rem;
+  font-size: 1rem;
+
+  &:focus {
+    border-color: #10B981;
+    box-shadow: 0 0 0 0.2rem rgba(16, 185, 129, 0.25);
+  }
+}
+
+.btn {
+  border-radius: 8px;
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+}
+
+.btn-primary {
+  background-color: #10B981;
+  border-color: #10B981;
+
+  &:hover:not(:disabled) {
+    background-color: #059669;
+    border-color: #059669;
+  }
+
+  &:disabled {
+    background-color: #6B7280;
+    border-color: #6B7280;
+    cursor: not-allowed;
+  }
+}
+
+.modal-backdrop {
+  background-color: rgba(0, 0, 0, 0.5);
+}

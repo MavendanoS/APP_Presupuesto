@@ -186,3 +186,25 @@
     font-size: 0.875rem;
   }
 }
+
+// Encabezados ordenables
+.sortable {
+  user-select: none;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+    color: $primary;
+  }
+
+  i {
+    font-size: 0.875rem;
+    margin-left: 0.25rem;
+    opacity: 0.6;
+    transition: opacity 0.2s ease;
+  }
+
+  &:hover i {
+    opacity: 1;
+  }
+}

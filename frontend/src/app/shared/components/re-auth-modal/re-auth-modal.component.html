@@ -1,0 +1,95 @@
+<!-- Modal de re-autenticación por inactividad -->
+<div class="modal fade" [class.show]="show()" [style.display]="show() ? 'block' : 'none'" tabindex="-1" role="dialog" [attr.aria-hidden]="!show()">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header border-0">
+        <h5 class="modal-title">
+          <i class="bi bi-lock me-2"></i>
+          Sesión Inactiva
+        </h5>
+      </div>
+
+      <div class="modal-body">
+        <!-- Mensaje informativo -->
+        <div class="alert alert-warning d-flex align-items-center mb-4">
+          <i class="bi bi-exclamation-triangle-fill me-2"></i>
+          <div>
+            Por seguridad, tu sesión ha estado inactiva por más de <strong>{{ timeoutLabel }}</strong>.
+            Por favor confirma tu contraseña para continuar.
+          </div>
+        </div>
+
+        <!-- Usuario actual -->
+        @if (currentUser()) {
+          <div class="mb-3">
+            <label class="form-label text-muted small">Usuario</label>
+            <div class="fw-medium">
+              <i class="bi bi-person-circle me-2"></i>
+              {{ currentUser()!.email }}
+            </div>
+          </div>
+        }
+
+        <!-- Formulario de contraseña -->
+        <form [formGroup]="reAuthForm" (ngSubmit)="onSubmit()">
+          <div class="mb-3">
+            <label for="password" class="form-label">Contraseña</label>
+            <input
+              type="password"
+              class="form-control"
+              id="password"
+              formControlName="password"
+              placeholder="Ingresa tu contraseña"
+              [class.is-invalid]="reAuthForm.get('password')?.invalid && reAuthForm.get('password')?.touched"
+              autofocus
+            />
+            @if (reAuthForm.get('password')?.invalid && reAuthForm.get('password')?.touched) {
+              <div class="invalid-feedback">
+                La contraseña debe tener al menos 6 caracteres
+              </div>
+            }
+          </div>
+
+          <!-- Mensaje de error -->
+          @if (errorMessage()) {
+            <div class="alert alert-danger d-flex align-items-center">
+              <i class="bi bi-x-circle-fill me-2"></i>
+              {{ errorMessage() }}
+            </div>
+          }
+
+          <!-- Botones -->
+          <div class="d-flex gap-2">
+            <button
+              type="submit"
+              class="btn btn-primary flex-grow-1"
+              [disabled]="loading() || reAuthForm.invalid"
+            >
+              @if (loading()) {
+                <span class="spinner-border spinner-border-sm me-2"></span>
+                Validando...
+              } @else {
+                <i class="bi bi-check-circle me-2"></i>
+                Confirmar
+              }
+            </button>
+            <button
+              type="button"
+              class="btn btn-outline-secondary"
+              (click)="logout()"
+              [disabled]="loading()"
+            >
+              <i class="bi bi-box-arrow-right me-2"></i>
+              Cerrar Sesión
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Backdrop -->
+@if (show()) {
+  <div class="modal-backdrop fade show"></div>
+}

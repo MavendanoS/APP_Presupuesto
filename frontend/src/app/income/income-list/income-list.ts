@@ -33,6 +33,10 @@ export class IncomeListComponent implements OnInit, OnDestroy {
   totalItems = signal(0);
   totalPages = signal(0);
 
+  // Ordenamiento
+  sortColumn = signal<string>('date');
+  sortDirection = signal<'asc' | 'desc'>('desc');
+
   // Math para template
   Math = Math;
 
@@ -77,6 +81,7 @@ export class IncomeListComponent implements OnInit, OnDestroy {
           this.incomes.set(response.data.incomes);
           this.totalItems.set(response.data.total || response.data.incomes.length);
           this.totalPages.set(Math.ceil(this.totalItems() / this.itemsPerPage()));
+          this.sortIncomes();
           this.calculateTotal();
         }
         this.loading.set(false);
@@ -192,5 +197,64 @@ export class IncomeListComponent implements OnInit, OnDestroy {
     const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
     const day = String(lastDay).padStart(2, '0');
     return `${year}-${month}-${day}`;
+  }
+
+  sortBy(column: string): void {
+    if (this.sortColumn() === column) {
+      // Cambiar dirección si es la misma columna
+      this.sortDirection.set(this.sortDirection() === 'asc' ? 'desc' : 'asc');
+    } else {
+      // Nueva columna, ordenar ascendente por defecto
+      this.sortColumn.set(column);
+      this.sortDirection.set('asc');
+    }
+    this.sortIncomes();
+  }
+
+  sortIncomes(): void {
+    const sorted = [...this.incomes()].sort((a, b) => {
+      const column = this.sortColumn();
+      const direction = this.sortDirection();
+      let aValue: any;
+      let bValue: any;
+
+      switch (column) {
+        case 'date':
+          aValue = new Date(a.date).getTime();
+          bValue = new Date(b.date).getTime();
+          break;
+        case 'source':
+          aValue = a.source.toLowerCase();
+          bValue = b.source.toLowerCase();
+          break;
+        case 'amount':
+          aValue = a.amount;
+          bValue = b.amount;
+          break;
+        case 'frequency':
+          aValue = this.getFrequencyLabel(a.frequency).toLowerCase();
+          bValue = this.getFrequencyLabel(b.frequency).toLowerCase();
+          break;
+        default:
+          return 0;
+      }
+
+      if (aValue < bValue) {
+        return direction === 'asc' ? -1 : 1;
+      }
+      if (aValue > bValue) {
+        return direction === 'asc' ? 1 : -1;
+      }
+      return 0;
+    });
+
+    this.incomes.set(sorted);
+  }
+
+  getSortIcon(column: string): string {
+    if (this.sortColumn() !== column) {
+      return 'bi-arrow-down-up';
+    }
+    return this.sortDirection() === 'asc' ? 'bi-sort-up' : 'bi-sort-down';
   }
 }

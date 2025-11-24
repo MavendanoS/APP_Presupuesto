@@ -20,7 +20,17 @@
               (click)="changeTab('profile')"
             >
               <i class="bi bi-person me-1"></i>
-              Información Personal
+              {{ 'profile.personalInfo' | transloco }}
+            </button>
+          </li>
+          <li class="nav-item">
+            <button
+              class="nav-link"
+              [class.active]="activeTab() === 'preferences'"
+              (click)="changeTab('preferences')"
+            >
+              <i class="bi bi-gear me-1"></i>
+              {{ 'profile.preferences' | transloco }}
             </button>
           </li>
           <li class="nav-item">
@@ -30,7 +40,7 @@
               (click)="changeTab('password')"
             >
               <i class="bi bi-shield-lock me-1"></i>
-              Cambiar Contraseña
+              {{ 'profile.security' | transloco }}
             </button>
           </li>
         </ul>
@@ -136,6 +146,83 @@
                   <a routerLink="/dashboard" class="btn btn-outline-secondary">
                     <i class="bi bi-x-circle me-2"></i>
                     Cancelar
+                  </a>
+                </div>
+              </form>
+            </div>
+          </div>
+        }
+
+        <!-- Preferences Tab Content -->
+        @if (activeTab() === 'preferences') {
+          <div class="card profile-card">
+            <div class="card-body">
+              <h5 class="card-title mb-4">
+                <i class="bi bi-gear me-2"></i>
+                {{ 'profile.preferences' | transloco }}
+              </h5>
+
+              <form [formGroup]="preferencesForm" (ngSubmit)="onSubmitPreferences()">
+                <!-- Language Field -->
+                <div class="mb-3">
+                  <label for="language" class="form-label">
+                    <i class="bi bi-translate me-1"></i>
+                    {{ 'profile.language' | transloco }}
+                  </label>
+                  <select
+                    id="language"
+                    class="form-select"
+                    formControlName="language"
+                    [class.is-invalid]="language?.invalid && language?.touched"
+                  >
+                    <option value="es">{{ 'profile.spanish' | transloco }}</option>
+                    <option value="en">{{ 'profile.english' | transloco }}</option>
+                  </select>
+                  <div class="form-text">
+                    <i class="bi bi-info-circle me-1"></i>
+                    El idioma de la interfaz cambiará inmediatamente
+                  </div>
+                </div>
+
+                <!-- Currency Field -->
+                <div class="mb-4">
+                  <label for="currency" class="form-label">
+                    <i class="bi bi-currency-exchange me-1"></i>
+                    {{ 'profile.currency' | transloco }}
+                  </label>
+                  <select
+                    id="currency"
+                    class="form-select"
+                    formControlName="currency"
+                    [class.is-invalid]="currency?.invalid && currency?.touched"
+                  >
+                    <option value="CLP">CLP - Peso Chileno</option>
+                    <option value="USD">USD - Dólar Estadounidense</option>
+                  </select>
+                  <div class="form-text">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Los montos se mostrarán en la moneda seleccionada
+                  </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="d-flex gap-2">
+                  <button
+                    type="submit"
+                    class="btn btn-primary"
+                    [disabled]="preferencesForm.invalid || loading()"
+                  >
+                    @if (loading()) {
+                      <span class="spinner-border spinner-border-sm me-2"></span>
+                      {{ 'common.loading' | transloco }}
+                    } @else {
+                      <i class="bi bi-save me-2"></i>
+                      {{ 'common.save' | transloco }}
+                    }
+                  </button>
+                  <a routerLink="/dashboard" class="btn btn-outline-secondary">
+                    <i class="bi bi-x-circle me-2"></i>
+                    {{ 'common.cancel' | transloco }}
                   </a>
                 </div>
               </form>

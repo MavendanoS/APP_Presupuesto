@@ -61,3 +61,25 @@
     padding: 0.25rem 0.5rem;
   }
 }
+
+// Encabezados ordenables
+.sortable {
+  user-select: none;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: rgba(40, 167, 69, 0.05);
+    color: #28a745;
+  }
+
+  i {
+    font-size: 0.875rem;
+    margin-left: 0.25rem;
+    opacity: 0.6;
+    transition: opacity 0.2s ease;
+  }
+
+  &:hover i {
+    opacity: 1;
+  }
+}

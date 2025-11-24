@@ -2,6 +2,8 @@ export interface User {
   id: number;
   email: string;
   name: string;
+  language: 'es' | 'en';
+  currency: 'CLP' | 'USD';
   created_at: string;
 }
 

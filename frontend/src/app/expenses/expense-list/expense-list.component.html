@@ -146,11 +146,21 @@
               <table class="table table-hover align-middle">
                 <thead>
                   <tr>
-                    <th>Fecha</th>
-                    <th>Tipo</th>
-                    <th>Descripción</th>
-                    <th>Categoría</th>
-                    <th class="text-end">Monto</th>
+                    <th class="sortable" (click)="sortBy('date')" style="cursor: pointer;">
+                      Fecha <i class="bi" [ngClass]="getSortIcon('date')"></i>
+                    </th>
+                    <th class="sortable" (click)="sortBy('type')" style="cursor: pointer;">
+                      Tipo <i class="bi" [ngClass]="getSortIcon('type')"></i>
+                    </th>
+                    <th class="sortable" (click)="sortBy('description')" style="cursor: pointer;">
+                      Descripción <i class="bi" [ngClass]="getSortIcon('description')"></i>
+                    </th>
+                    <th class="sortable" (click)="sortBy('category')" style="cursor: pointer;">
+                      Categoría <i class="bi" [ngClass]="getSortIcon('category')"></i>
+                    </th>
+                    <th class="sortable text-end" (click)="sortBy('amount')" style="cursor: pointer;">
+                      Monto <i class="bi" [ngClass]="getSortIcon('amount')"></i>
+                    </th>
                     <th class="text-center">Acciones</th>
                   </tr>
                 </thead>

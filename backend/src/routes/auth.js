@@ -4,9 +4,10 @@
  */
 
 import { Router } from 'itty-router';
-import { registerUser, loginUser, getCurrentUser, generatePasswordResetToken, resetPasswordWithToken, updateUserProfile, changeUserPassword } from '../services/authService.js';
+import { registerUser, loginUser, getCurrentUser, generatePasswordResetToken, resetPasswordWithToken, updateUserProfile, changeUserPassword, reAuthenticateUser } from '../services/authService.js';
 import { requireAuth } from '../middleware/auth.js';
 import { withRateLimit, resetRateLimit } from '../middleware/rateLimit.js';
+import { updateUserPreferences } from '../db/users.js';
 
 const authRouter = Router({ base: '/api/auth' });
 
@@ -345,6 +346,130 @@ authRouter.put('/change-password', requireAuth(async (request, env) => {
   } catch (error) {
     return new Response(JSON.stringify({
       error: 'Error al cambiar contraseña',
+      message: error.message
+    }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}));
+
+/**
+ * POST /api/auth/re-authenticate
+ * Re-autenticar usuario después de inactividad
+ * Valida password sin cerrar sesión
+ */
+authRouter.post('/re-authenticate', requireAuth(async (request, env) => {
+  try {
+    const body = await request.json();
+    const { password } = body;
+
+    if (!password) {
+      return new Response(JSON.stringify({
+        error: 'Contraseña requerida'
+      }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const userId = request.user.userId; // Establecido por requireAuth
+
+    const isValid = await reAuthenticateUser(env.DB, userId, password);
+
+    if (!isValid) {
+      return new Response(JSON.stringify({
+        success: false,
+        message: 'Contraseña incorrecta'
+      }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    return new Response(JSON.stringify({
+      success: true,
+      message: 'Re-autenticación exitosa'
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+  } catch (error) {
+    return new Response(JSON.stringify({
+      error: 'Error al re-autenticar',
+      message: error.message
+    }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}));
+
+/**
+ * PUT /api/auth/preferences
+ * Actualizar preferencias de idioma y moneda del usuario
+ */
+authRouter.put('/preferences', requireAuth(async (request, env) => {
+  try {
+    const body = await request.json();
+    const { language, currency } = body;
+
+    // Validar que al menos uno de los campos esté presente
+    if (!language && !currency) {
+      return new Response(JSON.stringify({
+        error: 'Debe proporcionar al menos language o currency'
+      }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Validar idioma si está presente
+    if (language && !['es', 'en'].includes(language)) {
+      return new Response(JSON.stringify({
+        error: 'Idioma inválido. Debe ser "es" o "en"'
+      }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Validar moneda si está presente
+    if (currency && !['CLP', 'USD'].includes(currency)) {
+      return new Response(JSON.stringify({
+        error: 'Moneda inválida. Debe ser "CLP" o "USD"'
+      }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const userId = request.user.userId;
+
+    // Actualizar preferencias
+    const preferences = {};
+    if (language) preferences.language = language;
+    if (currency) preferences.currency = currency;
+
+    const updatedUser = await updateUserPreferences(env.DB, userId, preferences);
+
+    // Remover password_hash de la respuesta
+    const { password_hash: _, ...userWithoutPassword } = updatedUser;
+
+    return new Response(JSON.stringify({
+      success: true,
+      data: {
+        user: userWithoutPassword
+      }
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+  } catch (error) {
+    return new Response(JSON.stringify({
+      error: 'Error al actualizar preferencias',
       message: error.message
     }), {
       status: 400,

@@ -225,6 +225,32 @@
   }
 }
 
+// Botón de guardar con mejor contraste y hover
+.btn-success {
+  background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+  border: none;
+  color: #ffffff !important;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.2);
+
+  &:hover:not(:disabled) {
+    background: linear-gradient(135deg, #218838 0%, #1a6929 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(40, 167, 69, 0.4);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+}
+
 .alert {
   border-radius: 12px;
   border: none;

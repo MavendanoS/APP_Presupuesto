@@ -117,10 +117,18 @@
           <table class="table table-hover align-middle">
             <thead>
               <tr>
-                <th>Fecha</th>
-                <th>Fuente</th>
-                <th class="text-end">Monto</th>
-                <th class="text-center">Tipo</th>
+                <th class="sortable" (click)="sortBy('date')" style="cursor: pointer;">
+                  Fecha <i class="bi" [ngClass]="getSortIcon('date')"></i>
+                </th>
+                <th class="sortable" (click)="sortBy('source')" style="cursor: pointer;">
+                  Fuente <i class="bi" [ngClass]="getSortIcon('source')"></i>
+                </th>
+                <th class="sortable text-end" (click)="sortBy('amount')" style="cursor: pointer;">
+                  Monto <i class="bi" [ngClass]="getSortIcon('amount')"></i>
+                </th>
+                <th class="sortable text-center" (click)="sortBy('frequency')" style="cursor: pointer;">
+                  Tipo <i class="bi" [ngClass]="getSortIcon('frequency')"></i>
+                </th>
                 <th class="text-center">Acciones</th>
               </tr>
             </thead>

@@ -336,3 +336,24 @@ export async function changeUserPassword(db, userId, passwordData) {
   `).bind(password_hash, userId).run();
 }
 
+/**
+ * Re-autenticar usuario después de inactividad
+ * Valida la contraseña del usuario actual sin generar nuevo token
+ * @param {Object} db - D1 database binding
+ * @param {number} userId - ID del usuario
+ * @param {string} password - Contraseña a validar
+ * @returns {Promise<boolean>} true si la contraseña es correcta
+ */
+export async function reAuthenticateUser(db, userId, password) {
+  // Obtener usuario
+  const user = await findUserById(db, userId);
+  if (!user) {
+    throw new Error('Usuario no encontrado');
+  }
+
+  // Verificar contraseña
+  const { isValid } = await verifyPassword(password, user.password_hash);
+
+  return isValid;
+}
+

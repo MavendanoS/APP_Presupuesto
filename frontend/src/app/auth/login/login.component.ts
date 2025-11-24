@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
+import { APP_VERSION } from '../../core/version';
 
 @Component({
   selector: 'app-login',
@@ -15,6 +16,7 @@ export class LoginComponent {
   loginForm: FormGroup;
   loading = signal(false);
   errorMessage = signal<string | null>(null);
+  appVersion = APP_VERSION;
 
   constructor(
     private fb: FormBuilder,

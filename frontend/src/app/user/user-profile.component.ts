@@ -1,26 +1,32 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { AuthService } from '../core/services/auth.service';
+import { UserPreferencesService } from '../core/services/user-preferences.service';
 
 @Component({
   selector: 'app-user-profile',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, TranslocoModule],
   templateUrl: './user-profile.component.html',
   styleUrl: './user-profile.component.scss'
 })
 export class UserProfileComponent implements OnInit {
   profileForm: FormGroup;
   passwordForm: FormGroup;
+  preferencesForm: FormGroup;
   loading = signal(false);
   error = signal<string | null>(null);
   success = signal<string | null>(null);
-  activeTab = signal<'profile' | 'password'>('profile');
+  activeTab = signal<'profile' | 'password' | 'preferences'>('profile');
   showCurrentPassword = signal(false);
   showNewPassword = signal(false);
   showConfirmPassword = signal(false);
+
+  private userPreferencesService = inject(UserPreferencesService);
+  private translocoService = inject(TranslocoService);
 
   constructor(
     private fb: FormBuilder,
@@ -41,6 +47,11 @@ export class UserProfileComponent implements OnInit {
     }, {
       validators: this.passwordMatchValidator
     });
+
+    this.preferencesForm = this.fb.group({
+      language: [currentUser?.language || 'es', [Validators.required]],
+      currency: [currentUser?.currency || 'CLP', [Validators.required]]
+    });
   }
 
   ngOnInit(): void {
@@ -50,6 +61,10 @@ export class UserProfileComponent implements OnInit {
       this.profileForm.patchValue({
         name: user.name,
         email: user.email
+      });
+      this.preferencesForm.patchValue({
+        language: user.language || 'es',
+        currency: user.currency || 'CLP'
       });
     }
   }
@@ -64,7 +79,7 @@ export class UserProfileComponent implements OnInit {
     return null;
   }
 
-  changeTab(tab: 'profile' | 'password'): void {
+  changeTab(tab: 'profile' | 'password' | 'preferences'): void {
     this.activeTab.set(tab);
     this.error.set(null);
     this.success.set(null);
@@ -153,5 +168,38 @@ export class UserProfileComponent implements OnInit {
 
   get passwordsMatch() {
     return !this.passwordForm.errors?.['passwordMismatch'];
+  }
+
+  async onSubmitPreferences(): Promise<void> {
+    if (this.preferencesForm.invalid) {
+      return;
+    }
+
+    this.loading.set(true);
+    this.error.set(null);
+    this.success.set(null);
+
+    const { language, currency } = this.preferencesForm.value;
+
+    try {
+      await this.userPreferencesService.updatePreferences({ language, currency });
+
+      // Cambiar idioma de la interfaz inmediatamente
+      this.translocoService.setActiveLang(language);
+
+      this.loading.set(false);
+      this.success.set('Preferencias actualizadas correctamente');
+    } catch (err: any) {
+      this.loading.set(false);
+      this.error.set(err?.error?.message || 'Error al actualizar preferencias');
+    }
+  }
+
+  get language() {
+    return this.preferencesForm.get('language');
+  }
+
+  get currency() {
+    return this.preferencesForm.get('currency');
   }
 }

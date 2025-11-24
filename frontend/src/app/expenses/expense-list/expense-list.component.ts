@@ -42,6 +42,10 @@ export class ExpenseListComponent implements OnInit, OnDestroy {
   // Total del período actual
   totalAmount = signal(0);
 
+  // Ordenamiento
+  sortColumn = signal<string>('date');
+  sortDirection = signal<'asc' | 'desc'>('desc');
+
   // Math para template
   Math = Math;
 
@@ -119,6 +123,7 @@ export class ExpenseListComponent implements OnInit, OnDestroy {
         this.expenses.set(response.expenses);
         this.totalItems.set(response.total);
         this.totalPages.set(Math.ceil(response.total / this.itemsPerPage()));
+        this.sortExpenses();
         this.calculateTotal();
         this.loading.set(false);
       },
@@ -223,5 +228,68 @@ export class ExpenseListComponent implements OnInit, OnDestroy {
     }
 
     return pages;
+  }
+
+  sortBy(column: string): void {
+    if (this.sortColumn() === column) {
+      // Cambiar dirección si es la misma columna
+      this.sortDirection.set(this.sortDirection() === 'asc' ? 'desc' : 'asc');
+    } else {
+      // Nueva columna, ordenar ascendente por defecto
+      this.sortColumn.set(column);
+      this.sortDirection.set('asc');
+    }
+    this.sortExpenses();
+  }
+
+  sortExpenses(): void {
+    const sorted = [...this.expenses()].sort((a, b) => {
+      const column = this.sortColumn();
+      const direction = this.sortDirection();
+      let aValue: any;
+      let bValue: any;
+
+      switch (column) {
+        case 'date':
+          aValue = new Date(a.date).getTime();
+          bValue = new Date(b.date).getTime();
+          break;
+        case 'type':
+          aValue = a.type;
+          bValue = b.type;
+          break;
+        case 'description':
+          aValue = a.description.toLowerCase();
+          bValue = b.description.toLowerCase();
+          break;
+        case 'category':
+          aValue = (a.category_name || '').toLowerCase();
+          bValue = (b.category_name || '').toLowerCase();
+          break;
+        case 'amount':
+          aValue = a.amount;
+          bValue = b.amount;
+          break;
+        default:
+          return 0;
+      }
+
+      if (aValue < bValue) {
+        return direction === 'asc' ? -1 : 1;
+      }
+      if (aValue > bValue) {
+        return direction === 'asc' ? 1 : -1;
+      }
+      return 0;
+    });
+
+    this.expenses.set(sorted);
+  }
+
+  getSortIcon(column: string): string {
+    if (this.sortColumn() !== column) {
+      return 'bi-arrow-down-up';
+    }
+    return this.sortDirection() === 'asc' ? 'bi-sort-up' : 'bi-sort-down';
   }
 }

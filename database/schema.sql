@@ -92,7 +92,9 @@ CREATE INDEX IF NOT EXISTS idx_budget_user ON budget_limits(user_id);
 INSERT OR IGNORE INTO expense_categories (user_id, name, type, color, icon, is_standard)
 VALUES
   (NULL, 'Arriendo', 'payment', '#EF4444', 'home', 1),
-  (NULL, 'Servicios Básicos', 'payment', '#F59E0B', 'bolt', 1),
+  (NULL, 'Luz', 'payment', '#F59E0B', 'lightbulb', 1),
+  (NULL, 'Agua', 'payment', '#06B6D4', 'droplet', 1),
+  (NULL, 'Gas', 'payment', '#DC2626', 'fire', 1),
   (NULL, 'Internet/Teléfono', 'payment', '#3B82F6', 'wifi', 1),
   (NULL, 'Transporte', 'payment', '#8B5CF6', 'car', 1);
 

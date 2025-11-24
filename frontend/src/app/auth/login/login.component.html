@@ -5,10 +5,7 @@
         <div class="card-responsive login-card">
           <!-- Header -->
           <div class="text-center mb-4">
-            <h1 class="h3 mb-2">
-              APP Presupuesto
-              <span class="badge bg-success ms-2" style="font-size: 0.65rem; vertical-align: middle;">v3.2.3</span>
-            </h1>
+            <h1 class="h3 mb-2">APP Presupuesto</h1>
             <p class="text-muted">Inicia sesión para gestionar tus gastos</p>
           </div>
 
@@ -97,6 +94,11 @@
                 ¿No tienes cuenta?
                 <a routerLink="/auth/register" class="text-decoration-none">Regístrate aquí</a>
               </p>
+            </div>
+
+            <!-- Version -->
+            <div class="text-center mt-4">
+              <small class="text-muted">Versión {{ appVersion }}</small>
             </div>
           </form>
         </div>

@@ -2,6 +2,7 @@ import { Injectable, ApplicationRef } from '@angular/core';
 import { SwUpdate, VersionReadyEvent } from '@angular/service-worker';
 import { concat, interval } from 'rxjs';
 import { first, filter } from 'rxjs/operators';
+import { APP_VERSION } from '../version';
 
 /**
  * Servicio para gestionar actualizaciones automáticas de la PWA
@@ -88,7 +89,7 @@ export class PwaUpdateService {
 
     // Mostrar notificación nativa si está disponible
     if ('Notification' in window && Notification.permission === 'granted') {
-      new Notification('APP Presupuesto v3.2.3', {
+      new Notification(`APP Presupuesto v${APP_VERSION}`, {
         body: 'Nueva versión disponible. Actualizando...',
         icon: '/icons/icon-192x192.png',
         badge: '/icons/icon-72x72.png'
