@@ -33,6 +33,7 @@ export async function createPaymentService(db, data) {
       color,
       is_active,
       sort_order,
+      expected_amount,
       created_at,
       updated_at
     FROM payment_services
@@ -71,6 +72,7 @@ export async function getPaymentServices(db, userId, filters = {}) {
       color,
       is_active,
       sort_order,
+      expected_amount,
       created_at,
       updated_at
     FROM payment_services
@@ -98,6 +100,7 @@ export async function getPaymentServiceById(db, serviceId, userId) {
       color,
       is_active,
       sort_order,
+      expected_amount,
       created_at,
       updated_at
     FROM payment_services
@@ -147,6 +150,11 @@ export async function updatePaymentService(db, serviceId, userId, updates) {
   if (updates.sort_order !== undefined) {
     fields.push('sort_order = ?');
     values.push(updates.sort_order);
+  }
+
+  if (updates.expected_amount !== undefined) {
+    fields.push('expected_amount = ?');
+    values.push(updates.expected_amount === null ? null : updates.expected_amount);
   }
 
   if (fields.length === 0) {

@@ -23,6 +23,7 @@ export class ServiceFormComponent implements OnInit {
   name = signal('');
   icon = signal('bi-receipt');
   color = signal('#3B82F6');
+  expectedAmount = signal<number | null>(null);
 
   availableIcons = [
     'bi-house', 'bi-lightbulb', 'bi-droplet', 'bi-fire', 'bi-wifi',
@@ -53,6 +54,7 @@ export class ServiceFormComponent implements OnInit {
         this.name.set(data.service.name);
         this.icon.set(data.service.icon);
         this.color.set(data.service.color);
+        this.expectedAmount.set(data.service.expected_amount);
         this.loading.set(false);
       },
       error: (error) => {
@@ -69,7 +71,12 @@ export class ServiceFormComponent implements OnInit {
     }
 
     this.loading.set(true);
-    const data = { name: this.name().trim(), icon: this.icon(), color: this.color() };
+    const data: any = { name: this.name().trim(), icon: this.icon(), color: this.color() };
+    if (this.expectedAmount() !== null && this.expectedAmount()! > 0) {
+      data.expected_amount = this.expectedAmount();
+    } else {
+      data.expected_amount = null;
+    }
 
     const request$ = this.isEditMode()
       ? this.paymentServiceService.updateService(this.serviceId()!, data)

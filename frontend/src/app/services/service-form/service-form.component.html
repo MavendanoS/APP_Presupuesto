@@ -63,6 +63,24 @@
                 </div>
               </div>
 
+              <!-- Expected Amount -->
+              <div class="mb-4">
+                <label class="form-label">{{ 'services.expectedAmount' | transloco }}</label>
+                <div class="input-group">
+                  <span class="input-group-text">$</span>
+                  <input
+                    type="number"
+                    class="form-control"
+                    [ngModel]="expectedAmount()"
+                    (ngModelChange)="expectedAmount.set($event)"
+                    name="expectedAmount"
+                    min="0"
+                    [placeholder]="'services.expectedAmountPlaceholder' | transloco"
+                  />
+                </div>
+                <small class="text-muted">{{ 'services.expectedAmountHint' | transloco }}</small>
+              </div>
+
               <!-- Preview -->
               <div class="mb-4 p-3 bg-light rounded d-flex align-items-center gap-3">
                 <div class="rounded-circle" [style.background-color]="color()" style="width: 10px; height: 40px; border-radius: 5px !important;"></div>

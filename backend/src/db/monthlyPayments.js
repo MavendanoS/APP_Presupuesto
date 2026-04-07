@@ -93,6 +93,7 @@ export async function getMonthlyChecklist(db, userId, yearMonth) {
       ps.icon,
       ps.color,
       ps.sort_order,
+      ps.expected_amount,
       mp.id as payment_id,
       mp.amount,
       mp.paid_date,

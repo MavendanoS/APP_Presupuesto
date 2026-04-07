@@ -39,7 +39,8 @@
     "noServices": "No services configured.",
     "addService": "Add Service",
     "markAsPaid": "Pay",
-    "avgLabel": "Avg"
+    "avgLabel": "Avg",
+    "expectedLabel": "Expected"
   },
   "services": {
     "title": "Payment Services",
@@ -51,6 +52,9 @@
     "color": "Color",
     "active": "Active",
     "inactive": "Inactive",
+    "expectedAmount": "Expected Amount",
+    "expectedAmountPlaceholder": "E.g.: 70000",
+    "expectedAmountHint": "If not set, the average of previous payments will be used.",
     "noServices": "No services configured.",
     "confirmDelete": "Delete this service?"
   },

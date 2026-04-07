@@ -133,7 +133,11 @@
                     </div>
                     <div class="flex-grow-1">
                       <div class="fw-semibold">{{ item.name }}</div>
-                      @if (item.months_with_data > 0) {
+                      @if (item.expected_amount != null) {
+                        <small class="text-muted">
+                          {{ 'dashboard.expectedLabel' | transloco }}: {{ formatAmount(item.expected_amount) }}
+                        </small>
+                      } @else if (item.months_with_data > 0) {
                         <small class="text-muted">
                           {{ 'dashboard.avgLabel' | transloco }}: {{ formatAmount(item.average_amount) }}
                         </small>

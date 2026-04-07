@@ -39,7 +39,8 @@
     "noServices": "No tienes servicios configurados.",
     "addService": "Agregar Servicio",
     "markAsPaid": "Pagar",
-    "avgLabel": "Prom"
+    "avgLabel": "Prom",
+    "expectedLabel": "Esperado"
   },
   "services": {
     "title": "Servicios de Pago",
@@ -51,6 +52,9 @@
     "color": "Color",
     "active": "Activo",
     "inactive": "Inactivo",
+    "expectedAmount": "Monto Esperado",
+    "expectedAmountPlaceholder": "Ej: 70000",
+    "expectedAmountHint": "Si no lo defines, se usará el promedio de pagos anteriores.",
     "noServices": "No hay servicios configurados.",
     "confirmDelete": "¿Eliminar este servicio?"
   },

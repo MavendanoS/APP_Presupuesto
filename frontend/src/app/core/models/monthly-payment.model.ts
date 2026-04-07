@@ -22,6 +22,8 @@ export interface ChecklistItem {
   notes: string | null;
   year_month: string | null;
   is_paid: boolean;
+  expected_amount: number | null;
+  effective_expected: number;
   average_amount: number;
   min_amount: number;
   max_amount: number;

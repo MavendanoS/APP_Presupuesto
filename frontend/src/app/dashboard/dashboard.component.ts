@@ -131,7 +131,7 @@ export class DashboardComponent implements OnInit {
   // Start editing a payment (mark as paid)
   startPayment(item: ChecklistItem): void {
     this.editingServiceId.set(item.service_id);
-    this.paymentAmount.set(item.amount || Math.round(item.average_amount) || 0);
+    this.paymentAmount.set(item.amount || Math.round(item.effective_expected) || 0);
     this.paymentNotes.set(item.notes || '');
   }
 

@@ -153,17 +153,23 @@ export async function getBudgetSummarySvc(db, userId, yearMonth, avgMonths = 3) 
     avgMap[avg.service_id] = avg;
   }
 
-  // Enriquecer checklist con promedios
-  const enrichedChecklist = checklist.map(item => ({
-    ...item,
-    average_amount: avgMap[item.service_id]?.average_amount || 0,
-    min_amount: avgMap[item.service_id]?.min_amount || 0,
-    max_amount: avgMap[item.service_id]?.max_amount || 0,
-    months_with_data: avgMap[item.service_id]?.months_with_data || 0
-  }));
+  // Enriquecer checklist con promedios y expected_amount
+  const enrichedChecklist = checklist.map(item => {
+    const avg = avgMap[item.service_id];
+    // Si el servicio tiene expected_amount manual, usarlo; si no, usar promedio
+    const effectiveExpected = item.expected_amount != null ? item.expected_amount : (avg?.average_amount || 0);
+    return {
+      ...item,
+      average_amount: avg?.average_amount || 0,
+      min_amount: avg?.min_amount || 0,
+      max_amount: avg?.max_amount || 0,
+      months_with_data: avg?.months_with_data || 0,
+      effective_expected: effectiveExpected
+    };
+  });
 
   const totalExpected = enrichedChecklist.reduce(
-    (sum, item) => sum + (item.average_amount || 0), 0
+    (sum, item) => sum + (item.effective_expected || 0), 0
   );
   const totalPaid = enrichedChecklist
     .filter(i => i.is_paid)
