@@ -13,7 +13,7 @@
     }
 
     @if (loading()) {
-      <app-loading message="Cargando métricas..." />
+      <app-loading [message]="'dashboard.loadingMetrics' | transloco" />
     } @else if (metrics()) {
       <!-- Welcome Card -->
       <div class="row mb-4">
@@ -23,20 +23,20 @@
               <div class="flex-grow-1">
                 <h1 class="h3 mb-3">
                   <i class="bi bi-house-heart-fill me-2 text-primary"></i>
-                  Bienvenido, {{ user()?.name }}!
+                  {{ 'dashboard.welcome' | transloco }}, {{ user()?.name }}!
                 </h1>
                 <p class="text-muted mb-1">
-                  Resumen del período: <strong>{{ metrics()!.period.start_date }}</strong> al <strong>{{ metrics()!.period.end_date }}</strong>
+                  {{ 'dashboard.periodSummary' | transloco }}: <strong>{{ metrics()!.period.start_date }}</strong> {{ 'common.to' | transloco }} <strong>{{ metrics()!.period.end_date }}</strong>
                 </p>
                 <p class="text-muted mb-0">
-                  Controla tus finanzas personales de manera simple y efectiva.
+                  {{ 'dashboard.financesIntro' | transloco }}
                 </p>
               </div>
 
               <!-- Filtros de Fecha -->
               <div class="d-flex gap-2 align-items-end flex-wrap">
                 <div>
-                  <label class="form-label mb-1 small text-muted">Fecha Inicio</label>
+                  <label class="form-label mb-1 small text-muted">{{ 'dashboard.startDate' | transloco }}</label>
                   <input
                     type="date"
                     class="form-control form-control-sm"
@@ -45,7 +45,7 @@
                   />
                 </div>
                 <div>
-                  <label class="form-label mb-1 small text-muted">Fecha Fin</label>
+                  <label class="form-label mb-1 small text-muted">{{ 'dashboard.endDate' | transloco }}</label>
                   <input
                     type="date"
                     class="form-control form-control-sm"
@@ -57,10 +57,10 @@
                   type="button"
                   class="btn btn-outline-secondary btn-sm"
                   (click)="toggleAmounts()"
-                  title="{{ showAmounts() ? 'Ocultar montos' : 'Mostrar montos' }}"
+                  [title]="showAmounts() ? ('dashboard.hideAmountsTooltip' | transloco) : ('dashboard.showAmountsTooltip' | transloco)"
                 >
                   <i class="bi" [ngClass]="showAmounts() ? 'bi-eye-slash' : 'bi-eye'"></i>
-                  <span class="d-none d-md-inline ms-1">{{ showAmounts() ? 'Ocultar' : 'Mostrar' }}</span>
+                  <span class="d-none d-md-inline ms-1">{{ showAmounts() ? ('dashboard.hideAmounts' | transloco) : ('dashboard.showAmounts' | transloco) }}</span>
                 </button>
               </div>
             </div>
@@ -74,9 +74,9 @@
         <div class="col-12 col-md-6 col-lg-3">
           <div class="card-responsive metric-card clickable-card" routerLink="/income">
             <i class="bi bi-wallet2 metric-icon-clean text-success"></i>
-            <h6 class="text-muted mb-1">Ingresos</h6>
+            <h6 class="text-muted mb-1">{{ 'dashboard.income' | transloco }}</h6>
             <h3 class="mb-0">{{ formatAmount(metrics()!.income.total) }}</h3>
-            <small class="text-muted">{{ metrics()!.income.count }} registros</small>
+            <small class="text-muted">{{ metrics()!.income.count }} {{ 'dashboard.records' | transloco }}</small>
           </div>
         </div>
 
@@ -84,9 +84,9 @@
         <div class="col-12 col-md-6 col-lg-3">
           <div class="card-responsive metric-card clickable-card" routerLink="/expenses">
             <i class="bi bi-cash-stack metric-icon-clean text-danger"></i>
-            <h6 class="text-muted mb-1">Gastos Totales</h6>
+            <h6 class="text-muted mb-1">{{ 'dashboard.totalExpenses' | transloco }}</h6>
             <h3 class="mb-0">{{ formatAmount(metrics()!.expenses.total) }}</h3>
-            <small class="text-muted">{{ getTotalExpenseCount() }} registros</small>
+            <small class="text-muted">{{ getTotalExpenseCount() }} {{ 'dashboard.records' | transloco }}</small>
           </div>
         </div>
 
@@ -94,9 +94,9 @@
         <div class="col-12 col-md-6 col-lg-3">
           <div class="card-responsive metric-card clickable-card" routerLink="/analytics">
             <i class="bi metric-icon-clean" [ngClass]="[getBalanceIcon(), metrics()!.balance >= 0 ? 'text-primary' : 'text-warning']"></i>
-            <h6 class="text-muted mb-1">Balance</h6>
+            <h6 class="text-muted mb-1">{{ 'dashboard.balance' | transloco }}</h6>
             <h3 class="mb-0" [ngClass]="getBalanceClass()">{{ formatAmount(metrics()!.balance) }}</h3>
-            <small [ngClass]="getBalanceClass()">{{ getBalanceText() }}</small>
+            <small [ngClass]="getBalanceClass()">{{ getBalanceText() | transloco }}</small>
           </div>
         </div>
 
@@ -104,9 +104,9 @@
         <div class="col-12 col-md-6 col-lg-3">
           <div class="card-responsive metric-card clickable-card" routerLink="/savings">
             <i class="bi bi-piggy-bank metric-icon-clean text-success"></i>
-            <h6 class="text-muted mb-1">Total Ahorrado</h6>
+            <h6 class="text-muted mb-1">{{ 'dashboard.totalSaved' | transloco }}</h6>
             <h3 class="mb-0">{{ formatAmount(savingsSummary()?.total_saved || 0) }}</h3>
-            <small class="text-muted">{{ savingsSummary()?.active_goals || 0 }} metas activas</small>
+            <small class="text-muted">{{ savingsSummary()?.active_goals || 0 }} {{ 'dashboard.activeGoals' | transloco }}</small>
           </div>
         </div>
       </div>
@@ -117,7 +117,7 @@
           <div class="card-responsive metric-card-small">
             <div class="d-flex justify-content-between align-items-center">
               <div>
-                <h6 class="text-muted mb-1">Pagos</h6>
+                <h6 class="text-muted mb-1">{{ 'dashboard.payments' | transloco }}</h6>
                 <h4 class="mb-0 text-payment">{{ formatAmount(getExpensesByType('payment')) }}</h4>
               </div>
               <i class="bi bi-calendar-check display-6 text-payment opacity-50"></i>
@@ -128,7 +128,7 @@
           <div class="card-responsive metric-card-small">
             <div class="d-flex justify-content-between align-items-center">
               <div>
-                <h6 class="text-muted mb-1">Compras</h6>
+                <h6 class="text-muted mb-1">{{ 'dashboard.purchases' | transloco }}</h6>
                 <h4 class="mb-0 text-purchase">{{ formatAmount(getExpensesByType('purchase')) }}</h4>
               </div>
               <i class="bi bi-cart display-6 text-purchase opacity-50"></i>
@@ -139,7 +139,7 @@
           <div class="card-responsive metric-card-small">
             <div class="d-flex justify-content-between align-items-center">
               <div>
-                <h6 class="text-muted mb-1">Gastos Hormiga</h6>
+                <h6 class="text-muted mb-1">{{ 'dashboard.smallExpenses' | transloco }}</h6>
                 <h4 class="mb-0 text-small-expense">{{ formatAmount(getExpensesByType('small_expense')) }}</h4>
               </div>
               <i class="bi bi-cup-hot display-6 text-small-expense opacity-50"></i>
@@ -156,7 +156,7 @@
             <div class="card-responsive">
               <h5 class="mb-3">
                 <i class="bi bi-pie-chart-fill me-2 text-primary"></i>
-                Distribución de Gastos por Categoría
+                {{ 'dashboard.expenseDistribution' | transloco }}
               </h5>
               <app-expense-chart
                 [categories]="topCategoriesChartData()"
@@ -170,15 +170,15 @@
             <div class="card-responsive">
               <h5 class="mb-3">
                 <i class="bi bi-trophy-fill me-2 text-warning"></i>
-                Top 5 Categorías con Más Gastos
+                {{ 'dashboard.topCategories' | transloco }}
               </h5>
               <div class="table-responsive">
                 <table class="table table-hover">
                   <thead>
                     <tr>
-                      <th>Categoría</th>
-                      <th class="text-end">Total</th>
-                      <th class="text-end">Cant.</th>
+                      <th>{{ 'dashboard.category' | transloco }}</th>
+                      <th class="text-end">{{ 'dashboard.total' | transloco }}</th>
+                      <th class="text-end">{{ 'dashboard.quantity' | transloco }}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -206,31 +206,31 @@
           <div class="card-responsive">
             <h5 class="mb-3">
               <i class="bi bi-lightning-charge-fill me-2 text-primary"></i>
-              Acciones Rápidas
+              {{ 'dashboard.quickActions' | transloco }}
             </h5>
             <div class="row g-3">
               <div class="col-12 col-sm-6 col-md-3">
                 <button class="btn btn-payment w-100 py-3" (click)="navigateToNewExpense('payment')">
                   <i class="bi bi-calendar-check me-2"></i>
-                  Nuevo Pago
+                  {{ 'dashboard.newPayment' | transloco }}
                 </button>
               </div>
               <div class="col-12 col-sm-6 col-md-3">
                 <button class="btn btn-purchase w-100 py-3" (click)="navigateToNewExpense('purchase')">
                   <i class="bi bi-cart me-2"></i>
-                  Nueva Compra
+                  {{ 'dashboard.newPurchase' | transloco }}
                 </button>
               </div>
               <div class="col-12 col-sm-6 col-md-3">
                 <button class="btn btn-small-expense w-100 py-3" (click)="navigateToNewExpense('small_expense')">
                   <i class="bi bi-cup-hot me-2"></i>
-                  Gasto Hormiga
+                  {{ 'dashboard.newSmallExpense' | transloco }}
                 </button>
               </div>
               <div class="col-12 col-sm-6 col-md-3">
                 <button class="btn btn-outline-primary w-100 py-3" routerLink="/expenses">
                   <i class="bi bi-list-ul me-2"></i>
-                  Ver Todos los Gastos
+                  {{ 'dashboard.viewAllExpenses' | transloco }}
                 </button>
               </div>
             </div>

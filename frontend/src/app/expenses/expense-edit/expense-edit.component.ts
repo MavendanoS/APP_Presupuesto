@@ -22,6 +22,9 @@ export class ExpenseEditComponent implements OnInit {
   errorMessage = signal<string | null>(null);
   expenseId: number | null = null;
 
+  // Valor formateado para mostrar en el input
+  displayAmount = '';
+
   expenseTypes: { value: ExpenseType; label: string; icon: string }[] = [
     { value: 'payment', label: 'Pago', icon: 'bi-calendar-check' },
     { value: 'purchase', label: 'Compra', icon: 'bi-cart' },
@@ -75,6 +78,10 @@ export class ExpenseEditComponent implements OnInit {
           date: expense.date,
           notes: expense.notes || ''
         });
+        // Formatear el monto para mostrar
+        if (expense.amount) {
+          this.formatAmount(expense.amount);
+        }
         this.loadCategories();
         this.loading.set(false);
       },
@@ -138,5 +145,34 @@ export class ExpenseEditComponent implements OnInit {
 
   get date() {
     return this.expenseForm.get('date');
+  }
+
+  onAmountInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    // Remover todo excepto números
+    const numericValue = input.value.replace(/[^\d]/g, '');
+
+    if (numericValue === '') {
+      this.displayAmount = '';
+      this.expenseForm.patchValue({ amount: '' });
+      return;
+    }
+
+    const numValue = parseInt(numericValue, 10);
+    // Formatear con separador de miles
+    this.displayAmount = numValue.toLocaleString('es-CL');
+    // Guardar valor numérico en el formulario
+    this.expenseForm.patchValue({ amount: numValue }, { emitEvent: false });
+
+    // Mantener el cursor en la posición correcta
+    setTimeout(() => {
+      input.value = this.displayAmount;
+    });
+  }
+
+  private formatAmount(value: number): void {
+    if (value) {
+      this.displayAmount = value.toLocaleString('es-CL');
+    }
   }
 }

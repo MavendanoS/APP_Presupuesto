@@ -2,6 +2,7 @@ import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { AuthService } from '../core/services/auth.service';
 import { AnalyticsService } from '../core/services/analytics.service';
 import { SavingsService } from '../core/services/savings.service';
@@ -19,6 +20,7 @@ import { ClpCurrencyPipe } from '../shared/pipes/clp-currency.pipe';
     CommonModule,
     FormsModule,
     RouterModule,
+    TranslocoPipe,
     NavbarComponent,
     LoadingComponent,
     ErrorMessageComponent,
@@ -143,7 +145,7 @@ export class DashboardComponent implements OnInit {
 
   getBalanceText(): string {
     const balance = this.metrics()?.balance || 0;
-    return balance >= 0 ? 'Positivo' : 'Negativo';
+    return balance >= 0 ? 'dashboard.positive' : 'dashboard.negative';
   }
 
   getTotalCategories(): number {

@@ -76,14 +76,14 @@
               <div class="input-group">
                 <span class="input-group-text">$</span>
                 <input
-                  type="number"
+                  type="text"
                   id="amount"
                   class="form-control"
-                  formControlName="amount"
+                  [value]="displayAmount"
+                  (input)="onAmountInput($event)"
                   [class.is-invalid]="amount?.invalid && amount?.touched"
                   [placeholder]="'income.amountPlaceholder' | transloco"
-                  min="1"
-                  step="1"
+                  inputmode="numeric"
                 />
                 @if (amount?.invalid && amount?.touched) {
                   <div class="invalid-feedback">

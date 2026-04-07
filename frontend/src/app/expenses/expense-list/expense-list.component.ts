@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { ExpenseService } from '../../core/services/expense.service';
 import { CategoryService } from '../../core/services/category.service';
 import { DataRefreshService } from '../../core/services/data-refresh.service';
@@ -19,6 +20,7 @@ import { ExpenseTypePipe } from '../../shared/pipes/expense-type.pipe';
     CommonModule,
     RouterModule,
     ReactiveFormsModule,
+    TranslocoPipe,
     LoadingComponent,
     ErrorMessageComponent,
     NavbarComponent,

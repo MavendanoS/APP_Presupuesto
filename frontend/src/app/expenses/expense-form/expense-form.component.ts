@@ -22,6 +22,9 @@ export class ExpenseFormComponent implements OnInit {
   loading = signal(false);
   errorMessage = signal<string | null>(null);
 
+  // Valor formateado para mostrar en el input
+  displayAmount = '';
+
   private translocoService = inject(TranslocoService);
 
   expenseTypes: { value: ExpenseType; label: string; icon: string }[] = [
@@ -122,5 +125,28 @@ export class ExpenseFormComponent implements OnInit {
 
   get date() {
     return this.expenseForm.get('date');
+  }
+
+  onAmountInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    // Remover todo excepto números
+    const numericValue = input.value.replace(/[^\d]/g, '');
+
+    if (numericValue === '') {
+      this.displayAmount = '';
+      this.expenseForm.patchValue({ amount: '' });
+      return;
+    }
+
+    const numValue = parseInt(numericValue, 10);
+    // Formatear con separador de miles
+    this.displayAmount = numValue.toLocaleString('es-CL');
+    // Guardar valor numérico en el formulario
+    this.expenseForm.patchValue({ amount: numValue }, { emitEvent: false });
+
+    // Mantener el cursor en la posición correcta
+    setTimeout(() => {
+      input.value = this.displayAmount;
+    });
   }
 }
