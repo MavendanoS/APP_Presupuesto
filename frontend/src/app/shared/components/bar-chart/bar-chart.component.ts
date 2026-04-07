@@ -1,7 +1,7 @@
 import { Component, Input, OnChanges, SimpleChanges, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BaseChartDirective } from 'ng2-charts';
-import { ChartConfiguration, ChartData, ChartType } from 'chart.js';
+import { ChartConfiguration, ChartData, ChartType, Plugin } from 'chart.js';
 
 export interface BarChartDataset {
   label: string;
@@ -24,9 +24,53 @@ export class BarChartComponent implements OnChanges {
   @Input() height: number = 300;
   @Input() orientation: 'vertical' | 'horizontal' = 'vertical';
   @Input() stacked: boolean = false;
+  @Input() showTotalLabels: boolean = false;
   @ViewChild(BaseChartDirective) chart?: BaseChartDirective;
 
   public chartType: 'bar' = 'bar';
+
+  // Plugin inline para mostrar totales sobre cada barra apilada
+  public totalLabelsPlugin: Plugin<'bar'> = {
+    id: 'totalLabels',
+    afterDatasetsDraw: (chart) => {
+      if (!this.showTotalLabels || !this.stacked) return;
+
+      const ctx = chart.ctx;
+      const datasets = chart.data.datasets;
+      const meta0 = chart.getDatasetMeta(0);
+      if (!meta0 || meta0.data.length === 0) return;
+
+      const numBars = meta0.data.length;
+
+      for (let i = 0; i < numBars; i++) {
+        let total = 0;
+        let topY = Infinity;
+        let barX = 0;
+
+        for (let d = 0; d < datasets.length; d++) {
+          const meta = chart.getDatasetMeta(d);
+          if (meta.hidden) continue;
+          const value = (datasets[d].data[i] as number) || 0;
+          total += value;
+          const bar = meta.data[i];
+          if (bar) {
+            barX = bar.x;
+            topY = Math.min(topY, bar.y);
+          }
+        }
+
+        if (total > 0) {
+          ctx.save();
+          ctx.fillStyle = '#333';
+          ctx.font = 'bold 11px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'bottom';
+          ctx.fillText(this.formatCurrency(total), barX, topY - 4);
+          ctx.restore();
+        }
+      }
+    }
+  };
 
   public chartData: ChartData<'bar'> = {
     labels: [],
