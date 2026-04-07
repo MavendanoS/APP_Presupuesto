@@ -19,11 +19,8 @@ export class NavbarComponent {
 
   navLinks = [
     { path: '/dashboard', translationKey: 'nav.dashboard', icon: 'bi-house' },
-    { path: '/expenses', translationKey: 'nav.expenses', icon: 'bi-wallet2' },
-    { path: '/income', translationKey: 'nav.income', icon: 'bi-cash-stack' },
-    { path: '/categories', translationKey: 'nav.categories', icon: 'bi-tags' },
-    { path: '/savings', translationKey: 'nav.savings', icon: 'bi-piggy-bank' },
-    { path: '/analytics', translationKey: 'nav.analytics', icon: 'bi-graph-up' }
+    { path: '/history', translationKey: 'nav.history', icon: 'bi-clock-history' },
+    { path: '/services', translationKey: 'nav.services', icon: 'bi-gear' }
   ];
 
   constructor(

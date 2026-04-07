@@ -1,16 +1,14 @@
 import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterModule } from '@angular/router';
+import { RouterModule } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { AuthService } from '../core/services/auth.service';
-import { AnalyticsService } from '../core/services/analytics.service';
-import { SavingsService } from '../core/services/savings.service';
-import { DashboardMetrics, SavingsSummary } from '../core/models';
+import { MonthlyPaymentService } from '../core/services/monthly-payment.service';
+import { BudgetSummary, ChecklistItem } from '../core/models';
 import { NavbarComponent } from '../shared/components/navbar/navbar.component';
 import { LoadingComponent } from '../shared/components/loading/loading.component';
 import { ErrorMessageComponent } from '../shared/components/error-message/error-message.component';
-import { ExpenseChartComponent } from '../shared/components/expense-chart/expense-chart.component';
 import { ClpCurrencyPipe } from '../shared/pipes/clp-currency.pipe';
 
 @Component({
@@ -24,7 +22,6 @@ import { ClpCurrencyPipe } from '../shared/pipes/clp-currency.pipe';
     NavbarComponent,
     LoadingComponent,
     ErrorMessageComponent,
-    ExpenseChartComponent,
     ClpCurrencyPipe
   ],
   templateUrl: './dashboard.component.html',
@@ -33,33 +30,38 @@ import { ClpCurrencyPipe } from '../shared/pipes/clp-currency.pipe';
 export class DashboardComponent implements OnInit {
   loading = signal(true);
   errorMessage = signal<string | null>(null);
-  metrics = signal<DashboardMetrics | null>(null);
-  savingsSummary = signal<SavingsSummary | null>(null);
+  budgetData = signal<BudgetSummary | null>(null);
   showAmounts = signal(false);
+  currentMonth = signal(this.getCurrentYearMonth());
+  avgMonths = signal(3);
 
-  // Filtros de fecha
-  startDate = signal(this.getMonthStart());
-  endDate = signal(this.getMonthEnd());
+  // Payment editing state
+  editingServiceId = signal<number | null>(null);
+  paymentAmount = signal<number>(0);
+  paymentNotes = signal('');
 
-  // Computed signal para datos del gráfico - solo se recalcula cuando metrics cambia
-  topCategoriesChartData = computed(() => {
-    const categories = this.metrics()?.top_categories || [];
-    return categories.map(cat => ({
-      category_id: cat.id,
-      category_name: cat.name,
-      type: 'payment' as const,
-      count: cat.expense_count,
-      total: cat.total_amount
-    }));
+  // Computed
+  displayMonth = computed(() => {
+    const [year, month] = this.currentMonth().split('-');
+    const date = new Date(parseInt(year), parseInt(month) - 1);
+    return date.toLocaleDateString('es-CL', { month: 'long', year: 'numeric' });
+  });
+
+  checklist = computed(() => this.budgetData()?.checklist || []);
+  summary = computed(() => this.budgetData()?.summary || { total_expected: 0, total_paid: 0, remaining: 0, paid_count: 0, total_count: 0 });
+  progressPercent = computed(() => {
+    const s = this.summary();
+    return s.total_count > 0 ? Math.round((s.paid_count / s.total_count) * 100) : 0;
+  });
+  allPaid = computed(() => {
+    const s = this.summary();
+    return s.total_count > 0 && s.paid_count === s.total_count;
   });
 
   constructor(
     private authService: AuthService,
-    private analyticsService: AnalyticsService,
-    private savingsService: SavingsService,
-    private router: Router
+    private paymentService: MonthlyPaymentService
   ) {
-    // Load preference from localStorage (default hidden)
     const saved = localStorage.getItem('showAmounts');
     this.showAmounts.set(saved === 'true');
   }
@@ -69,8 +71,24 @@ export class DashboardComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.loadMetrics();
-    this.loadSavingsSummary();
+    this.loadData();
+  }
+
+  loadData(): void {
+    this.loading.set(true);
+    this.errorMessage.set(null);
+    this.editingServiceId.set(null);
+
+    this.paymentService.getBudgetSummary(this.currentMonth(), this.avgMonths()).subscribe({
+      next: (data) => {
+        this.budgetData.set(data);
+        this.loading.set(false);
+      },
+      error: (error) => {
+        this.errorMessage.set(error.message || 'Error al cargar datos');
+        this.loading.set(false);
+      }
+    });
   }
 
   toggleAmounts(): void {
@@ -79,102 +97,98 @@ export class DashboardComponent implements OnInit {
     localStorage.setItem('showAmounts', newValue.toString());
   }
 
-  formatAmount(amount: number): string {
-    return this.showAmounts() ? this.formatCurrency(amount) : '****';
-  }
-
-  private formatCurrency(amount: number): string {
+  formatAmount(amount: number | null | undefined): string {
+    if (amount === null || amount === undefined) return '-';
+    if (!this.showAmounts()) return '****';
     const rounded = Math.round(amount);
     const formatted = rounded.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
     return `$${formatted}`;
   }
 
-  loadMetrics(): void {
-    this.loading.set(true);
-    this.errorMessage.set(null);
+  previousMonth(): void {
+    const [year, month] = this.currentMonth().split('-').map(Number);
+    const date = new Date(year, month - 2, 1);
+    this.currentMonth.set(this.formatYearMonth(date));
+    this.loadData();
+  }
 
-    this.analyticsService.getDashboardMetrics({
-      start_date: this.startDate(),
-      end_date: this.endDate()
+  nextMonth(): void {
+    const [year, month] = this.currentMonth().split('-').map(Number);
+    const date = new Date(year, month, 1);
+    this.currentMonth.set(this.formatYearMonth(date));
+    this.loadData();
+  }
+
+  goToCurrentMonth(): void {
+    this.currentMonth.set(this.getCurrentYearMonth());
+    this.loadData();
+  }
+
+  isCurrentMonth(): boolean {
+    return this.currentMonth() === this.getCurrentYearMonth();
+  }
+
+  // Start editing a payment (mark as paid)
+  startPayment(item: ChecklistItem): void {
+    this.editingServiceId.set(item.service_id);
+    this.paymentAmount.set(item.amount || Math.round(item.average_amount) || 0);
+    this.paymentNotes.set(item.notes || '');
+  }
+
+  cancelPayment(): void {
+    this.editingServiceId.set(null);
+    this.paymentAmount.set(0);
+    this.paymentNotes.set('');
+  }
+
+  confirmPayment(item: ChecklistItem): void {
+    if (this.paymentAmount() <= 0) return;
+
+    const today = new Date().toISOString().split('T')[0];
+    this.paymentService.upsertPayment({
+      service_id: item.service_id,
+      amount: this.paymentAmount(),
+      year_month: this.currentMonth(),
+      paid_date: today,
+      notes: this.paymentNotes() || undefined
     }).subscribe({
-      next: (data) => {
-        this.metrics.set(data);
-        this.loading.set(false);
+      next: () => {
+        this.cancelPayment();
+        this.loadData();
       },
       error: (error) => {
-        this.errorMessage.set(error.message || 'Error al cargar métricas');
-        this.loading.set(false);
+        this.errorMessage.set(error.message || 'Error al registrar pago');
       }
     });
   }
 
-  loadSavingsSummary(): void {
-    this.savingsService.getSavingsSummary().subscribe({
-      next: (data) => {
-        this.savingsSummary.set(data);
-      },
+  unmarkPayment(item: ChecklistItem): void {
+    if (!item.payment_id) return;
+
+    this.paymentService.deletePayment(item.payment_id).subscribe({
+      next: () => this.loadData(),
       error: (error) => {
-        console.error('Error al cargar resumen de ahorros:', error);
+        this.errorMessage.set(error.message || 'Error al desmarcar pago');
       }
     });
   }
 
-  onStartDateChange(value: string): void {
-    this.startDate.set(value);
-    this.loadMetrics();
+  editPayment(item: ChecklistItem): void {
+    this.startPayment(item);
   }
 
-  onEndDateChange(value: string): void {
-    this.endDate.set(value);
-    this.loadMetrics();
+  onAvgMonthsChange(value: number): void {
+    this.avgMonths.set(value);
+    this.loadData();
   }
 
-  navigateToNewExpense(type: 'payment' | 'purchase' | 'small_expense'): void {
-    this.router.navigate(['/expenses/new'], { queryParams: { type } });
+  private getCurrentYearMonth(): string {
+    return this.formatYearMonth(new Date());
   }
 
-  getBalanceClass(): string {
-    const balance = this.metrics()?.balance || 0;
-    return balance >= 0 ? 'text-success' : 'text-danger';
-  }
-
-  getBalanceIcon(): string {
-    const balance = this.metrics()?.balance || 0;
-    return balance >= 0 ? 'bi-arrow-up-circle' : 'bi-arrow-down-circle';
-  }
-
-  getBalanceText(): string {
-    const balance = this.metrics()?.balance || 0;
-    return balance >= 0 ? 'dashboard.positive' : 'dashboard.negative';
-  }
-
-  getTotalCategories(): number {
-    return this.metrics()?.top_categories.length || 0;
-  }
-
-  getExpensesByType(type: 'payment' | 'purchase' | 'small_expense'): number {
-    const byType = this.metrics()?.expenses.by_type.find(t => t.type === type);
-    return byType?.total || 0;
-  }
-
-  getTotalExpenseCount(): number {
-    const byType = this.metrics()?.expenses.by_type || [];
-    return byType.reduce((sum, t) => sum + t.count, 0);
-  }
-
-  private getMonthStart(): string {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    return `${year}-${month}-01`;
-  }
-
-  private getMonthEnd(): string {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-    const day = String(lastDay).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+  private formatYearMonth(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    return `${year}-${month}`;
   }
 }

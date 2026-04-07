@@ -5,11 +5,8 @@
 
 import { Router } from 'itty-router';
 import authRouter from './routes/auth.js';
-import expensesRouter from './routes/expenses.js';
-import incomeRouter from './routes/income.js';
-import categoriesRouter from './routes/categories.js';
-import analyticsRouter from './routes/analytics.js';
-import savingsRouter from './routes/savings.js';
+import servicesRouter from './routes/services.js';
+import paymentsRouter from './routes/payments.js';
 import indicatorsRouter from './routes/indicators.js';
 
 const router = Router();
@@ -105,21 +102,11 @@ router.get('/api/health', (request) => {
 // Rutas de autenticación
 router.all('/api/auth/*', authRouter.handle);
 
-// Rutas de gastos
-router.all('/api/expenses/*', expensesRouter.handle);
+// Rutas de servicios de pago
+router.all('/api/services/*', servicesRouter.handle);
 
-// Rutas de ingresos
-router.all('/api/income/*', incomeRouter.handle);
-
-// Rutas de categorías
-router.all('/api/categories/*', categoriesRouter.handle);
-
-// Rutas de analytics y exportación
-router.all('/api/analytics/*', analyticsRouter.handle);
-router.all('/api/exports/*', analyticsRouter.handle);
-
-// Rutas de ahorros
-router.all('/api/savings/*', savingsRouter.handle);
+// Rutas de pagos mensuales
+router.all('/api/payments/*', paymentsRouter.handle);
 
 // Rutas de indicadores económicos
 router.all('/api/indicators*', indicatorsRouter.handle);
@@ -147,41 +134,18 @@ router.all('*', (request) => {
       'POST /api/auth/register',
       'POST /api/auth/login',
       'GET /api/auth/me',
-      'GET /api/expenses',
-      'POST /api/expenses',
-      'GET /api/expenses/summary',
-      'GET /api/expenses/:id',
-      'PUT /api/expenses/:id',
-      'DELETE /api/expenses/:id',
-      'GET /api/income',
-      'POST /api/income',
-      'GET /api/income/summary',
-      'GET /api/income/recurring',
-      'GET /api/income/:id',
-      'PUT /api/income/:id',
-      'DELETE /api/income/:id',
-      'GET /api/categories',
-      'POST /api/categories',
-      'GET /api/categories/stats',
-      'GET /api/categories/:id',
-      'PUT /api/categories/:id',
-      'DELETE /api/categories/:id',
-      'GET /api/analytics/dashboard',
-      'GET /api/analytics/charts',
-      'GET /api/analytics/trends',
-      'GET /api/analytics/predictions',
-      'GET /api/analytics/compare',
-      'GET /api/exports/csv',
-      'GET /api/exports/excel',
-      'GET /api/savings',
-      'POST /api/savings',
-      'GET /api/savings/summary',
-      'GET /api/savings/:id',
-      'PUT /api/savings/:id',
-      'DELETE /api/savings/:id',
-      'GET /api/savings/:id/transactions',
-      'POST /api/savings/:id/transactions',
-      'DELETE /api/savings/:id/transactions/:transactionId',
+      'GET /api/services',
+      'POST /api/services',
+      'PUT /api/services/reorder',
+      'GET /api/services/:id',
+      'PUT /api/services/:id',
+      'DELETE /api/services/:id',
+      'GET /api/payments/checklist',
+      'GET /api/payments/history',
+      'GET /api/payments/averages',
+      'GET /api/payments/budget',
+      'POST /api/payments',
+      'DELETE /api/payments/:id',
       'GET /api/indicators'
     ]
   }), {

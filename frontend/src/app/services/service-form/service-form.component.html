@@ -1,0 +1,91 @@
+<div class="page-container">
+  <app-navbar />
+
+  <div class="container-fluid p-3 p-md-4">
+    @if (errorMessage()) {
+      <app-error-message [message]="errorMessage()!" (dismissed)="errorMessage.set(null)" />
+    }
+
+    <div class="row justify-content-center">
+      <div class="col-12 col-md-8 col-lg-6">
+        <div class="card shadow-sm border-0">
+          <div class="card-body p-4">
+            <h3 class="mb-4">
+              <i class="bi bi-gear me-2"></i>
+              {{ (isEditMode() ? 'services.edit' : 'services.add') | transloco }}
+            </h3>
+
+            <form (ngSubmit)="onSubmit()">
+              <!-- Name -->
+              <div class="mb-3">
+                <label class="form-label">{{ 'services.name' | transloco }}</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  [ngModel]="name()"
+                  (ngModelChange)="name.set($event)"
+                  name="name"
+                  required
+                  minlength="2"
+                  [placeholder]="'services.namePlaceholder' | transloco"
+                />
+              </div>
+
+              <!-- Color -->
+              <div class="mb-3">
+                <label class="form-label">{{ 'services.color' | transloco }}</label>
+                <div class="d-flex align-items-center gap-2">
+                  <input
+                    type="color"
+                    class="form-control form-control-color"
+                    [ngModel]="color()"
+                    (ngModelChange)="color.set($event)"
+                    name="color"
+                  />
+                  <span class="text-muted small">{{ color() }}</span>
+                </div>
+              </div>
+
+              <!-- Icon -->
+              <div class="mb-4">
+                <label class="form-label">{{ 'services.icon' | transloco }}</label>
+                <div class="d-flex flex-wrap gap-2">
+                  @for (ic of availableIcons; track ic) {
+                    <button
+                      type="button"
+                      class="btn btn-sm"
+                      [ngClass]="icon() === ic ? 'btn-primary' : 'btn-outline-secondary'"
+                      (click)="icon.set(ic)"
+                    >
+                      <i [class]="'bi ' + ic"></i>
+                    </button>
+                  }
+                </div>
+              </div>
+
+              <!-- Preview -->
+              <div class="mb-4 p-3 bg-light rounded d-flex align-items-center gap-3">
+                <div class="rounded-circle" [style.background-color]="color()" style="width: 10px; height: 40px; border-radius: 5px !important;"></div>
+                <i [class]="'bi ' + icon() + ' fs-4'" [style.color]="color()"></i>
+                <span class="fw-semibold">{{ name() || ('services.namePlaceholder' | transloco) }}</span>
+              </div>
+
+              <!-- Actions -->
+              <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary" [disabled]="loading() || !name() || name().trim().length < 2">
+                  @if (loading()) {
+                    <span class="spinner-border spinner-border-sm me-1"></span>
+                  }
+                  {{ 'common.save' | transloco }}
+                </button>
+                <a routerLink="/services" class="btn btn-outline-secondary">
+                  {{ 'common.cancel' | transloco }}
+                </a>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

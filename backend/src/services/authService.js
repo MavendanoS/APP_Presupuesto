@@ -7,6 +7,7 @@ import { hashPassword, verifyPassword } from '../utils/hash.js';
 import { createToken } from '../utils/jwt.js';
 import { isValidEmail, validatePassword, validateName, sanitizeInput } from '../utils/validators.js';
 import { createUser, findUserByEmail, findUserById, updateUserPasswordHash } from '../db/users.js';
+import { createDefaultServices } from '../db/paymentServices.js';
 import { sendPasswordResetEmail, sendPasswordChangedEmail } from './emailService.js';
 
 /**
@@ -53,6 +54,9 @@ export async function registerUser(db, userData, jwtSecret) {
     password_hash,
     name: cleanName
   });
+
+  // Crear servicios de pago predeterminados
+  await createDefaultServices(db, user.id);
 
   // Generar token JWT
   const token = await createToken(

@@ -1,0 +1,75 @@
+<div class="page-container">
+  <app-navbar />
+
+  <div class="container-fluid p-3 p-md-4">
+    @if (errorMessage()) {
+      <app-error-message [message]="errorMessage()!" (dismissed)="errorMessage.set(null)" />
+    }
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h2 class="mb-0">
+        <i class="bi bi-gear me-2"></i>{{ 'services.title' | transloco }}
+      </h2>
+      <a routerLink="/services/new" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1"></i>{{ 'services.add' | transloco }}
+      </a>
+    </div>
+
+    @if (loading()) {
+      <app-loading [message]="'common.loading' | transloco" />
+    } @else if (services().length === 0) {
+      <div class="card shadow-sm border-0">
+        <div class="card-body text-center py-5">
+          <i class="bi bi-list-check display-1 text-muted"></i>
+          <p class="text-muted mt-3">{{ 'services.noServices' | transloco }}</p>
+          <a routerLink="/services/new" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-1"></i>{{ 'services.add' | transloco }}
+          </a>
+        </div>
+      </div>
+    } @else {
+      @for (service of services(); track service.id; let i = $index) {
+        <div class="card shadow-sm border-0 mb-2">
+          <div class="card-body p-3">
+            <div class="d-flex align-items-center gap-3">
+              <div class="rounded-circle flex-shrink-0" [style.background-color]="service.color" style="width: 10px; height: 40px; border-radius: 5px !important;"></div>
+              <i [class]="'bi ' + service.icon + ' fs-4'" [style.color]="service.color"></i>
+              <div class="flex-grow-1">
+                <span class="fw-semibold">{{ service.name }}</span>
+                @if (service.is_active === 0) {
+                  <span class="badge bg-secondary ms-2">{{ 'services.inactive' | transloco }}</span>
+                }
+              </div>
+              <div class="d-flex gap-1">
+                <button class="btn btn-outline-secondary btn-sm" (click)="moveUp(i)" [disabled]="i === 0" title="Subir">
+                  <i class="bi bi-arrow-up"></i>
+                </button>
+                <button class="btn btn-outline-secondary btn-sm" (click)="moveDown(i)" [disabled]="i === services().length - 1" title="Bajar">
+                  <i class="bi bi-arrow-down"></i>
+                </button>
+                <button class="btn btn-sm" [ngClass]="service.is_active === 1 ? 'btn-outline-warning' : 'btn-outline-success'" (click)="toggleActive(service)">
+                  <i class="bi" [ngClass]="service.is_active === 1 ? 'bi-pause-circle' : 'bi-play-circle'"></i>
+                </button>
+                <a [routerLink]="['/services/edit', service.id]" class="btn btn-outline-primary btn-sm">
+                  <i class="bi bi-pencil"></i>
+                </a>
+                @if (deleteConfirmId() === service.id) {
+                  <button class="btn btn-danger btn-sm" (click)="deleteService(service.id)">
+                    <i class="bi bi-check-lg"></i> {{ 'common.confirm' | transloco }}
+                  </button>
+                  <button class="btn btn-outline-secondary btn-sm" (click)="cancelDelete()">
+                    <i class="bi bi-x-lg"></i>
+                  </button>
+                } @else {
+                  <button class="btn btn-outline-danger btn-sm" (click)="confirmDelete(service.id)">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+    }
+  </div>
+</div>
