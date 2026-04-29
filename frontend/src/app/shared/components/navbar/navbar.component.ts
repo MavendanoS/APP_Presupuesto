@@ -19,6 +19,7 @@ export class NavbarComponent {
 
   navLinks = [
     { path: '/dashboard', translationKey: 'nav.dashboard', icon: 'bi-house' },
+    { path: '/incomes', translationKey: 'nav.incomes', icon: 'bi-cash-coin' },
     { path: '/history', translationKey: 'nav.history', icon: 'bi-clock-history' },
     { path: '/services', translationKey: 'nav.services', icon: 'bi-gear' }
   ];

@@ -12,6 +12,7 @@ import {
   getMonthlyTotals
 } from '../db/monthlyPayments.js';
 import { getPaymentServiceById } from '../db/paymentServices.js';
+import { getMonthlyIncomeTotal, getIncomesByMonth } from '../db/monthlyIncomes.js';
 
 /**
  * Crear o actualizar un pago mensual
@@ -140,11 +141,13 @@ export async function getBudgetSummarySvc(db, userId, yearMonth, avgMonths = 3) 
 
   const parsedAvgMonths = parseInt(avgMonths) || 3;
 
-  // Obtener checklist, promedios y totales en paralelo
-  const [checklist, averages, totals] = await Promise.all([
+  // Obtener checklist, promedios, totales e ingresos en paralelo
+  const [checklist, averages, totals, incomes, incomesTotal] = await Promise.all([
     getMonthlyChecklist(db, userId, yearMonth),
     getServiceAverages(db, userId, parsedAvgMonths),
-    getMonthlyTotals(db, userId, yearMonth)
+    getMonthlyTotals(db, userId, yearMonth),
+    getIncomesByMonth(db, userId, yearMonth),
+    getMonthlyIncomeTotal(db, userId, yearMonth)
   ]);
 
   // Construir mapa de promedios
@@ -181,12 +184,20 @@ export async function getBudgetSummarySvc(db, userId, yearMonth, avgMonths = 3) 
     avg_months: parsedAvgMonths,
     checklist: enrichedChecklist,
     totals,
+    incomes: {
+      list: incomes,
+      total: incomesTotal.total,
+      count: incomesTotal.count
+    },
     summary: {
       total_expected: totalExpected,
       total_paid: totalPaid,
       remaining: totalExpected - totalPaid,
       paid_count: paidCount,
-      total_count: enrichedChecklist.length
+      total_count: enrichedChecklist.length,
+      total_incomes: incomesTotal.total,
+      balance: incomesTotal.total - totalPaid,
+      projected_balance: incomesTotal.total - totalExpected
     }
   };
 }

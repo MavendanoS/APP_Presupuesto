@@ -53,12 +53,20 @@ export interface BudgetSummary {
   year_month: string;
   avg_months: number;
   checklist: ChecklistItem[];
+  incomes?: {
+    list: import('./monthly-income.model').MonthlyIncome[];
+    total: number;
+    count: number;
+  };
   summary: {
     total_expected: number;
     total_paid: number;
     remaining: number;
     paid_count: number;
     total_count: number;
+    total_incomes?: number;
+    balance?: number;
+    projected_balance?: number;
   };
 }
 

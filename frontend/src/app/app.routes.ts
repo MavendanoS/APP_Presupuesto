@@ -42,7 +42,34 @@ export const routes: Routes = [
   {
     path: 'history',
     canActivate: [authGuard],
-    loadComponent: () => import('./history/payment-history/payment-history.component').then(m => m.PaymentHistoryComponent)
+    children: [
+      {
+        path: '',
+        loadComponent: () => import('./history/payment-history/payment-history.component').then(m => m.PaymentHistoryComponent)
+      },
+      {
+        path: 'incomes',
+        loadComponent: () => import('./history/income-history/income-history.component').then(m => m.IncomeHistoryComponent)
+      }
+    ]
+  },
+  {
+    path: 'incomes',
+    canActivate: [authGuard],
+    children: [
+      {
+        path: '',
+        loadComponent: () => import('./incomes/income-list/income-list.component').then(m => m.IncomeListComponent)
+      },
+      {
+        path: 'new',
+        loadComponent: () => import('./incomes/income-form/income-form.component').then(m => m.IncomeFormComponent)
+      },
+      {
+        path: 'edit/:id',
+        loadComponent: () => import('./incomes/income-form/income-form.component').then(m => m.IncomeFormComponent)
+      }
+    ]
   },
   {
     path: 'services',

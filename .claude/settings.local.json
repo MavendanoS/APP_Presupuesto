@@ -45,7 +45,9 @@
       "mcp__memory__read_graph",
       "mcp__memory__create_entities",
       "mcp__memory__create_relations",
-      "Bash(claude doctor:*)"
+      "Bash(claude doctor:*)",
+      "Bash(dir:*)",
+      "mcp__Claude_Preview__preview_start"
     ],
     "deny": [],
     "ask": []

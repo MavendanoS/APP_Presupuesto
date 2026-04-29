@@ -7,6 +7,7 @@ import { Router } from 'itty-router';
 import authRouter from './routes/auth.js';
 import servicesRouter from './routes/services.js';
 import paymentsRouter from './routes/payments.js';
+import incomesRouter from './routes/incomes.js';
 import indicatorsRouter from './routes/indicators.js';
 
 const router = Router();
@@ -108,6 +109,10 @@ router.all('/api/services/*', servicesRouter.handle);
 // Rutas de pagos mensuales
 router.all('/api/payments/*', paymentsRouter.handle);
 
+// Rutas de ingresos mensuales
+router.all('/api/incomes/*', incomesRouter.handle);
+router.all('/api/incomes', incomesRouter.handle);
+
 // Rutas de indicadores económicos
 router.all('/api/indicators*', indicatorsRouter.handle);
 
@@ -146,6 +151,13 @@ router.all('*', (request) => {
       'GET /api/payments/budget',
       'POST /api/payments',
       'DELETE /api/payments/:id',
+      'GET /api/incomes/monthly',
+      'GET /api/incomes/history',
+      'GET /api/incomes/totals-by-month',
+      'GET /api/incomes/:id',
+      'POST /api/incomes',
+      'PUT /api/incomes/:id',
+      'DELETE /api/incomes/:id',
       'GET /api/indicators'
     ]
   }), {

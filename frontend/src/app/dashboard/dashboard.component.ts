@@ -10,6 +10,7 @@ import { NavbarComponent } from '../shared/components/navbar/navbar.component';
 import { LoadingComponent } from '../shared/components/loading/loading.component';
 import { ErrorMessageComponent } from '../shared/components/error-message/error-message.component';
 import { ClpCurrencyPipe } from '../shared/pipes/clp-currency.pipe';
+import { WaterfallChartComponent, WaterfallStep } from '../shared/components/waterfall-chart/waterfall-chart.component';
 
 @Component({
   selector: 'app-dashboard',
@@ -22,7 +23,8 @@ import { ClpCurrencyPipe } from '../shared/pipes/clp-currency.pipe';
     NavbarComponent,
     LoadingComponent,
     ErrorMessageComponent,
-    ClpCurrencyPipe
+    ClpCurrencyPipe,
+    WaterfallChartComponent
   ],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
@@ -48,7 +50,52 @@ export class DashboardComponent implements OnInit {
   });
 
   checklist = computed(() => this.budgetData()?.checklist || []);
-  summary = computed(() => this.budgetData()?.summary || { total_expected: 0, total_paid: 0, remaining: 0, paid_count: 0, total_count: 0 });
+  summary = computed(() => this.budgetData()?.summary || { total_expected: 0, total_paid: 0, remaining: 0, paid_count: 0, total_count: 0, total_incomes: 0, balance: 0, projected_balance: 0 });
+  totalIncomes = computed(() => this.summary().total_incomes ?? 0);
+  balance = computed(() => this.summary().balance ?? 0);
+  projectedBalance = computed(() => this.summary().projected_balance ?? 0);
+
+  // Pasos del waterfall: Ingresos -> Gastos pagados -> Gastos pendientes -> Saldo proyectado
+  waterfallSteps = computed<WaterfallStep[]>(() => {
+    const s = this.summary();
+    const totalIncomes = s.total_incomes ?? 0;
+    const totalPaid = s.total_paid ?? 0;
+    const remaining = s.remaining ?? 0;
+    const projected = s.projected_balance ?? (totalIncomes - (s.total_expected ?? 0));
+
+    return [
+      {
+        label: 'Ingresos',
+        value: totalIncomes,
+        type: 'total',
+        color: '#198754'
+      },
+      {
+        label: 'Gastos pagados',
+        value: totalPaid,
+        type: 'negative',
+        color: '#dc3545'
+      },
+      {
+        label: 'Pendientes',
+        value: remaining,
+        type: 'negative',
+        color: '#fd7e14'
+      },
+      {
+        label: 'Saldo proyectado',
+        value: projected,
+        type: 'total',
+        color: projected >= 0 ? '#0d6efd' : '#dc3545'
+      }
+    ];
+  });
+
+  hasWaterfallData = computed(() => {
+    const s = this.summary();
+    return (s.total_incomes ?? 0) > 0 || (s.total_paid ?? 0) > 0 || (s.total_expected ?? 0) > 0;
+  });
+
   progressPercent = computed(() => {
     const s = this.summary();
     return s.total_count > 0 ? Math.round((s.paid_count / s.total_count) * 100) : 0;

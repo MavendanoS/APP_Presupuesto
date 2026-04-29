@@ -1,0 +1,16 @@
+<div class="chart-container" [style.height.px]="height">
+  @if (steps.length > 0) {
+    <canvas
+      baseChart
+      [type]="chartType"
+      [data]="chartData"
+      [options]="chartOptions"
+      [plugins]="[connectorLinesPlugin, valueLabelsPlugin]"
+    ></canvas>
+  } @else {
+    <div class="empty-state">
+      <i class="bi bi-bar-chart-steps display-4 text-muted mb-3"></i>
+      <p class="text-muted">Sin datos para mostrar</p>
+    </div>
+  }
+</div>

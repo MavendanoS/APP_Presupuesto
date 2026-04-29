@@ -1,0 +1,166 @@
+<div class="income-form-container">
+  <app-navbar />
+
+  <div class="container py-4">
+    @if (errorMessage()) {
+      <app-error-message
+        [message]="errorMessage()!"
+        (dismissed)="errorMessage.set(null)"
+      />
+    }
+
+    @if (loading()) {
+      <app-loading [message]="'common.loading' | transloco" />
+    } @else {
+      <div class="row justify-content-center">
+        <div class="col-12 col-md-8 col-lg-6">
+          <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+              <h4 class="mb-4">
+                <i class="bi bi-cash-coin text-success me-2"></i>
+                @if (isEditMode()) {
+                  {{ 'incomes.editTitle' | transloco }}
+                } @else {
+                  {{ 'incomes.newTitle' | transloco }}
+                }
+              </h4>
+
+              <form #form="ngForm" (ngSubmit)="save(form)" novalidate>
+                <!-- Descripción -->
+                <div class="mb-3">
+                  <label for="description" class="form-label">
+                    {{ 'incomes.description' | transloco }} *
+                  </label>
+                  <input
+                    type="text"
+                    id="description"
+                    name="description"
+                    class="form-control"
+                    [ngModel]="description()"
+                    (ngModelChange)="description.set($event)"
+                    [placeholder]="'incomes.descriptionPlaceholder' | transloco"
+                    required
+                    minlength="2"
+                    maxlength="100"
+                    #descCtrl="ngModel"
+                  />
+                  @if (descCtrl.invalid && descCtrl.touched) {
+                    <div class="invalid-feedback d-block">
+                      {{ 'incomes.descriptionRequired' | transloco }}
+                    </div>
+                  }
+                </div>
+
+                <!-- Monto -->
+                <div class="mb-3">
+                  <label for="amount" class="form-label">
+                    {{ 'incomes.amount' | transloco }} *
+                  </label>
+                  <div class="input-group">
+                    <span class="input-group-text">$</span>
+                    <input
+                      type="number"
+                      id="amount"
+                      name="amount"
+                      class="form-control"
+                      [ngModel]="amount()"
+                      (ngModelChange)="amount.set($event)"
+                      [placeholder]="'incomes.amountPlaceholder' | transloco"
+                      required
+                      min="1"
+                      step="1"
+                      #amountCtrl="ngModel"
+                    />
+                  </div>
+                  @if (amountCtrl.invalid && amountCtrl.touched) {
+                    <div class="invalid-feedback d-block">
+                      {{ 'incomes.amountRequired' | transloco }}
+                    </div>
+                  }
+                </div>
+
+                <!-- Mes (year_month) -->
+                <div class="mb-3">
+                  <label for="yearMonth" class="form-label">
+                    {{ 'incomes.month' | transloco }} *
+                  </label>
+                  <input
+                    type="month"
+                    id="yearMonth"
+                    name="yearMonth"
+                    class="form-control"
+                    [ngModel]="yearMonth()"
+                    (ngModelChange)="yearMonth.set($event)"
+                    required
+                  />
+                  <small class="form-text text-muted">
+                    {{ 'incomes.monthHint' | transloco }}
+                  </small>
+                </div>
+
+                <!-- Fecha de recepción -->
+                <div class="mb-3">
+                  <label for="receivedDate" class="form-label">
+                    {{ 'incomes.receivedDate' | transloco }}
+                  </label>
+                  <input
+                    type="date"
+                    id="receivedDate"
+                    name="receivedDate"
+                    class="form-control"
+                    [ngModel]="receivedDate()"
+                    (ngModelChange)="receivedDate.set($event)"
+                  />
+                  <small class="form-text text-muted">
+                    {{ 'incomes.receivedDateHint' | transloco }}
+                  </small>
+                </div>
+
+                <!-- Notas -->
+                <div class="mb-4">
+                  <label for="notes" class="form-label">
+                    {{ 'incomes.notes' | transloco }}
+                  </label>
+                  <textarea
+                    id="notes"
+                    name="notes"
+                    class="form-control"
+                    rows="2"
+                    [ngModel]="notes()"
+                    (ngModelChange)="notes.set($event)"
+                    [placeholder]="'incomes.notesPlaceholder' | transloco"
+                    maxlength="500"
+                  ></textarea>
+                </div>
+
+                <!-- Buttons -->
+                <div class="d-flex justify-content-end gap-2">
+                  <button
+                    type="button"
+                    class="btn btn-outline-secondary"
+                    (click)="cancel()"
+                    [disabled]="saving()"
+                  >
+                    {{ 'common.cancel' | transloco }}
+                  </button>
+                  <button
+                    type="submit"
+                    class="btn btn-success"
+                    [disabled]="saving() || form.invalid"
+                  >
+                    @if (saving()) {
+                      <span class="spinner-border spinner-border-sm me-2"></span>
+                    } @else {
+                      <i class="bi bi-check-lg me-1"></i>
+                    }
+                    {{ 'common.save' | transloco }}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+</div>

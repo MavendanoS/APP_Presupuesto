@@ -1,0 +1,156 @@
+<div class="income-history-container">
+  <app-navbar />
+
+  <div class="container-fluid p-3 p-md-4">
+    @if (errorMessage()) {
+      <app-error-message
+        [message]="errorMessage()!"
+        (dismissed)="errorMessage.set(null)"
+      />
+    }
+
+    @if (loading()) {
+      <app-loading [message]="'common.loading' | transloco" />
+    } @else {
+      <!-- Filters -->
+      <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body">
+          <div class="row g-3 align-items-end">
+            <div class="col-12 col-md-4">
+              <label class="form-label small text-muted mb-1">{{ 'history.startMonth' | transloco }}</label>
+              <input
+                type="month"
+                class="form-control form-control-sm"
+                [ngModel]="startMonth()"
+                (ngModelChange)="startMonth.set($event); onFilterChange()"
+              />
+            </div>
+            <div class="col-12 col-md-4">
+              <label class="form-label small text-muted mb-1">{{ 'history.endMonth' | transloco }}</label>
+              <input
+                type="month"
+                class="form-control form-control-sm"
+                [ngModel]="endMonth()"
+                (ngModelChange)="endMonth.set($event); onFilterChange()"
+              />
+            </div>
+            <div class="col-12 col-md-4">
+              <div class="btn-group w-100" role="group">
+                <button
+                  type="button"
+                  class="btn btn-sm"
+                  [class.btn-primary]="viewMode() === 'chart'"
+                  [class.btn-outline-secondary]="viewMode() !== 'chart'"
+                  (click)="viewMode.set('chart')"
+                >
+                  <i class="bi bi-bar-chart me-1"></i>{{ 'incomes.chart' | transloco }}
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-sm"
+                  [class.btn-primary]="viewMode() === 'table'"
+                  [class.btn-outline-secondary]="viewMode() !== 'table'"
+                  (click)="viewMode.set('table')"
+                >
+                  <i class="bi bi-table me-1"></i>{{ 'incomes.table' | transloco }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Summary cards -->
+      <div class="row g-3 mb-4">
+        <div class="col-6 col-md-4">
+          <div class="card shadow-sm border-0 h-100">
+            <div class="card-body p-3 text-center">
+              <div class="text-muted small mb-1">{{ 'incomes.totalAccumulated' | transloco }}</div>
+              <div class="h5 mb-0 text-success">{{ totalAccumulated() | clpCurrency }}</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-6 col-md-4">
+          <div class="card shadow-sm border-0 h-100">
+            <div class="card-body p-3 text-center">
+              <div class="text-muted small mb-1">{{ 'incomes.monthsCount' | transloco }}</div>
+              <div class="h5 mb-0">{{ totals().length }}</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-12 col-md-4">
+          <div class="card shadow-sm border-0 h-100">
+            <div class="card-body p-3 text-center">
+              <div class="text-muted small mb-1">{{ 'incomes.monthlyAverage' | transloco }}</div>
+              <div class="h5 mb-0">{{ averageMonthly() | clpCurrency }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chart View -->
+      @if (viewMode() === 'chart') {
+        <div class="card shadow-sm border-0">
+          <div class="card-body">
+            <h6 class="mb-3">{{ 'incomes.evolution' | transloco }}</h6>
+            @if (chartDatasets().length > 0) {
+              <app-bar-chart
+                [labels]="chartLabels()"
+                [datasets]="chartDatasets()"
+                [height]="350"
+              />
+            } @else {
+              <div class="text-center py-4 text-muted">
+                {{ 'history.noData' | transloco }}
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- Table View -->
+      @if (viewMode() === 'table') {
+        <div class="card shadow-sm border-0">
+          <div class="card-body p-0">
+            @if (history().length === 0) {
+              <div class="text-center py-5 text-muted">
+                <i class="bi bi-inbox display-4"></i>
+                <p class="mt-3 mb-0">{{ 'history.noData' | transloco }}</p>
+              </div>
+            } @else {
+              <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th>{{ 'history.month' | transloco }}</th>
+                      <th>{{ 'incomes.description' | transloco }}</th>
+                      <th>{{ 'incomes.receivedDate' | transloco }}</th>
+                      <th class="text-end">{{ 'history.amount' | transloco }}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (entry of history(); track entry.id) {
+                      <tr>
+                        <td>{{ formatMonth(entry.year_month) }}</td>
+                        <td>
+                          <div class="fw-semibold">{{ entry.description }}</div>
+                          @if (entry.notes) {
+                            <small class="text-muted">{{ entry.notes }}</small>
+                          }
+                        </td>
+                        <td>{{ formatDate(entry.received_date) }}</td>
+                        <td class="text-end fw-semibold text-success">
+                          {{ entry.amount | clpCurrency }}
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    }
+  </div>
+</div>
