@@ -53,6 +53,11 @@ export interface BudgetSummary {
   year_month: string;
   avg_months: number;
   checklist: ChecklistItem[];
+  /** Total pagado y cantidad de pagos registrados en el mes (solo servicios activos) */
+  totals: {
+    total: number;
+    count: number;
+  };
   incomes?: {
     list: import('./monthly-income.model').MonthlyIncome[];
     total: number;
@@ -61,7 +66,7 @@ export interface BudgetSummary {
   summary: {
     total_expected: number;
     total_paid: number;
-    remaining: number;
+    remaining: number; // puede ser negativo si se pagó más de lo esperado
     paid_count: number;
     total_count: number;
     total_incomes?: number;

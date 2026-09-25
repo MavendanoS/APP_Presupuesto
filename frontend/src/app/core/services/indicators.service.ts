@@ -30,10 +30,7 @@ export class IndicatorsService {
   error = signal<string | null>(null);
 
   constructor(private http: HttpClient) {
-    // Cargar indicadores al iniciar el servicio
-    this.loadIndicators();
-
-    // Actualizar cada 30 minutos
+    // Cargar indicadores al iniciar (startWith(0)) y actualizar cada 30 minutos
     interval(30 * 60 * 1000)
       .pipe(startWith(0))
       .subscribe(() => this.loadIndicators());
@@ -59,7 +56,7 @@ export class IndicatorsService {
       },
       error: (err) => {
         console.error('Error al cargar indicadores económicos:', err);
-        this.error.set('Error al cargar indicadores');
+        this.error.set(err?.message || null);
         this.loading.set(false);
       }
     });

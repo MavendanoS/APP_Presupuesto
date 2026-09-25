@@ -5,7 +5,7 @@
       <div class="modal-header border-0">
         <h5 class="modal-title">
           <i class="bi bi-lock me-2"></i>
-          Sesión Inactiva
+          {{ 'reAuth.title' | transloco }}
         </h5>
       </div>
 
@@ -14,15 +14,14 @@
         <div class="alert alert-warning d-flex align-items-center mb-4">
           <i class="bi bi-exclamation-triangle-fill me-2"></i>
           <div>
-            Por seguridad, tu sesión ha estado inactiva por más de <strong>{{ timeoutLabel }}</strong>.
-            Por favor confirma tu contraseña para continuar.
+            {{ 'reAuth.message' | transloco: { time: (timeoutLabelKey | transloco) } }}
           </div>
         </div>
 
         <!-- Usuario actual -->
         @if (currentUser()) {
           <div class="mb-3">
-            <label class="form-label text-muted small">Usuario</label>
+            <label class="form-label text-muted small">{{ 'reAuth.user' | transloco }}</label>
             <div class="fw-medium">
               <i class="bi bi-person-circle me-2"></i>
               {{ currentUser()!.email }}
@@ -33,19 +32,19 @@
         <!-- Formulario de contraseña -->
         <form [formGroup]="reAuthForm" (ngSubmit)="onSubmit()">
           <div class="mb-3">
-            <label for="password" class="form-label">Contraseña</label>
+            <label for="password" class="form-label">{{ 'auth.password' | transloco }}</label>
             <input
               type="password"
               class="form-control"
               id="password"
               formControlName="password"
-              placeholder="Ingresa tu contraseña"
+              [placeholder]="'reAuth.passwordPlaceholder' | transloco"
               [class.is-invalid]="reAuthForm.get('password')?.invalid && reAuthForm.get('password')?.touched"
               autofocus
             />
             @if (reAuthForm.get('password')?.invalid && reAuthForm.get('password')?.touched) {
               <div class="invalid-feedback">
-                La contraseña debe tener al menos 6 caracteres
+                {{ 'messages.minLength' | transloco: { min: 6 } }}
               </div>
             }
           </div>
@@ -67,10 +66,10 @@
             >
               @if (loading()) {
                 <span class="spinner-border spinner-border-sm me-2"></span>
-                Validando...
+                {{ 'reAuth.validating' | transloco }}
               } @else {
                 <i class="bi bi-check-circle me-2"></i>
-                Confirmar
+                {{ 'auth.confirm' | transloco }}
               }
             </button>
             <button
@@ -80,7 +79,7 @@
               [disabled]="loading()"
             >
               <i class="bi bi-box-arrow-right me-2"></i>
-              Cerrar Sesión
+              {{ 'auth.logout' | transloco }}
             </button>
           </div>
         </form>

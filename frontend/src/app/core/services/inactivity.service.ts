@@ -21,6 +21,7 @@ export class InactivityService {
 
   // Throttle: solo actualizar cada 30 segundos para evitar updates constantes
   private readonly UPDATE_THROTTLE_MS = 30000; // 30 segundos
+  private readonly STORAGE_KEY = 'lastActivityTime';
 
   // Eventos que indican actividad del usuario
   private readonly ACTIVITY_EVENTS = [
@@ -37,25 +38,39 @@ export class InactivityService {
   inactivityDetected$ = new Subject<void>();
 
   constructor() {
-    // Restaurar último tiempo de actividad desde localStorage
+    this.restoreLastActivity();
+  }
+
+  /**
+   * Restaurar último tiempo de actividad desde localStorage
+   */
+  private restoreLastActivity(): void {
     if (isPlatformBrowser(this.platformId)) {
-      const stored = localStorage.getItem('lastActivityTime');
-      if (stored) {
-        this.lastActivityTime = parseInt(stored, 10);
+      const stored = parseInt(localStorage.getItem(this.STORAGE_KEY) ?? '', 10);
+      if (!isNaN(stored)) {
+        this.lastActivityTime = stored;
       }
     }
   }
 
   /**
-   * Iniciar monitoreo de inactividad
+   * Iniciar monitoreo de inactividad.
+   * NO reinicia el último tiempo de actividad: si el valor persistido ya superó el timeout
+   * (ej: la app estuvo cerrada), se dispara inmediatamente el flujo de re-autenticación.
    */
   startMonitoring(): void {
     if (!isPlatformBrowser(this.platformId) || this.isMonitoring) {
       return;
     }
 
+    this.restoreLastActivity();
+    if (this.getInactiveTime() >= this.deviceDetection.getInactivityTimeout()) {
+      this.inactivityDetected$.next();
+      return;
+    }
+
     this.isMonitoring = true;
-    this.resetTimer();
+    this.lastUpdateTime = Date.now();
 
     // Agregar listeners de eventos de actividad
     this.ACTIVITY_EVENTS.forEach(event => {
@@ -72,8 +87,6 @@ export class InactivityService {
 
     // Persistir último tiempo de actividad antes de cerrar
     window.addEventListener('beforeunload', this.persistLastActivity);
-
-    console.log('✅ Monitoreo de inactividad iniciado');
   }
 
   /**
@@ -100,7 +113,8 @@ export class InactivityService {
     document.removeEventListener('visibilitychange', this.handleVisibilityChange);
     window.removeEventListener('beforeunload', this.persistLastActivity);
 
-    console.log('⏸️ Monitoreo de inactividad detenido');
+    // Guardar el último tiempo de actividad conocido
+    this.persistLastActivity();
   }
 
   /**
@@ -108,11 +122,10 @@ export class InactivityService {
    */
   resetTimer(): void {
     this.lastActivityTime = Date.now();
+    this.lastUpdateTime = this.lastActivityTime;
 
     // Guardar en localStorage para persistencia
-    if (isPlatformBrowser(this.platformId)) {
-      localStorage.setItem('lastActivityTime', this.lastActivityTime.toString());
-    }
+    this.persistLastActivity();
   }
 
   /**
@@ -130,7 +143,6 @@ export class InactivityService {
     const timeout = this.deviceDetection.getInactivityTimeout();
 
     if (inactiveTime >= timeout) {
-      console.warn(`⏱️ Inactividad detectada: ${Math.floor(inactiveTime / 60000)} minutos`);
       this.handleInactivityDetected();
     }
   };
@@ -177,7 +189,7 @@ export class InactivityService {
    */
   private persistLastActivity = (): void => {
     if (isPlatformBrowser(this.platformId)) {
-      localStorage.setItem('lastActivityTime', this.lastActivityTime.toString());
+      localStorage.setItem(this.STORAGE_KEY, this.lastActivityTime.toString());
     }
   };
 }

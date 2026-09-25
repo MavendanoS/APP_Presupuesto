@@ -1,7 +1,8 @@
-import { Component, Input, OnChanges, SimpleChanges, ViewChild } from '@angular/core';
+import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BaseChartDirective } from 'ng2-charts';
-import { ChartConfiguration, ChartData, ChartType, Plugin } from 'chart.js';
+import { TranslocoPipe } from '@jsverse/transloco';
+import { ChartConfiguration, ChartData, Plugin } from 'chart.js';
 
 export interface BarChartDataset {
   label: string;
@@ -13,7 +14,7 @@ export interface BarChartDataset {
 @Component({
   selector: 'app-bar-chart',
   standalone: true,
-  imports: [CommonModule, BaseChartDirective],
+  imports: [CommonModule, BaseChartDirective, TranslocoPipe],
   templateUrl: './bar-chart.component.html',
   styleUrls: ['./bar-chart.component.scss']
 })
@@ -25,7 +26,6 @@ export class BarChartComponent implements OnChanges {
   @Input() orientation: 'vertical' | 'horizontal' = 'vertical';
   @Input() stacked: boolean = false;
   @Input() showTotalLabels: boolean = false;
-  @ViewChild(BaseChartDirective) chart?: BaseChartDirective;
 
   public chartType: 'bar' = 'bar';
 
@@ -97,7 +97,9 @@ export class BarChartComponent implements OnChanges {
         callbacks: {
           label: (context) => {
             const label = context.dataset.label || '';
-            const value = (context.parsed['y'] || context.parsed['x']) as number;
+            // El eje de valores depende de la orientación (y en vertical, x en horizontal)
+            const parsed = context.parsed as { x: number | null; y: number | null };
+            const value = (this.orientation === 'horizontal' ? parsed.x : parsed.y) ?? 0;
             const formatted = this.formatCurrency(value);
             return `${label}: ${formatted}`;
           }
@@ -124,8 +126,13 @@ export class BarChartComponent implements OnChanges {
   };
 
   ngOnChanges(changes: SimpleChanges): void {
-    if ((changes['datasets'] || changes['labels'] || changes['orientation'] || changes['stacked']) && this.labels.length > 0) {
-      this.updateChartData();
+    if (changes['datasets'] || changes['labels'] || changes['orientation'] || changes['stacked']) {
+      if (this.labels.length > 0) {
+        this.updateChartData();
+      } else {
+        // Sin etiquetas: limpiar el gráfico para no mostrar datos obsoletos
+        this.chartData = { labels: [], datasets: [] };
+      }
     }
   }
 
@@ -141,22 +148,27 @@ export class BarChartComponent implements OnChanges {
       '#F97316'  // Orange-red
     ];
 
-    // Update orientation
-    if (this.chartOptions && this.chartOptions.indexAxis) {
-      this.chartOptions.indexAxis = this.orientation === 'horizontal' ? 'y' : 'x';
-    }
-
-    // Update stacked mode
-    if (this.chartOptions && this.chartOptions.scales) {
-      this.chartOptions.scales['x'] = {
-        ...this.chartOptions.scales['x'],
-        stacked: this.stacked
-      };
-      this.chartOptions.scales['y'] = {
-        ...this.chartOptions.scales['y'],
-        stacked: this.stacked
-      };
-    }
+    // Orientación y modo apilado (nueva referencia de options para que ng2-charts la detecte)
+    const horizontal = this.orientation === 'horizontal';
+    const valueTicks = { callback: (value: string | number) => this.formatCurrency(Number(value)) };
+    this.chartOptions = {
+      ...this.chartOptions,
+      indexAxis: horizontal ? 'y' : 'x',
+      scales: {
+        x: {
+          stacked: this.stacked,
+          grid: { display: horizontal },
+          beginAtZero: horizontal,
+          ...(horizontal ? { ticks: valueTicks } : {})
+        },
+        y: {
+          stacked: this.stacked,
+          grid: { display: !horizontal },
+          beginAtZero: !horizontal,
+          ...(!horizontal ? { ticks: valueTicks } : {})
+        }
+      }
+    };
 
     this.chartData = {
       labels: this.labels,
@@ -169,13 +181,12 @@ export class BarChartComponent implements OnChanges {
         borderRadius: 4
       }))
     };
-
-    this.chart?.update();
+    // ng2-charts detecta el cambio de referencia de [data]/[options] y actualiza el gráfico
   }
 
   private formatCurrency(value: number): string {
     const rounded = Math.round(value);
-    const formatted = rounded.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-    return `$${formatted}`;
+    const formatted = Math.abs(rounded).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    return `${rounded < 0 ? '-' : ''}$${formatted}`;
   }
 }

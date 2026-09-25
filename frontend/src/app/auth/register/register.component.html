@@ -28,7 +28,7 @@
                 id="name"
                 formControlName="name"
                 [class.is-invalid]="name?.invalid && name?.touched"
-                placeholder="Juan Pérez"
+                [placeholder]="'profile.namePlaceholder' | transloco"
                 autocomplete="name"
               />
               @if (name?.invalid && name?.touched) {
@@ -37,7 +37,7 @@
                     {{ 'messages.requiredField' | transloco }}
                   }
                   @if (name?.errors?.['minlength']) {
-                    {{ 'income.sourceRequired' | transloco }}
+                    {{ 'messages.minLength' | transloco: { min: 3 } }}
                   }
                 </div>
               }
@@ -85,7 +85,7 @@
                     {{ 'messages.requiredField' | transloco }}
                   }
                   @if (password?.errors?.['minlength']) {
-                    {{ 'income.sourceRequired' | transloco }}
+                    {{ 'messages.minLength' | transloco: { min: 6 } }}
                   }
                 </div>
               }
@@ -105,7 +105,7 @@
               />
               @if (passwordMismatch) {
                 <div class="invalid-feedback">
-                  {{ 'messages.invalidData' | transloco }}
+                  {{ 'messages.passwordMismatch' | transloco }}
                 </div>
               }
             </div>

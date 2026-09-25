@@ -1,14 +1,23 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslocoPipe } from '@jsverse/transloco';
+import { Subject, catchError, of, switchMap } from 'rxjs';
 import { MonthlyIncomeService } from '../../core/services/monthly-income.service';
+import { LocaleService } from '../../core/services/locale.service';
 import { MonthlyIncome, IncomeMonthlySummary } from '../../core/models';
 import { NavbarComponent } from '../../shared/components/navbar/navbar.component';
 import { LoadingComponent } from '../../shared/components/loading/loading.component';
 import { ErrorMessageComponent } from '../../shared/components/error-message/error-message.component';
-import { ClpCurrencyPipe } from '../../shared/pipes/clp-currency.pipe';
+import {
+  addMonths,
+  currentYearMonth,
+  isValidYearMonth,
+  parseLocalDate,
+  parseYearMonth
+} from '../../shared/utils/date.utils';
 
 @Component({
   selector: 'app-income-list',
@@ -20,28 +29,35 @@ import { ClpCurrencyPipe } from '../../shared/pipes/clp-currency.pipe';
     TranslocoPipe,
     NavbarComponent,
     LoadingComponent,
-    ErrorMessageComponent,
-    ClpCurrencyPipe
+    ErrorMessageComponent
   ],
   templateUrl: './income-list.component.html',
   styleUrls: ['./income-list.component.scss']
 })
 export class IncomeListComponent implements OnInit {
+  private localeService = inject(LocaleService);
+  private route = inject(ActivatedRoute);
+
   loading = signal(true);
   errorMessage = signal<string | null>(null);
   summary = signal<IncomeMonthlySummary | null>(null);
-  currentMonth = signal(this.getCurrentYearMonth());
+  currentMonth = signal(currentYearMonth());
   showAmounts = signal(false);
+
+  /** Spinner de página completa solo en la carga inicial (sin datos previos) */
+  initialLoading = computed(() => this.loading() && this.summary() === null);
 
   incomes = computed<MonthlyIncome[]>(() => this.summary()?.incomes ?? []);
   total = computed<number>(() => this.summary()?.total ?? 0);
   count = computed<number>(() => this.summary()?.count ?? 0);
 
   displayMonth = computed(() => {
-    const [year, month] = this.currentMonth().split('-');
-    const date = new Date(parseInt(year), parseInt(month) - 1);
-    return date.toLocaleDateString('es-CL', { month: 'long', year: 'numeric' });
+    const date = parseYearMonth(this.currentMonth());
+    return date.toLocaleDateString(this.localeService.locale(), { month: 'long', year: 'numeric' });
   });
+
+  /** Disparador de recargas: switchMap cancela respuestas obsoletas */
+  private reload$ = new Subject<void>();
 
   constructor(
     private incomeService: MonthlyIncomeService,
@@ -49,26 +65,39 @@ export class IncomeListComponent implements OnInit {
   ) {
     const saved = localStorage.getItem('showAmounts');
     this.showAmounts.set(saved === 'true');
+
+    this.reload$
+      .pipe(
+        switchMap(() => {
+          this.loading.set(true);
+          this.errorMessage.set(null);
+          return this.incomeService.getMonthlySummary(this.currentMonth()).pipe(
+            catchError((error) => {
+              this.errorMessage.set(error?.message || this.localeService.t('incomes.loadError'));
+              return of(null);
+            })
+          );
+        }),
+        takeUntilDestroyed()
+      )
+      .subscribe((data) => {
+        if (data) {
+          this.summary.set(data);
+        }
+        this.loading.set(false);
+      });
   }
 
   ngOnInit(): void {
+    const monthParam = this.route.snapshot.queryParamMap.get('month');
+    if (isValidYearMonth(monthParam)) {
+      this.currentMonth.set(monthParam);
+    }
     this.loadData();
   }
 
   loadData(): void {
-    this.loading.set(true);
-    this.errorMessage.set(null);
-
-    this.incomeService.getMonthlySummary(this.currentMonth()).subscribe({
-      next: (data) => {
-        this.summary.set(data);
-        this.loading.set(false);
-      },
-      error: (error) => {
-        this.errorMessage.set(error?.message || 'Error al cargar ingresos');
-        this.loading.set(false);
-      }
-    });
+    this.reload$.next();
   }
 
   toggleAmounts(): void {
@@ -81,31 +110,38 @@ export class IncomeListComponent implements OnInit {
     if (amount === null || amount === undefined) return '-';
     if (!this.showAmounts()) return '****';
     const rounded = Math.round(amount);
-    const formatted = rounded.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-    return `$${formatted}`;
+    const formatted = Math.abs(rounded).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    return `${rounded < 0 ? '-' : ''}$${formatted}`;
   }
 
   previousMonth(): void {
-    const [year, month] = this.currentMonth().split('-').map(Number);
-    const date = new Date(year, month - 2, 1);
-    this.currentMonth.set(this.formatYearMonth(date));
-    this.loadData();
+    this.changeMonth(addMonths(this.currentMonth(), -1));
   }
 
   nextMonth(): void {
-    const [year, month] = this.currentMonth().split('-').map(Number);
-    const date = new Date(year, month, 1);
-    this.currentMonth.set(this.formatYearMonth(date));
-    this.loadData();
+    this.changeMonth(addMonths(this.currentMonth(), 1));
   }
 
   goToCurrentMonth(): void {
-    this.currentMonth.set(this.getCurrentYearMonth());
-    this.loadData();
+    this.changeMonth(currentYearMonth());
   }
 
   isCurrentMonth(): boolean {
-    return this.currentMonth() === this.getCurrentYearMonth();
+    return this.currentMonth() === currentYearMonth();
+  }
+
+  /**
+   * Cambia de mes, recarga y mantiene el mes en la URL (?month=YYYY-MM)
+   */
+  private changeMonth(yearMonth: string): void {
+    this.currentMonth.set(yearMonth);
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { month: yearMonth },
+      queryParamsHandling: 'merge',
+      replaceUrl: true
+    });
+    this.loadData();
   }
 
   newIncome(): void {
@@ -119,34 +155,26 @@ export class IncomeListComponent implements OnInit {
   }
 
   deleteIncome(income: MonthlyIncome): void {
-    const confirmed = confirm(`¿Eliminar el ingreso "${income.description}"?`);
+    const confirmed = confirm(
+      this.localeService.t('incomes.confirmDelete', { description: income.description })
+    );
     if (!confirmed) return;
 
     this.incomeService.delete(income.id).subscribe({
       next: () => this.loadData(),
       error: (error) => {
-        this.errorMessage.set(error?.message || 'Error al eliminar ingreso');
+        this.errorMessage.set(error?.message || this.localeService.t('messages.deleteError'));
       }
     });
   }
 
   formatDate(dateStr: string | null): string {
-    if (!dateStr) return '-';
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('es-CL', {
+    const date = parseLocalDate(dateStr);
+    if (!date) return '-';
+    return date.toLocaleDateString(this.localeService.locale(), {
       day: '2-digit',
       month: 'short',
       year: 'numeric'
     });
-  }
-
-  private getCurrentYearMonth(): string {
-    return this.formatYearMonth(new Date());
-  }
-
-  private formatYearMonth(date: Date): string {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    return `${year}-${month}`;
   }
 }

@@ -1,16 +1,25 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslocoPipe } from '@jsverse/transloco';
+import { Subject, catchError, of, switchMap } from 'rxjs';
 import { AuthService } from '../core/services/auth.service';
 import { MonthlyPaymentService } from '../core/services/monthly-payment.service';
+import { LocaleService } from '../core/services/locale.service';
 import { BudgetSummary, ChecklistItem } from '../core/models';
 import { NavbarComponent } from '../shared/components/navbar/navbar.component';
 import { LoadingComponent } from '../shared/components/loading/loading.component';
 import { ErrorMessageComponent } from '../shared/components/error-message/error-message.component';
-import { ClpCurrencyPipe } from '../shared/pipes/clp-currency.pipe';
 import { WaterfallChartComponent, WaterfallStep } from '../shared/components/waterfall-chart/waterfall-chart.component';
+import {
+  addMonths,
+  currentYearMonth,
+  lastDayOfMonthISO,
+  parseYearMonth,
+  todayLocalISO
+} from '../shared/utils/date.utils';
 
 @Component({
   selector: 'app-dashboard',
@@ -23,30 +32,36 @@ import { WaterfallChartComponent, WaterfallStep } from '../shared/components/wat
     NavbarComponent,
     LoadingComponent,
     ErrorMessageComponent,
-    ClpCurrencyPipe,
     WaterfallChartComponent
   ],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
 })
 export class DashboardComponent implements OnInit {
+  private localeService = inject(LocaleService);
+
   loading = signal(true);
   errorMessage = signal<string | null>(null);
   budgetData = signal<BudgetSummary | null>(null);
   showAmounts = signal(false);
-  currentMonth = signal(this.getCurrentYearMonth());
+  currentMonth = signal(currentYearMonth());
   avgMonths = signal(3);
+
+  /** Spinner de página completa solo en la carga inicial (sin datos previos) */
+  initialLoading = computed(() => this.loading() && this.budgetData() === null);
 
   // Payment editing state
   editingServiceId = signal<number | null>(null);
   paymentAmount = signal<number>(0);
   paymentNotes = signal('');
 
+  /** Disparador de recargas: switchMap cancela respuestas obsoletas */
+  private reload$ = new Subject<void>();
+
   // Computed
   displayMonth = computed(() => {
-    const [year, month] = this.currentMonth().split('-');
-    const date = new Date(parseInt(year), parseInt(month) - 1);
-    return date.toLocaleDateString('es-CL', { month: 'long', year: 'numeric' });
+    const date = parseYearMonth(this.currentMonth());
+    return date.toLocaleDateString(this.localeService.locale(), { month: 'long', year: 'numeric' });
   });
 
   checklist = computed(() => this.budgetData()?.checklist || []);
@@ -60,30 +75,30 @@ export class DashboardComponent implements OnInit {
     const s = this.summary();
     const totalIncomes = s.total_incomes ?? 0;
     const totalPaid = s.total_paid ?? 0;
-    const remaining = s.remaining ?? 0;
+    const remaining = s.remaining ?? 0; // puede ser negativo (se pagó más de lo esperado)
     const projected = s.projected_balance ?? (totalIncomes - (s.total_expected ?? 0));
 
     return [
       {
-        label: 'Ingresos',
+        label: this.localeService.t('dashboard.waterfallIncomes'),
         value: totalIncomes,
         type: 'total',
         color: '#198754'
       },
       {
-        label: 'Gastos pagados',
+        label: this.localeService.t('dashboard.waterfallPaid'),
         value: totalPaid,
         type: 'negative',
         color: '#dc3545'
       },
       {
-        label: 'Pendientes',
+        label: this.localeService.t('dashboard.waterfallPending'),
         value: remaining,
         type: 'negative',
         color: '#fd7e14'
       },
       {
-        label: 'Saldo proyectado',
+        label: this.localeService.t('dashboard.waterfallProjected'),
         value: projected,
         type: 'total',
         color: projected >= 0 ? '#0d6efd' : '#dc3545'
@@ -111,6 +126,28 @@ export class DashboardComponent implements OnInit {
   ) {
     const saved = localStorage.getItem('showAmounts');
     this.showAmounts.set(saved === 'true');
+
+    this.reload$
+      .pipe(
+        switchMap(() => {
+          this.loading.set(true);
+          this.errorMessage.set(null);
+          this.editingServiceId.set(null);
+          return this.paymentService.getBudgetSummary(this.currentMonth(), this.avgMonths()).pipe(
+            catchError((error) => {
+              this.errorMessage.set(error?.message || this.localeService.t('messages.loadError'));
+              return of(null);
+            })
+          );
+        }),
+        takeUntilDestroyed()
+      )
+      .subscribe((data) => {
+        if (data) {
+          this.budgetData.set(data);
+        }
+        this.loading.set(false);
+      });
   }
 
   get user() {
@@ -122,20 +159,7 @@ export class DashboardComponent implements OnInit {
   }
 
   loadData(): void {
-    this.loading.set(true);
-    this.errorMessage.set(null);
-    this.editingServiceId.set(null);
-
-    this.paymentService.getBudgetSummary(this.currentMonth(), this.avgMonths()).subscribe({
-      next: (data) => {
-        this.budgetData.set(data);
-        this.loading.set(false);
-      },
-      error: (error) => {
-        this.errorMessage.set(error.message || 'Error al cargar datos');
-        this.loading.set(false);
-      }
-    });
+    this.reload$.next();
   }
 
   toggleAmounts(): void {
@@ -148,31 +172,27 @@ export class DashboardComponent implements OnInit {
     if (amount === null || amount === undefined) return '-';
     if (!this.showAmounts()) return '****';
     const rounded = Math.round(amount);
-    const formatted = rounded.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-    return `$${formatted}`;
+    const formatted = Math.abs(rounded).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    return `${rounded < 0 ? '-' : ''}$${formatted}`;
   }
 
   previousMonth(): void {
-    const [year, month] = this.currentMonth().split('-').map(Number);
-    const date = new Date(year, month - 2, 1);
-    this.currentMonth.set(this.formatYearMonth(date));
+    this.currentMonth.set(addMonths(this.currentMonth(), -1));
     this.loadData();
   }
 
   nextMonth(): void {
-    const [year, month] = this.currentMonth().split('-').map(Number);
-    const date = new Date(year, month, 1);
-    this.currentMonth.set(this.formatYearMonth(date));
+    this.currentMonth.set(addMonths(this.currentMonth(), 1));
     this.loadData();
   }
 
   goToCurrentMonth(): void {
-    this.currentMonth.set(this.getCurrentYearMonth());
+    this.currentMonth.set(currentYearMonth());
     this.loadData();
   }
 
   isCurrentMonth(): boolean {
-    return this.currentMonth() === this.getCurrentYearMonth();
+    return this.currentMonth() === currentYearMonth();
   }
 
   // Start editing a payment (mark as paid)
@@ -188,15 +208,24 @@ export class DashboardComponent implements OnInit {
     this.paymentNotes.set('');
   }
 
+  /**
+   * Fecha de pago a registrar: hoy si se está viendo el mes actual (o uno futuro);
+   * para meses pasados, el último día de ese mes.
+   */
+  private getPaidDateForViewedMonth(): string {
+    const today = todayLocalISO();
+    const lastDay = lastDayOfMonthISO(this.currentMonth());
+    return lastDay < today ? lastDay : today;
+  }
+
   confirmPayment(item: ChecklistItem): void {
     if (this.paymentAmount() <= 0) return;
 
-    const today = new Date().toISOString().split('T')[0];
     this.paymentService.upsertPayment({
       service_id: item.service_id,
       amount: this.paymentAmount(),
       year_month: this.currentMonth(),
-      paid_date: today,
+      paid_date: this.getPaidDateForViewedMonth(),
       notes: this.paymentNotes() || undefined
     }).subscribe({
       next: () => {
@@ -204,7 +233,7 @@ export class DashboardComponent implements OnInit {
         this.loadData();
       },
       error: (error) => {
-        this.errorMessage.set(error.message || 'Error al registrar pago');
+        this.errorMessage.set(error?.message || this.localeService.t('dashboard.paymentError'));
       }
     });
   }
@@ -215,7 +244,7 @@ export class DashboardComponent implements OnInit {
     this.paymentService.deletePayment(item.payment_id).subscribe({
       next: () => this.loadData(),
       error: (error) => {
-        this.errorMessage.set(error.message || 'Error al desmarcar pago');
+        this.errorMessage.set(error?.message || this.localeService.t('dashboard.unmarkError'));
       }
     });
   }
@@ -225,17 +254,7 @@ export class DashboardComponent implements OnInit {
   }
 
   onAvgMonthsChange(value: number): void {
-    this.avgMonths.set(value);
+    this.avgMonths.set(Number(value));
     this.loadData();
-  }
-
-  private getCurrentYearMonth(): string {
-    return this.formatYearMonth(new Date());
-  }
-
-  private formatYearMonth(date: Date): string {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    return `${year}-${month}`;
   }
 }

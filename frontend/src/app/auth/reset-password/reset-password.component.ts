@@ -1,17 +1,20 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-reset-password',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, TranslocoPipe],
   templateUrl: './reset-password.component.html',
   styleUrl: './reset-password.component.scss'
 })
 export class ResetPasswordComponent implements OnInit {
+  private transloco = inject(TranslocoService);
+
   resetPasswordForm: FormGroup;
   loading = signal(false);
   error = signal<string | null>(null);
@@ -41,7 +44,7 @@ export class ResetPasswordComponent implements OnInit {
       if (token) {
         this.token.set(token);
       } else {
-        this.error.set('Token de recuperación no encontrado');
+        this.error.set(this.transloco.translate('resetPassword.tokenNotFound'));
       }
     });
   }
@@ -85,7 +88,7 @@ export class ResetPasswordComponent implements OnInit {
       },
       error: (err) => {
         this.loading.set(false);
-        this.error.set(err.error?.message || 'Error al restablecer contraseña');
+        this.error.set(err?.message || this.transloco.translate('resetPassword.error'));
       }
     });
   }

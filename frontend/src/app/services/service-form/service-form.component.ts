@@ -1,8 +1,8 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { PaymentServiceService } from '../../core/services/payment-service.service';
 import { NavbarComponent } from '../../shared/components/navbar/navbar.component';
 import { ErrorMessageComponent } from '../../shared/components/error-message/error-message.component';
@@ -15,6 +15,8 @@ import { ErrorMessageComponent } from '../../shared/components/error-message/err
   styleUrls: ['./service-form.component.scss']
 })
 export class ServiceFormComponent implements OnInit {
+  private transloco = inject(TranslocoService);
+
   isEditMode = signal(false);
   serviceId = signal<number | null>(null);
   loading = signal(false);
@@ -58,7 +60,7 @@ export class ServiceFormComponent implements OnInit {
         this.loading.set(false);
       },
       error: (error) => {
-        this.errorMessage.set(error.message || 'Error al cargar servicio');
+        this.errorMessage.set(error?.message || this.transloco.translate('messages.loadError'));
         this.loading.set(false);
       }
     });
@@ -66,7 +68,7 @@ export class ServiceFormComponent implements OnInit {
 
   onSubmit(): void {
     if (!this.name() || this.name().trim().length < 2) {
-      this.errorMessage.set('El nombre debe tener al menos 2 caracteres');
+      this.errorMessage.set(this.transloco.translate('services.nameRequired'));
       return;
     }
 
@@ -85,7 +87,7 @@ export class ServiceFormComponent implements OnInit {
     request$.subscribe({
       next: () => this.router.navigate(['/services']),
       error: (error) => {
-        this.errorMessage.set(error.message || 'Error al guardar');
+        this.errorMessage.set(error?.message || this.transloco.translate('messages.saveError'));
         this.loading.set(false);
       }
     });

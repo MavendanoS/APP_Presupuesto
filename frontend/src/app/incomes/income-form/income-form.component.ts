@@ -1,13 +1,14 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { MonthlyIncomeService } from '../../core/services/monthly-income.service';
 import { CreateIncomeRequest, UpdateIncomeRequest } from '../../core/models';
 import { NavbarComponent } from '../../shared/components/navbar/navbar.component';
 import { LoadingComponent } from '../../shared/components/loading/loading.component';
 import { ErrorMessageComponent } from '../../shared/components/error-message/error-message.component';
+import { currentYearMonth, isValidYearMonth, todayLocalISO } from '../../shared/utils/date.utils';
 
 @Component({
   selector: 'app-income-form',
@@ -25,6 +26,8 @@ import { ErrorMessageComponent } from '../../shared/components/error-message/err
   styleUrls: ['./income-form.component.scss']
 })
 export class IncomeFormComponent implements OnInit {
+  private transloco = inject(TranslocoService);
+
   loading = signal(false);
   saving = signal(false);
   errorMessage = signal<string | null>(null);
@@ -34,7 +37,7 @@ export class IncomeFormComponent implements OnInit {
   // Form fields
   description = signal('');
   amount = signal<number | null>(null);
-  yearMonth = signal(this.getCurrentYearMonth());
+  yearMonth = signal(currentYearMonth());
   receivedDate = signal<string>('');
   notes = signal('');
 
@@ -56,11 +59,11 @@ export class IncomeFormComponent implements OnInit {
     } else {
       // En modo creacion, intentar usar el query param ?month=YYYY-MM
       const monthParam = this.route.snapshot.queryParamMap.get('month');
-      if (monthParam && /^\d{4}-(0[1-9]|1[0-2])$/.test(monthParam)) {
+      if (isValidYearMonth(monthParam)) {
         this.yearMonth.set(monthParam);
       }
       // Por defecto, fecha de recepcion = hoy
-      this.receivedDate.set(new Date().toISOString().split('T')[0]);
+      this.receivedDate.set(todayLocalISO());
     }
   }
 
@@ -77,7 +80,7 @@ export class IncomeFormComponent implements OnInit {
         this.loading.set(false);
       },
       error: (error) => {
-        this.errorMessage.set(error?.message || 'Error al cargar ingreso');
+        this.errorMessage.set(error?.message || this.transloco.translate('messages.loadError'));
         this.loading.set(false);
       }
     });
@@ -93,12 +96,12 @@ export class IncomeFormComponent implements OnInit {
     const amt = this.amount();
 
     if (!desc || desc.length < 2) {
-      this.errorMessage.set('La descripción debe tener al menos 2 caracteres');
+      this.errorMessage.set(this.transloco.translate('incomes.descriptionRequired'));
       return;
     }
 
     if (!amt || amt <= 0) {
-      this.errorMessage.set('El monto debe ser mayor a 0');
+      this.errorMessage.set(this.transloco.translate('incomes.amountRequired'));
       return;
     }
 
@@ -122,7 +125,7 @@ export class IncomeFormComponent implements OnInit {
           });
         },
         error: (error) => {
-          this.errorMessage.set(error?.message || 'Error al actualizar ingreso');
+          this.errorMessage.set(error?.message || this.transloco.translate('messages.updateError'));
           this.saving.set(false);
         }
       });
@@ -143,7 +146,7 @@ export class IncomeFormComponent implements OnInit {
           });
         },
         error: (error) => {
-          this.errorMessage.set(error?.message || 'Error al registrar ingreso');
+          this.errorMessage.set(error?.message || this.transloco.translate('messages.saveError'));
           this.saving.set(false);
         }
       });
@@ -151,13 +154,8 @@ export class IncomeFormComponent implements OnInit {
   }
 
   cancel(): void {
-    this.router.navigate(['/incomes']);
-  }
-
-  private getCurrentYearMonth(): string {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    return `${year}-${month}`;
+    this.router.navigate(['/incomes'], {
+      queryParams: { month: this.yearMonth() }
+    });
   }
 }

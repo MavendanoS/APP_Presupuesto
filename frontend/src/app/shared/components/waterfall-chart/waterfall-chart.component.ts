@@ -1,6 +1,7 @@
-import { Component, Input, OnChanges, SimpleChanges, ViewChild } from '@angular/core';
+import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BaseChartDirective } from 'ng2-charts';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { ChartConfiguration, ChartData, Plugin } from 'chart.js';
 
 /**
@@ -11,7 +12,8 @@ import { ChartConfiguration, ChartData, Plugin } from 'chart.js';
  */
 export interface WaterfallStep {
   label: string;
-  value: number;          // siempre en valor absoluto positivo
+  value: number;          // 'total': valor con signo. 'positive'/'negative': magnitud del cambio
+                          // (si viene negativa, el cambio se invierte, ej: pendientes < 0)
   type: 'total' | 'positive' | 'negative';
   color?: string;         // color personalizado (sobreescribe el default)
 }
@@ -19,7 +21,7 @@ export interface WaterfallStep {
 @Component({
   selector: 'app-waterfall-chart',
   standalone: true,
-  imports: [CommonModule, BaseChartDirective],
+  imports: [CommonModule, BaseChartDirective, TranslocoPipe],
   templateUrl: './waterfall-chart.component.html',
   styleUrls: ['./waterfall-chart.component.scss']
 })
@@ -28,7 +30,6 @@ export class WaterfallChartComponent implements OnChanges {
   @Input() title?: string;
   @Input() height: number = 320;
   @Input() showValues: boolean = true;
-  @ViewChild(BaseChartDirective) chart?: BaseChartDirective;
 
   public chartType: 'bar' = 'bar';
 
@@ -46,18 +47,23 @@ export class WaterfallChartComponent implements OnChanges {
       ctx.fillStyle = '#212529';
       ctx.font = 'bold 11px sans-serif';
       ctx.textAlign = 'center';
-      ctx.textBaseline = 'bottom';
 
       meta.data.forEach((bar, i) => {
         const step = this.steps[i];
         if (!step) return;
 
-        const sign = step.type === 'negative' ? '-' : '';
-        const text = `${sign}${this.formatCurrency(step.value)}`;
+        const signedValue = this.getSignedValue(step);
+        const text = this.formatCurrency(signedValue);
 
         const anyBar = bar as any;
-        const topY = Math.min(anyBar.y, anyBar.base);
-        ctx.fillText(text, anyBar.x, topY - 4);
+        if (step.type === 'total' && signedValue < 0) {
+          // Barra total negativa: etiqueta bajo la barra
+          ctx.textBaseline = 'top';
+          ctx.fillText(text, anyBar.x, Math.max(anyBar.y, anyBar.base) + 4);
+        } else {
+          ctx.textBaseline = 'bottom';
+          ctx.fillText(text, anyBar.x, Math.min(anyBar.y, anyBar.base) - 4);
+        }
       });
 
       ctx.restore();
@@ -82,13 +88,13 @@ export class WaterfallChartComponent implements OnChanges {
         const next = meta.data[i + 1] as any;
         if (!current || !next) continue;
 
-        const currentTop = Math.min(current.y, current.base);
         const currentRight = current.x + (current.width || 0) / 2;
         const nextLeft = next.x - (next.width || 0) / 2;
 
-        // La conexion sale del extremo superior (o el lado donde "termina" la barra)
-        const stepCurrent = this.steps[i];
-        const yCurrent = stepCurrent?.type === 'negative' ? current.base : current.y;
+        // La conexión sale del valor acumulado donde "termina" la barra actual
+        const yCurrent = this.cumulativeEnds[i] !== undefined
+          ? chart.scales['y'].getPixelForValue(this.cumulativeEnds[i])
+          : current.y;
 
         ctx.beginPath();
         ctx.moveTo(currentRight, yCurrent);
@@ -118,8 +124,7 @@ export class WaterfallChartComponent implements OnChanges {
           label: (context) => {
             const step = this.steps[context.dataIndex];
             if (!step) return '';
-            const sign = step.type === 'negative' ? '-' : '';
-            return `${step.label}: ${sign}${this.formatCurrency(step.value)}`;
+            return `${step.label}: ${this.formatCurrency(this.getSignedValue(step))}`;
           }
         }
       }
@@ -138,6 +143,9 @@ export class WaterfallChartComponent implements OnChanges {
     }
   };
 
+  /** Valor acumulado al final de cada barra (para las líneas conectoras) */
+  private cumulativeEnds: number[] = [];
+
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['steps']) {
       this.updateChartData();
@@ -150,6 +158,7 @@ export class WaterfallChartComponent implements OnChanges {
     const data: [number, number][] = [];
     const backgroundColors: string[] = [];
 
+    const cumulativeEnds: number[] = [];
     let cumulative = 0;
     let cumulativeInitialized = false;
 
@@ -158,21 +167,21 @@ export class WaterfallChartComponent implements OnChanges {
       let color: string;
 
       if (step.type === 'total') {
-        bar = [0, step.value];
+        bar = step.value >= 0 ? [0, step.value] : [step.value, 0];
         cumulative = step.value;
         cumulativeInitialized = true;
         color = step.color || (step.value >= 0 ? '#0d6efd' : '#dc3545');
       } else if (step.type === 'positive') {
         const start = cumulativeInitialized ? cumulative : 0;
         const end = start + step.value;
-        bar = [start, end];
+        bar = [Math.min(start, end), Math.max(start, end)];
         cumulative = end;
         cumulativeInitialized = true;
         color = step.color || '#198754';
       } else {
         const start = cumulativeInitialized ? cumulative : 0;
         const end = start - step.value;
-        bar = [end, start];
+        bar = [Math.min(start, end), Math.max(start, end)];
         cumulative = end;
         cumulativeInitialized = true;
         color = step.color || '#dc3545';
@@ -180,7 +189,10 @@ export class WaterfallChartComponent implements OnChanges {
 
       data.push(bar);
       backgroundColors.push(color);
+      cumulativeEnds.push(cumulative);
     }
+
+    this.cumulativeEnds = cumulativeEnds;
 
     this.chartData = {
       labels,
@@ -196,13 +208,18 @@ export class WaterfallChartComponent implements OnChanges {
         }
       ]
     };
-
-    this.chart?.update();
+    // ng2-charts detecta el cambio de referencia de [data] y actualiza el gráfico
   }
 
+  /** Valor con signo que representa el paso (negativo = resta) */
+  private getSignedValue(step: WaterfallStep): number {
+    return step.type === 'negative' ? -step.value : step.value;
+  }
+
+  /** Formato CLP conservando el signo: -$1.234 */
   private formatCurrency(value: number): string {
-    const rounded = Math.round(Math.abs(value));
-    const formatted = rounded.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-    return `$${formatted}`;
+    const rounded = Math.round(value);
+    const formatted = Math.abs(rounded).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    return `${rounded < 0 ? '-' : ''}$${formatted}`;
   }
 }

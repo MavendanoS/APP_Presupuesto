@@ -5,7 +5,8 @@
     "history": "Historial",
     "services": "Servicios",
     "profile": "Mi Perfil",
-    "logout": "Cerrar Sesión"
+    "logout": "Cerrar Sesión",
+    "incomeHistory": "Historial de Ingresos"
   },
   "auth": {
     "login": "Iniciar Sesión",
@@ -22,7 +23,8 @@
     "reAuthenticate": "Re-autenticación requerida",
     "reAuthMessage": "Por seguridad, confirma tu contraseña para continuar",
     "confirm": "Confirmar",
-    "logout": "Cerrar Sesión"
+    "logout": "Cerrar Sesión",
+    "backToLogin": "Volver al inicio de sesión"
   },
   "dashboard": {
     "title": "Mis Pagos",
@@ -48,7 +50,15 @@
     "addService": "Agregar Servicio",
     "markAsPaid": "Pagar",
     "avgLabel": "Prom",
-    "expectedLabel": "Esperado"
+    "expectedLabel": "Esperado",
+    "financesIntro": "Controla tus pagos mensuales e ingresos",
+    "unmark": "Desmarcar",
+    "paymentError": "Error al registrar el pago",
+    "unmarkError": "Error al desmarcar el pago",
+    "waterfallIncomes": "Ingresos",
+    "waterfallPaid": "Gastos pagados",
+    "waterfallPending": "Pendientes",
+    "waterfallProjected": "Saldo proyectado"
   },
   "services": {
     "title": "Servicios de Pago",
@@ -64,7 +74,12 @@
     "expectedAmountPlaceholder": "Ej: 70000",
     "expectedAmountHint": "Si no lo defines, se usará el promedio de pagos anteriores.",
     "noServices": "No hay servicios configurados.",
-    "confirmDelete": "¿Eliminar este servicio?"
+    "confirmDelete": "¿Eliminar este servicio?",
+    "nameRequired": "El nombre debe tener al menos 2 caracteres",
+    "moveUp": "Subir",
+    "moveDown": "Bajar",
+    "activate": "Activar",
+    "deactivate": "Desactivar"
   },
   "incomes": {
     "title": "Ingresos",
@@ -94,7 +109,10 @@
     "evolution": "Evolución de Ingresos",
     "totalAccumulated": "Total Acumulado",
     "monthsCount": "Meses con datos",
-    "monthlyAverage": "Promedio Mensual"
+    "monthlyAverage": "Promedio Mensual",
+    "historyTitle": "Historial de Ingresos",
+    "loadError": "Error al cargar ingresos",
+    "confirmDelete": "¿Eliminar el ingreso \"{{description}}\"?"
   },
   "history": {
     "title": "Historial de Pagos",
@@ -128,7 +146,24 @@
     "changePassword": "Cambiar Contraseña",
     "updateProfile": "Actualizar Perfil",
     "save": "Guardar",
-    "cancel": "Cancelar"
+    "cancel": "Cancelar",
+    "subtitle": "Gestiona tu información personal y seguridad",
+    "personalData": "Datos personales",
+    "namePlaceholder": "Tu nombre completo",
+    "emailHint": "Usarás este email para iniciar sesión",
+    "emailChangePasswordHint": "Para cambiar tu email debes confirmar tu contraseña actual.",
+    "saveChanges": "Guardar cambios",
+    "languageHint": "El idioma de la interfaz cambiará inmediatamente",
+    "currencyCLP": "CLP - Peso chileno",
+    "currencyUSD": "USD - Dólar estadounidense",
+    "updatePassword": "Actualizar contraseña",
+    "currentPasswordPlaceholder": "Tu contraseña actual",
+    "repeatNewPassword": "Repite tu nueva contraseña",
+    "securityTitle": "Seguridad:",
+    "securityMessage": "Nunca compartas tu contraseña con nadie.",
+    "profileUpdated": "Perfil actualizado correctamente",
+    "passwordUpdated": "Contraseña actualizada correctamente",
+    "preferencesUpdated": "Preferencias actualizadas correctamente"
   },
   "common": {
     "loading": "Cargando...",
@@ -143,7 +178,10 @@
     "error": "Error",
     "to": "al",
     "from": "del",
-    "of": "de"
+    "of": "de",
+    "version": "Versión",
+    "saving": "Guardando...",
+    "updating": "Actualizando..."
   },
   "messages": {
     "saveSuccess": "Guardado exitosamente",
@@ -152,10 +190,74 @@
     "deleteError": "Error al eliminar",
     "updateSuccess": "Actualizado exitosamente",
     "updateError": "Error al actualizar",
-    "loadError": "Error al cargar datos"
+    "loadError": "Error al cargar datos",
+    "requiredField": "Este campo es requerido",
+    "invalidData": "Datos inválidos",
+    "invalidEmail": "Ingresa un email válido",
+    "minLength": "Debe tener al menos {{min}} caracteres",
+    "passwordMismatch": "Las contraseñas no coinciden",
+    "passwordHint": "Usa al menos 8 caracteres con letras y números"
   },
   "indicators": {
     "dollar": "Dólar",
     "uf": "UF"
+  },
+  "forgotPassword": {
+    "title": "¿Olvidaste tu contraseña?",
+    "subtitle": "Te enviaremos un enlace a tu correo para restablecer tu contraseña",
+    "sentTitle": "¡Email enviado!",
+    "sentMessage": "Si el correo existe en nuestro sistema, recibirás un enlace de recuperación en los próximos minutos.",
+    "checkSpam": "Revisa también tu carpeta de spam.",
+    "sending": "Enviando...",
+    "submit": "Enviar enlace de recuperación",
+    "noteTitle": "Nota importante:",
+    "noteMessage": "El enlace de recuperación expira en 1 hora por seguridad. Si no recibes el correo, verifica que ingresaste el email correcto.",
+    "error": "Error al enviar el email de recuperación"
+  },
+  "resetPassword": {
+    "title": "Crear nueva contraseña",
+    "subtitle": "Ingresa tu nueva contraseña segura",
+    "successTitle": "¡Contraseña actualizada!",
+    "successMessage": "Tu contraseña ha sido restablecida correctamente.",
+    "redirecting": "Redirigiendo al inicio de sesión en 3 segundos...",
+    "goToLogin": "Ir al inicio de sesión ahora",
+    "repeatPassword": "Repite tu contraseña",
+    "submit": "Restablecer contraseña",
+    "invalidTokenTitle": "Token inválido",
+    "invalidTokenMessage": "El enlace de recuperación no es válido o ha expirado.",
+    "requestNewLink": "Solicitar nuevo enlace",
+    "securityTitle": "Seguridad:",
+    "securityMessage": "Tu contraseña se almacena cifrada de forma segura.",
+    "tokenNotFound": "Token de recuperación no encontrado",
+    "error": "Error al restablecer la contraseña"
+  },
+  "reAuth": {
+    "title": "Sesión inactiva",
+    "message": "Por seguridad, tu sesión ha estado inactiva por más de {{time}}. Por favor confirma tu contraseña para continuar.",
+    "timeoutMobile": "10 minutos",
+    "timeoutDesktop": "1 hora",
+    "user": "Usuario",
+    "passwordPlaceholder": "Ingresa tu contraseña",
+    "validating": "Validando...",
+    "incorrectPassword": "Contraseña incorrecta",
+    "validationError": "Error al validar la contraseña"
+  },
+  "errors": {
+    "network": "No se pudo conectar con el servidor. Revisa tu conexión a internet.",
+    "sessionExpired": "Sesión expirada. Por favor inicia sesión nuevamente.",
+    "invalidCredentials": "Credenciales inválidas",
+    "forbidden": "No tienes permisos para realizar esta acción.",
+    "notFound": "Recurso no encontrado.",
+    "tooManyRequests": "Demasiados intentos. Espera un momento e inténtalo nuevamente.",
+    "server": "Error interno del servidor. Intenta nuevamente más tarde.",
+    "unknown": "Ocurrió un error desconocido",
+    "loginFailed": "Error al iniciar sesión",
+    "registerFailed": "Error al registrar usuario"
+  },
+  "charts": {
+    "noData": "No hay datos disponibles para mostrar"
+  },
+  "pwa": {
+    "updateAvailable": "Hay una nueva versión de la aplicación disponible. ¿Deseas actualizar ahora?"
   }
 }

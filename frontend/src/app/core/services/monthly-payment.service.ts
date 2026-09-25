@@ -4,7 +4,6 @@ import { ApiService } from './api.service';
 import { DataRefreshService } from './data-refresh.service';
 import {
   MonthlyPayment,
-  ChecklistItem,
   UpsertPaymentRequest,
   ServiceAverage,
   BudgetSummary,
@@ -22,13 +21,6 @@ export class MonthlyPaymentService {
     private api: ApiService,
     private dataRefresh: DataRefreshService
   ) {}
-
-  /**
-   * Obtener checklist de pagos para un mes
-   */
-  getChecklist(yearMonth: string): Observable<{ checklist: ChecklistItem[] }> {
-    return this.api.get<{ checklist: ChecklistItem[] }>(`${this.endpoint}/checklist`, { month: yearMonth });
-  }
 
   /**
    * Obtener resumen de presupuesto mensual

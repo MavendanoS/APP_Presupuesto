@@ -41,13 +41,13 @@
                 }
               </div>
               <div class="d-flex gap-1">
-                <button class="btn btn-outline-secondary btn-sm" (click)="moveUp(i)" [disabled]="i === 0" title="Subir">
+                <button class="btn btn-outline-secondary btn-sm" (click)="moveUp(i)" [disabled]="i === 0" [title]="'services.moveUp' | transloco">
                   <i class="bi bi-arrow-up"></i>
                 </button>
-                <button class="btn btn-outline-secondary btn-sm" (click)="moveDown(i)" [disabled]="i === services().length - 1" title="Bajar">
+                <button class="btn btn-outline-secondary btn-sm" (click)="moveDown(i)" [disabled]="i === services().length - 1" [title]="'services.moveDown' | transloco">
                   <i class="bi bi-arrow-down"></i>
                 </button>
-                <button class="btn btn-sm" [ngClass]="service.is_active === 1 ? 'btn-outline-warning' : 'btn-outline-success'" (click)="toggleActive(service)">
+                <button class="btn btn-sm" [ngClass]="service.is_active === 1 ? 'btn-outline-warning' : 'btn-outline-success'" (click)="toggleActive(service)" [title]="(service.is_active === 1 ? 'services.deactivate' : 'services.activate') | transloco">
                   <i class="bi" [ngClass]="service.is_active === 1 ? 'bi-pause-circle' : 'bi-play-circle'"></i>
                 </button>
                 <a [routerLink]="['/services/edit', service.id]" class="btn btn-outline-primary btn-sm">

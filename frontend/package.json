@@ -1,13 +1,14 @@
 {
   "name": "frontend",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "deploy:dev": "npm run build && cp public/_redirects dist/frontend/browser/_redirects && npx wrangler pages deploy dist/frontend/browser --project-name=app-presupuesto --branch=dev"
+    "deploy:dev": "npm run build && npx wrangler pages deploy dist/frontend/browser --project-name=app-presupuesto --branch=dev",
+    "deploy:prod": "npm run build && npx wrangler pages deploy dist/frontend/browser --project-name=app-presupuesto --branch=main"
   },
   "prettier": {
     "printWidth": 100,

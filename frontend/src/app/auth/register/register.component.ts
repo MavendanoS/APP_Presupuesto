@@ -1,8 +1,8 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { AuthService } from '../../core/services/auth.service';
 
 @Component({
@@ -13,6 +13,8 @@ import { AuthService } from '../../core/services/auth.service';
   styleUrls: ['./register.component.scss']
 })
 export class RegisterComponent {
+  private transloco = inject(TranslocoService);
+
   registerForm: FormGroup;
   loading = signal(false);
   errorMessage = signal<string | null>(null);
@@ -48,13 +50,11 @@ export class RegisterComponent {
 
       this.authService.register({ name, email, password }).subscribe({
         next: () => {
+          this.loading.set(false);
           this.router.navigate(['/dashboard']);
         },
         error: (error) => {
-          this.errorMessage.set(error.message || 'Error al registrar usuario');
-          this.loading.set(false);
-        },
-        complete: () => {
+          this.errorMessage.set(error?.message || this.transloco.translate('errors.registerFailed'));
           this.loading.set(false);
         }
       });

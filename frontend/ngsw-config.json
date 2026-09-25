@@ -7,12 +7,22 @@
       "installMode": "prefetch",
       "resources": {
         "files": [
-          "/favicon.ico",
+          "/favicon.svg",
           "/index.csr.html",
           "/index.html",
           "/manifest.webmanifest",
           "/*.css",
           "/*.js"
+        ]
+      }
+    },
+    {
+      "name": "i18n",
+      "installMode": "prefetch",
+      "updateMode": "prefetch",
+      "resources": {
+        "files": [
+          "/i18n/*.json"
         ]
       }
     },
@@ -24,36 +34,6 @@
         "files": [
           "/**/*.(svg|cur|jpg|jpeg|png|apng|webp|avif|gif|otf|ttf|woff|woff2)"
         ]
-      }
-    }
-  ],
-  "dataGroups": [
-    {
-      "name": "api-dashboard",
-      "urls": [
-        "/api/analytics/dashboard",
-        "/api/expenses/summary"
-      ],
-      "cacheConfig": {
-        "strategy": "freshness",
-        "maxSize": 20,
-        "maxAge": "5m",
-        "timeout": "10s"
-      }
-    },
-    {
-      "name": "api-data",
-      "urls": [
-        "/api/expenses",
-        "/api/categories",
-        "/api/income",
-        "/api/analytics/**"
-      ],
-      "cacheConfig": {
-        "strategy": "freshness",
-        "maxSize": 50,
-        "maxAge": "1m",
-        "timeout": "10s"
       }
     }
   ],

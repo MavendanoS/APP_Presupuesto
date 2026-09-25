@@ -6,9 +6,9 @@
         <div class="profile-header mb-4">
           <h2>
             <i class="bi bi-person-circle me-2"></i>
-            Mi Perfil
+            {{ 'profile.title' | transloco }}
           </h2>
-          <p class="text-muted">Gestiona tu información personal y seguridad</p>
+          <p class="text-muted">{{ 'profile.subtitle' | transloco }}</p>
         </div>
 
         <!-- Tabs -->
@@ -68,7 +68,7 @@
             <div class="card-body">
               <h5 class="card-title mb-4">
                 <i class="bi bi-info-circle me-2"></i>
-                Datos Personales
+                {{ 'profile.personalData' | transloco }}
               </h5>
 
               <form [formGroup]="profileForm" (ngSubmit)="onSubmitProfile()">
@@ -76,23 +76,23 @@
                 <div class="mb-3">
                   <label for="name" class="form-label">
                     <i class="bi bi-person me-1"></i>
-                    Nombre
+                    {{ 'profile.name' | transloco }}
                   </label>
                   <input
                     type="text"
                     id="name"
                     class="form-control"
                     formControlName="name"
-                    placeholder="Tu nombre completo"
+                    [placeholder]="'profile.namePlaceholder' | transloco"
                     [class.is-invalid]="name?.invalid && name?.touched"
                   />
                   @if (name?.invalid && name?.touched) {
                     <div class="invalid-feedback">
                       @if (name?.errors?.['required']) {
-                        El nombre es requerido
+                        {{ 'messages.requiredField' | transloco }}
                       }
                       @if (name?.errors?.['minlength']) {
-                        El nombre debe tener al menos 3 caracteres
+                        {{ 'messages.minLength' | transloco: { min: 3 } }}
                       }
                     </div>
                   }
@@ -102,7 +102,7 @@
                 <div class="mb-4">
                   <label for="email" class="form-label">
                     <i class="bi bi-envelope me-1"></i>
-                    Correo Electrónico
+                    {{ 'profile.email' | transloco }}
                   </label>
                   <input
                     type="email"
@@ -115,18 +115,45 @@
                   @if (email?.invalid && email?.touched) {
                     <div class="invalid-feedback">
                       @if (email?.errors?.['required']) {
-                        El email es requerido
+                        {{ 'messages.requiredField' | transloco }}
                       }
                       @if (email?.errors?.['email']) {
-                        Ingresa un email válido
+                        {{ 'messages.invalidEmail' | transloco }}
                       }
                     </div>
                   }
                   <div class="form-text">
                     <i class="bi bi-info-circle me-1"></i>
-                    Usarás este email para iniciar sesión
+                    {{ 'profile.emailHint' | transloco }}
                   </div>
                 </div>
+
+                <!-- Current password (required only when changing email) -->
+                @if (emailChanged()) {
+                  <div class="mb-4">
+                    <label for="profileCurrentPassword" class="form-label">
+                      <i class="bi bi-key me-1"></i>
+                      {{ 'profile.currentPassword' | transloco }}
+                    </label>
+                    <input
+                      type="password"
+                      id="profileCurrentPassword"
+                      class="form-control"
+                      formControlName="currentPassword"
+                      autocomplete="current-password"
+                      [class.is-invalid]="profileCurrentPassword?.invalid && profileCurrentPassword?.touched"
+                    />
+                    @if (profileCurrentPassword?.invalid && profileCurrentPassword?.touched) {
+                      <div class="invalid-feedback">
+                        {{ 'messages.requiredField' | transloco }}
+                      </div>
+                    }
+                    <div class="form-text">
+                      <i class="bi bi-info-circle me-1"></i>
+                      {{ 'profile.emailChangePasswordHint' | transloco }}
+                    </div>
+                  </div>
+                }
 
                 <!-- Submit Button -->
                 <div class="d-flex gap-2">
@@ -137,15 +164,15 @@
                   >
                     @if (loading()) {
                       <span class="spinner-border spinner-border-sm me-2"></span>
-                      Guardando...
+                      {{ 'common.saving' | transloco }}
                     } @else {
                       <i class="bi bi-save me-2"></i>
-                      Guardar Cambios
+                      {{ 'profile.saveChanges' | transloco }}
                     }
                   </button>
                   <a routerLink="/dashboard" class="btn btn-outline-secondary">
                     <i class="bi bi-x-circle me-2"></i>
-                    Cancelar
+                    {{ 'common.cancel' | transloco }}
                   </a>
                 </div>
               </form>
@@ -180,7 +207,7 @@
                   </select>
                   <div class="form-text">
                     <i class="bi bi-info-circle me-1"></i>
-                    El idioma de la interfaz cambiará inmediatamente
+                    {{ 'profile.languageHint' | transloco }}
                   </div>
                 </div>
 
@@ -196,13 +223,9 @@
                     formControlName="currency"
                     [class.is-invalid]="currency?.invalid && currency?.touched"
                   >
-                    <option value="CLP">CLP - Peso Chileno</option>
-                    <option value="USD">USD - Dólar Estadounidense</option>
+                    <option value="CLP">{{ 'profile.currencyCLP' | transloco }}</option>
+                    <option value="USD">{{ 'profile.currencyUSD' | transloco }}</option>
                   </select>
-                  <div class="form-text">
-                    <i class="bi bi-info-circle me-1"></i>
-                    Los montos se mostrarán en la moneda seleccionada
-                  </div>
                 </div>
 
                 <!-- Submit Button -->
@@ -236,7 +259,7 @@
             <div class="card-body">
               <h5 class="card-title mb-4">
                 <i class="bi bi-shield-lock me-2"></i>
-                Actualizar Contraseña
+                {{ 'profile.updatePassword' | transloco }}
               </h5>
 
               <form [formGroup]="passwordForm" (ngSubmit)="onSubmitPassword()">
@@ -244,7 +267,7 @@
                 <div class="mb-3">
                   <label for="currentPassword" class="form-label">
                     <i class="bi bi-key me-1"></i>
-                    Contraseña Actual
+                    {{ 'profile.currentPassword' | transloco }}
                   </label>
                   <div class="input-group">
                     <input
@@ -252,7 +275,7 @@
                       id="currentPassword"
                       class="form-control"
                       formControlName="currentPassword"
-                      placeholder="Tu contraseña actual"
+                      [placeholder]="'profile.currentPasswordPlaceholder' | transloco"
                       [class.is-invalid]="currentPassword?.invalid && currentPassword?.touched"
                     />
                     <button
@@ -265,7 +288,7 @@
                   </div>
                   @if (currentPassword?.invalid && currentPassword?.touched) {
                     <div class="invalid-feedback d-block">
-                      La contraseña actual es requerida
+                      {{ 'messages.requiredField' | transloco }}
                     </div>
                   }
                 </div>
@@ -274,7 +297,7 @@
                 <div class="mb-3">
                   <label for="newPassword" class="form-label">
                     <i class="bi bi-lock me-1"></i>
-                    Nueva Contraseña
+                    {{ 'profile.newPassword' | transloco }}
                   </label>
                   <div class="input-group">
                     <input
@@ -282,7 +305,7 @@
                       id="newPassword"
                       class="form-control"
                       formControlName="newPassword"
-                      placeholder="Mínimo 8 caracteres"
+                      [placeholder]="'messages.minLength' | transloco: { min: 8 }"
                       [class.is-invalid]="newPassword?.invalid && newPassword?.touched"
                     />
                     <button
@@ -296,10 +319,10 @@
                   @if (newPassword?.invalid && newPassword?.touched) {
                     <div class="invalid-feedback d-block">
                       @if (newPassword?.errors?.['required']) {
-                        La nueva contraseña es requerida
+                        {{ 'messages.requiredField' | transloco }}
                       }
                       @if (newPassword?.errors?.['minlength']) {
-                        La contraseña debe tener al menos 8 caracteres
+                        {{ 'messages.minLength' | transloco: { min: 8 } }}
                       }
                     </div>
                   }
@@ -309,7 +332,7 @@
                 <div class="mb-4">
                   <label for="confirmPassword" class="form-label">
                     <i class="bi bi-lock-fill me-1"></i>
-                    Confirmar Nueva Contraseña
+                    {{ 'profile.confirmPassword' | transloco }}
                   </label>
                   <div class="input-group">
                     <input
@@ -317,7 +340,7 @@
                       id="confirmPassword"
                       class="form-control"
                       formControlName="confirmPassword"
-                      placeholder="Repite tu nueva contraseña"
+                      [placeholder]="'profile.repeatNewPassword' | transloco"
                       [class.is-invalid]="(confirmPassword?.invalid && confirmPassword?.touched) || (!passwordsMatch && confirmPassword?.touched)"
                     />
                     <button
@@ -330,12 +353,12 @@
                   </div>
                   @if (!passwordsMatch && confirmPassword?.touched) {
                     <div class="invalid-feedback d-block">
-                      Las contraseñas no coinciden
+                      {{ 'messages.passwordMismatch' | transloco }}
                     </div>
                   }
                   <div class="form-text">
                     <i class="bi bi-info-circle me-1"></i>
-                    Usa al menos 8 caracteres con letras y números
+                    {{ 'messages.passwordHint' | transloco }}
                   </div>
                 </div>
 
@@ -348,15 +371,15 @@
                   >
                     @if (loading()) {
                       <span class="spinner-border spinner-border-sm me-2"></span>
-                      Actualizando...
+                      {{ 'common.updating' | transloco }}
                     } @else {
                       <i class="bi bi-shield-check me-2"></i>
-                      Cambiar Contraseña
+                      {{ 'profile.changePassword' | transloco }}
                     }
                   </button>
                   <a routerLink="/dashboard" class="btn btn-outline-secondary">
                     <i class="bi bi-x-circle me-2"></i>
-                    Cancelar
+                    {{ 'common.cancel' | transloco }}
                   </a>
                 </div>
               </form>
@@ -368,10 +391,9 @@
         <div class="info-box mt-4">
           <i class="bi bi-shield-check me-2"></i>
           <div>
-            <strong>Seguridad:</strong>
+            <strong>{{ 'profile.securityTitle' | transloco }}</strong>
             <p class="mb-0 mt-1 small">
-              Todos tus datos están protegidos con encriptación.
-              Nunca compartas tu contraseña con nadie.
+              {{ 'profile.securityMessage' | transloco }}
             </p>
           </div>
         </div>

@@ -24,18 +24,18 @@
           </div>
           <div class="col-6 col-md-2">
             <label class="form-label small text-muted">{{ 'history.avgMonths' | transloco }}</label>
-            <select class="form-select form-select-sm" [ngModel]="avgMonths()" (ngModelChange)="avgMonths.set($event); onFilterChange()">
-              <option [value]="3">3 meses</option>
-              <option [value]="6">6 meses</option>
-              <option [value]="12">12 meses</option>
+            <select class="form-select form-select-sm" [ngModel]="avgMonths()" (ngModelChange)="onAvgMonthsChange($event)">
+              <option [ngValue]="3">3 {{ 'history.monthsData' | transloco }}</option>
+              <option [ngValue]="6">6 {{ 'history.monthsData' | transloco }}</option>
+              <option [ngValue]="12">12 {{ 'history.monthsData' | transloco }}</option>
             </select>
           </div>
           <div class="col-6 col-md-2">
             <div class="btn-group btn-group-sm w-100">
-              <button class="btn" [ngClass]="viewMode() === 'chart' ? 'btn-primary' : 'btn-outline-primary'" (click)="viewMode.set('chart')">
+              <button class="btn" [ngClass]="viewMode() === 'chart' ? 'btn-primary' : 'btn-outline-primary'" (click)="viewMode.set('chart')" [title]="'incomes.chart' | transloco">
                 <i class="bi bi-bar-chart"></i>
               </button>
-              <button class="btn" [ngClass]="viewMode() === 'table' ? 'btn-primary' : 'btn-outline-primary'" (click)="viewMode.set('table')">
+              <button class="btn" [ngClass]="viewMode() === 'table' ? 'btn-primary' : 'btn-outline-primary'" (click)="viewMode.set('table')" [title]="'incomes.table' | transloco">
                 <i class="bi bi-table"></i>
               </button>
             </div>
@@ -137,7 +137,7 @@
                           <span class="ms-1">{{ entry.service_name }}</span>
                         </td>
                         <td class="text-end fw-bold">{{ entry.amount | clpCurrency }}</td>
-                        <td>{{ entry.paid_date }}</td>
+                        <td>{{ formatDate(entry.paid_date) }}</td>
                       </tr>
                     }
                   </tbody>

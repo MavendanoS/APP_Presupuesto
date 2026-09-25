@@ -46,9 +46,9 @@ export class DeviceDetectionService {
   }
 
   /**
-   * Retorna un nombre descriptivo del timeout para mostrar al usuario
+   * Retorna la clave de traducción del timeout para mostrar al usuario
    */
-  getInactivityTimeoutLabel(): string {
-    return this.isMobileDevice() ? '10 minutos' : '1 hora';
+  getInactivityTimeoutLabelKey(): string {
+    return this.isMobileDevice() ? 'reAuth.timeoutMobile' : 'reAuth.timeoutDesktop';
   }
 }

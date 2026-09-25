@@ -33,9 +33,8 @@ export class UserPreferencesService {
   private http = inject(HttpClient);
   private authService = inject(AuthService);
 
-  // Señales para idioma y moneda actuales
+  // Señal para el idioma actual
   currentLanguage = signal<Language>('es');
-  currentCurrency = signal<Currency>('CLP');
 
   constructor() {
     // Observar cambios en el usuario autenticado
@@ -43,11 +42,9 @@ export class UserPreferencesService {
       const user = this.authService.currentUser();
       if (user) {
         this.currentLanguage.set(user.language || 'es');
-        this.currentCurrency.set(user.currency || 'CLP');
       } else {
         // Si no hay usuario, volver a valores por defecto
         this.currentLanguage.set('es');
-        this.currentCurrency.set('CLP');
       }
     });
   }
@@ -85,23 +82,9 @@ export class UserPreferencesService {
   }
 
   /**
-   * Cambiar moneda
-   */
-  async setCurrency(currency: Currency): Promise<void> {
-    await this.updatePreferences({ currency });
-  }
-
-  /**
    * Obtener idioma actual
    */
   getLanguage(): Language {
     return this.currentLanguage();
-  }
-
-  /**
-   * Obtener moneda actual
-   */
-  getCurrency(): Currency {
-    return this.currentCurrency();
   }
 }

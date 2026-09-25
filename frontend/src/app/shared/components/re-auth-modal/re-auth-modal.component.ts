@@ -1,6 +1,7 @@
-import { Component, signal, inject } from '@angular/core';
+import { Component, signal, inject, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { AuthService } from '../../../core/services/auth.service';
 import { DeviceDetectionService } from '../../../core/services/device-detection.service';
 
@@ -11,7 +12,7 @@ import { DeviceDetectionService } from '../../../core/services/device-detection.
 @Component({
   selector: 'app-re-auth-modal',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslocoPipe],
   templateUrl: './re-auth-modal.component.html',
   styleUrls: ['./re-auth-modal.component.scss']
 })
@@ -19,6 +20,10 @@ export class ReAuthModalComponent {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private deviceDetection = inject(DeviceDetectionService);
+  private transloco = inject(TranslocoService);
+
+  /** Se emite cuando el usuario confirmó su contraseña correctamente */
+  reauthenticated = output<void>();
 
   show = signal(false);
   loading = signal(false);
@@ -40,10 +45,10 @@ export class ReAuthModalComponent {
   }
 
   /**
-   * Obtener label del timeout según dispositivo
+   * Clave de traducción del timeout según dispositivo
    */
-  get timeoutLabel(): string {
-    return this.deviceDetection.getInactivityTimeoutLabel();
+  get timeoutLabelKey(): string {
+    return this.deviceDetection.getInactivityTimeoutLabelKey();
   }
 
   /**
@@ -81,14 +86,13 @@ export class ReAuthModalComponent {
       const success = await this.authService.reAuthenticate(password);
 
       if (success) {
-        console.log('✅ Re-autenticación exitosa');
         this.close();
+        this.reauthenticated.emit();
       } else {
-        this.errorMessage.set('Contraseña incorrecta');
+        this.errorMessage.set(this.transloco.translate('reAuth.incorrectPassword'));
       }
     } catch (error: any) {
-      console.error('❌ Error en re-autenticación:', error);
-      this.errorMessage.set(error.message || 'Error al validar contraseña');
+      this.errorMessage.set(error?.message || this.transloco.translate('reAuth.validationError'));
     } finally {
       this.loading.set(false);
     }

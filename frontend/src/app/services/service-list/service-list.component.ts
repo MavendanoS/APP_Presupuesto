@@ -1,7 +1,7 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { PaymentServiceService } from '../../core/services/payment-service.service';
 import { PaymentService } from '../../core/models';
 import { NavbarComponent } from '../../shared/components/navbar/navbar.component';
@@ -16,6 +16,8 @@ import { ErrorMessageComponent } from '../../shared/components/error-message/err
   styleUrls: ['./service-list.component.scss']
 })
 export class ServiceListComponent implements OnInit {
+  private transloco = inject(TranslocoService);
+
   services = signal<PaymentService[]>([]);
   loading = signal(true);
   errorMessage = signal<string | null>(null);
@@ -35,7 +37,7 @@ export class ServiceListComponent implements OnInit {
         this.loading.set(false);
       },
       error: (error) => {
-        this.errorMessage.set(error.message || 'Error al cargar servicios');
+        this.errorMessage.set(error?.message || this.transloco.translate('messages.loadError'));
         this.loading.set(false);
       }
     });
@@ -45,7 +47,7 @@ export class ServiceListComponent implements OnInit {
     const newActive = service.is_active === 1 ? 0 : 1;
     this.paymentServiceService.updateService(service.id, { is_active: newActive }).subscribe({
       next: () => this.loadServices(),
-      error: (error) => this.errorMessage.set(error.message)
+      error: (error) => this.errorMessage.set(error?.message || this.transloco.translate('messages.updateError'))
     });
   }
 
@@ -55,7 +57,7 @@ export class ServiceListComponent implements OnInit {
     [ids[index - 1], ids[index]] = [ids[index], ids[index - 1]];
     this.paymentServiceService.reorderServices(ids).subscribe({
       next: () => this.loadServices(),
-      error: (error) => this.errorMessage.set(error.message)
+      error: (error) => this.errorMessage.set(error?.message || this.transloco.translate('messages.updateError'))
     });
   }
 
@@ -66,7 +68,7 @@ export class ServiceListComponent implements OnInit {
     [ids[index], ids[index + 1]] = [ids[index + 1], ids[index]];
     this.paymentServiceService.reorderServices(ids).subscribe({
       next: () => this.loadServices(),
-      error: (error) => this.errorMessage.set(error.message)
+      error: (error) => this.errorMessage.set(error?.message || this.transloco.translate('messages.updateError'))
     });
   }
 
@@ -84,7 +86,7 @@ export class ServiceListComponent implements OnInit {
         this.deleteConfirmId.set(null);
         this.loadServices();
       },
-      error: (error) => this.errorMessage.set(error.message)
+      error: (error) => this.errorMessage.set(error?.message || this.transloco.translate('messages.deleteError'))
     });
   }
 }

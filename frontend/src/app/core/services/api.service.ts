@@ -25,19 +25,14 @@ export class ApiService {
   get<T>(endpoint: string, params?: any): Observable<T> {
     let httpParams = new HttpParams();
 
-    console.log('🌐 ApiService.get() - Received params:', params);
-
     if (params) {
       Object.keys(params).forEach(key => {
         // Exclude null, undefined, and empty strings from query parameters
         if (params[key] !== null && params[key] !== undefined && params[key] !== '') {
-          console.log(`  ➡️ Adding param: ${key} = ${params[key]}`);
           httpParams = httpParams.set(key, params[key].toString());
         }
       });
     }
-
-    console.log('🌐 ApiService.get() - Final HttpParams:', httpParams.toString());
 
     return this.http.get<ApiResponse<T>>(`${this.BASE_URL}${endpoint}`, {
       params: httpParams,

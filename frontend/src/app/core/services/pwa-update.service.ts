@@ -1,103 +1,73 @@
-import { Injectable, ApplicationRef } from '@angular/core';
+import { Injectable, ApplicationRef, inject } from '@angular/core';
 import { SwUpdate, VersionReadyEvent } from '@angular/service-worker';
+import { TranslocoService } from '@jsverse/transloco';
 import { concat, interval } from 'rxjs';
 import { first, filter } from 'rxjs/operators';
-import { APP_VERSION } from '../version';
 
 /**
- * Servicio para gestionar actualizaciones automáticas de la PWA
- * Verifica cada 30 segundos si hay una nueva versión disponible
+ * Servicio para gestionar actualizaciones de la PWA.
+ * Verifica periódicamente si hay una nueva versión y, cuando está lista,
+ * pregunta al usuario antes de recargar (nunca recarga en silencio).
  */
 @Injectable({
   providedIn: 'root'
 })
 export class PwaUpdateService {
-  constructor(
-    private swUpdate: SwUpdate,
-    private appRef: ApplicationRef
-  ) {}
+  private swUpdate = inject(SwUpdate);
+  private appRef = inject(ApplicationRef);
+  private transloco = inject(TranslocoService);
+
+  private promptShown = false;
 
   /**
    * Inicializa el servicio de actualizaciones
-   * Verifica actualizaciones periódicamente y al detectar cambios
    */
   init(): void {
     if (!this.swUpdate.isEnabled) {
-      console.log('⚠️ Service Worker no está habilitado');
       return;
     }
 
-    // Verificar actualizaciones INMEDIATAMENTE al iniciar
-    console.log('🔍 Verificando actualizaciones al iniciar...');
-    this.swUpdate.checkForUpdate().then(updateAvailable => {
-      if (updateAvailable) {
-        console.log('✅ Actualización encontrada al iniciar');
-      } else {
-        console.log('✅ App actualizada (sin nuevas versiones)');
-      }
-    }).catch(err => {
-      console.error('❌ Error al verificar actualizaciones iniciales:', err);
-    });
+    // Verificar actualizaciones al iniciar y luego cada 30 segundos una vez que la app esté estable
+    const appIsStable$ = this.appRef.isStable.pipe(first(isStable => isStable === true));
+    const every30Seconds$ = interval(30 * 1000);
 
-    // Verificar actualizaciones cada 30 segundos una vez que la app esté estable
-    const appIsStable$ = this.appRef.isStable.pipe(
-      first(isStable => isStable === true)
-    );
-
-    const every30Seconds$ = interval(30 * 1000); // 30 segundos
-
-    const every30SecondsOnceAppIsStable$ = concat(appIsStable$, every30Seconds$);
-
-    // Verificar actualizaciones periódicamente
-    every30SecondsOnceAppIsStable$.subscribe(async () => {
+    concat(appIsStable$, every30Seconds$).subscribe(async () => {
       try {
-        const updateAvailable = await this.swUpdate.checkForUpdate();
-        if (updateAvailable) {
-          console.log('✅ Nueva versión disponible');
-        }
+        await this.swUpdate.checkForUpdate();
       } catch (err) {
-        console.error('❌ Error al verificar actualizaciones:', err);
+        console.error('Error al verificar actualizaciones:', err);
       }
     });
 
-    // Escuchar cuando hay una nueva versión lista
+    // Cuando hay una nueva versión lista, preguntar al usuario
     this.swUpdate.versionUpdates
       .pipe(filter((evt): evt is VersionReadyEvent => evt.type === 'VERSION_READY'))
-      .subscribe(evt => {
-        console.log('🚀 Nueva versión detectada:', evt.latestVersion.hash);
-        console.log('📦 Versión actual:', evt.currentVersion.hash);
+      .subscribe(() => this.promptUserToUpdate());
 
-        // Mostrar notificación al usuario
-        this.promptUserToUpdate();
-      });
-
-    // Escuchar errores de actualización
+    // Estado irrecuperable del Service Worker: la única salida es recargar
     this.swUpdate.unrecoverable.subscribe(event => {
-      console.error('❌ Error irrecuperable en Service Worker:', event.reason);
-      // Recargar la página para recuperarse del error
+      console.error('Error irrecuperable en Service Worker:', event.reason);
       this.reloadPage();
     });
-
-    console.log('✅ Servicio de actualizaciones PWA inicializado');
   }
 
   /**
-   * Muestra un mensaje al usuario y actualiza automáticamente
+   * Pregunta (sin bloquear el uso de la app hasta que se muestre) si se desea actualizar ahora.
+   * Si el usuario rechaza, la nueva versión se aplicará en la próxima carga de la app.
    */
   private promptUserToUpdate(): void {
-    console.log('🎉 ¡Nueva versión disponible! Actualizando inmediatamente...');
+    if (this.promptShown) return;
+    this.promptShown = true;
 
-    // Mostrar notificación nativa si está disponible
-    if ('Notification' in window && Notification.permission === 'granted') {
-      new Notification(`APP Presupuesto v${APP_VERSION}`, {
-        body: 'Nueva versión disponible. Actualizando...',
-        icon: '/icons/icon-192x192.png',
-        badge: '/icons/icon-72x72.png'
-      });
-    }
-
-    // Actualizar INMEDIATAMENTE (sin espera de 3 segundos)
-    this.activateUpdate();
+    // Diferir para no interrumpir el ciclo actual de la app
+    setTimeout(() => {
+      const accepted = window.confirm(this.transloco.translate('pwa.updateAvailable'));
+      if (accepted) {
+        this.activateUpdate();
+      } else {
+        this.promptShown = false;
+      }
+    }, 0);
   }
 
   /**
@@ -106,12 +76,10 @@ export class PwaUpdateService {
   private async activateUpdate(): Promise<void> {
     try {
       await this.swUpdate.activateUpdate();
-      console.log('✅ Actualización activada, recargando página...');
-      this.reloadPage();
     } catch (err) {
-      console.error('❌ Error al activar actualización:', err);
-      this.reloadPage();
+      console.error('Error al activar actualización:', err);
     }
+    this.reloadPage();
   }
 
   /**
@@ -119,21 +87,5 @@ export class PwaUpdateService {
    */
   private reloadPage(): void {
     document.location.reload();
-  }
-
-  /**
-   * Fuerza la verificación de actualizaciones manualmente
-   */
-  async checkForUpdates(): Promise<boolean> {
-    if (!this.swUpdate.isEnabled) {
-      return false;
-    }
-
-    try {
-      return await this.swUpdate.checkForUpdate();
-    } catch (err) {
-      console.error('❌ Error al verificar actualizaciones:', err);
-      return false;
-    }
   }
 }

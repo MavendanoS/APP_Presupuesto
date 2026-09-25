@@ -5,7 +5,8 @@
     "history": "History",
     "services": "Services",
     "profile": "My Profile",
-    "logout": "Sign Out"
+    "logout": "Sign Out",
+    "incomeHistory": "Income History"
   },
   "auth": {
     "login": "Sign In",
@@ -22,7 +23,8 @@
     "reAuthenticate": "Re-authentication required",
     "reAuthMessage": "For security, confirm your password to continue",
     "confirm": "Confirm",
-    "logout": "Sign Out"
+    "logout": "Sign Out",
+    "backToLogin": "Back to sign in"
   },
   "dashboard": {
     "title": "My Payments",
@@ -48,7 +50,15 @@
     "addService": "Add Service",
     "markAsPaid": "Pay",
     "avgLabel": "Avg",
-    "expectedLabel": "Expected"
+    "expectedLabel": "Expected",
+    "financesIntro": "Track your monthly payments and income",
+    "unmark": "Unmark",
+    "paymentError": "Error recording the payment",
+    "unmarkError": "Error unmarking the payment",
+    "waterfallIncomes": "Income",
+    "waterfallPaid": "Paid expenses",
+    "waterfallPending": "Pending",
+    "waterfallProjected": "Projected balance"
   },
   "services": {
     "title": "Payment Services",
@@ -64,7 +74,12 @@
     "expectedAmountPlaceholder": "E.g.: 70000",
     "expectedAmountHint": "If not set, the average of previous payments will be used.",
     "noServices": "No services configured.",
-    "confirmDelete": "Delete this service?"
+    "confirmDelete": "Delete this service?",
+    "nameRequired": "The name must be at least 2 characters long",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
+    "activate": "Activate",
+    "deactivate": "Deactivate"
   },
   "incomes": {
     "title": "Incomes",
@@ -94,7 +109,10 @@
     "evolution": "Income Evolution",
     "totalAccumulated": "Total Accumulated",
     "monthsCount": "Months with data",
-    "monthlyAverage": "Monthly Average"
+    "monthlyAverage": "Monthly Average",
+    "historyTitle": "Income History",
+    "loadError": "Error loading income",
+    "confirmDelete": "Delete the income \"{{description}}\"?"
   },
   "history": {
     "title": "Payment History",
@@ -128,7 +146,24 @@
     "changePassword": "Change Password",
     "updateProfile": "Update Profile",
     "save": "Save",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "subtitle": "Manage your personal information and security",
+    "personalData": "Personal data",
+    "namePlaceholder": "Your full name",
+    "emailHint": "You will use this email to sign in",
+    "emailChangePasswordHint": "To change your email you must confirm your current password.",
+    "saveChanges": "Save changes",
+    "languageHint": "The interface language will change immediately",
+    "currencyCLP": "CLP - Chilean peso",
+    "currencyUSD": "USD - US dollar",
+    "updatePassword": "Update password",
+    "currentPasswordPlaceholder": "Your current password",
+    "repeatNewPassword": "Repeat your new password",
+    "securityTitle": "Security:",
+    "securityMessage": "Never share your password with anyone.",
+    "profileUpdated": "Profile updated successfully",
+    "passwordUpdated": "Password updated successfully",
+    "preferencesUpdated": "Preferences updated successfully"
   },
   "common": {
     "loading": "Loading...",
@@ -143,7 +178,10 @@
     "error": "Error",
     "to": "to",
     "from": "from",
-    "of": "of"
+    "of": "of",
+    "version": "Version",
+    "saving": "Saving...",
+    "updating": "Updating..."
   },
   "messages": {
     "saveSuccess": "Saved successfully",
@@ -152,10 +190,74 @@
     "deleteError": "Error deleting",
     "updateSuccess": "Updated successfully",
     "updateError": "Error updating",
-    "loadError": "Error loading data"
+    "loadError": "Error loading data",
+    "requiredField": "This field is required",
+    "invalidData": "Invalid data",
+    "invalidEmail": "Enter a valid email",
+    "minLength": "Must be at least {{min}} characters long",
+    "passwordMismatch": "Passwords do not match",
+    "passwordHint": "Use at least 8 characters with letters and numbers"
   },
   "indicators": {
     "dollar": "Dollar",
     "uf": "UF"
+  },
+  "forgotPassword": {
+    "title": "Forgot your password?",
+    "subtitle": "We will email you a link to reset your password",
+    "sentTitle": "Email sent!",
+    "sentMessage": "If the email exists in our system, you will receive a recovery link in the next few minutes.",
+    "checkSpam": "Please also check your spam folder.",
+    "sending": "Sending...",
+    "submit": "Send recovery link",
+    "noteTitle": "Important:",
+    "noteMessage": "For security, the recovery link expires in 1 hour. If you don't receive the email, check that you entered the correct address.",
+    "error": "Error sending the recovery email"
+  },
+  "resetPassword": {
+    "title": "Create a new password",
+    "subtitle": "Enter your new secure password",
+    "successTitle": "Password updated!",
+    "successMessage": "Your password has been reset successfully.",
+    "redirecting": "Redirecting to sign in in 3 seconds...",
+    "goToLogin": "Go to sign in now",
+    "repeatPassword": "Repeat your password",
+    "submit": "Reset password",
+    "invalidTokenTitle": "Invalid token",
+    "invalidTokenMessage": "The recovery link is invalid or has expired.",
+    "requestNewLink": "Request a new link",
+    "securityTitle": "Security:",
+    "securityMessage": "Your password is stored securely encrypted.",
+    "tokenNotFound": "Recovery token not found",
+    "error": "Error resetting the password"
+  },
+  "reAuth": {
+    "title": "Inactive session",
+    "message": "For security, your session has been inactive for more than {{time}}. Please confirm your password to continue.",
+    "timeoutMobile": "10 minutes",
+    "timeoutDesktop": "1 hour",
+    "user": "User",
+    "passwordPlaceholder": "Enter your password",
+    "validating": "Validating...",
+    "incorrectPassword": "Incorrect password",
+    "validationError": "Error validating the password"
+  },
+  "errors": {
+    "network": "Could not connect to the server. Check your internet connection.",
+    "sessionExpired": "Session expired. Please sign in again.",
+    "invalidCredentials": "Invalid credentials",
+    "forbidden": "You don't have permission to perform this action.",
+    "notFound": "Resource not found.",
+    "tooManyRequests": "Too many attempts. Please wait a moment and try again.",
+    "server": "Internal server error. Please try again later.",
+    "unknown": "An unknown error occurred",
+    "loginFailed": "Error signing in",
+    "registerFailed": "Error registering user"
+  },
+  "charts": {
+    "noData": "No data available to display"
+  },
+  "pwa": {
+    "updateAvailable": "A new version of the app is available. Do you want to update now?"
   }
 }

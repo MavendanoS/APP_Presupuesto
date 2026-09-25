@@ -1,10 +1,11 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, tap, map, BehaviorSubject } from 'rxjs';
+import { Observable, tap, map, filter, take, BehaviorSubject, firstValueFrom } from 'rxjs';
 import { Router } from '@angular/router';
 import { TranslocoService } from '@jsverse/transloco';
 import { User, LoginRequest, RegisterRequest, AuthResponse } from '../models';
 import { environment } from '../../../environments/environment';
+import { InactivityService } from './inactivity.service';
 
 @Injectable({
   providedIn: 'root'
@@ -12,10 +13,16 @@ import { environment } from '../../../environments/environment';
 export class AuthService {
   private readonly API_URL = `${environment.apiUrl}/auth`;
   private translocoService = inject(TranslocoService);
+  private inactivityService = inject(InactivityService);
 
   // Signals para estado reactivo
   currentUser = signal<User | null>(null);
   isAuthenticated = signal<boolean>(false);
+
+  /** true cuando terminó la verificación inicial de sesión (/auth/me) */
+  authChecked = signal<boolean>(false);
+  private authChecked$ = new BehaviorSubject<boolean>(false);
+  private loggingOut = false;
 
   constructor(
     private http: HttpClient,
@@ -26,22 +33,35 @@ export class AuthService {
   }
 
   /**
-   * Verificar si el usuario está autenticado (la cookie se envía automáticamente)
+   * Emite (una sola vez) el estado de autenticación cuando la verificación inicial terminó.
+   */
+  whenReady(): Observable<boolean> {
+    return this.authChecked$.pipe(
+      filter(Boolean),
+      take(1),
+      map(() => this.isAuthenticated())
+    );
+  }
+
+  private markAuthChecked(): void {
+    if (!this.authChecked()) {
+      this.authChecked.set(true);
+      this.authChecked$.next(true);
+    }
+  }
+
+  /**
+   * Verificar si el usuario está autenticado (la cookie se envía automáticamente).
+   * Un 401 aquí solo significa "sin sesión": no se navega a ningún lado.
    */
   private checkAuthStatus(): void {
-    // Intentar obtener el usuario actual
-    // Si hay una cookie válida, el backend la validará
     this.getCurrentUser().subscribe({
-      next: (user) => {
-        this.currentUser.set(user);
-        this.isAuthenticated.set(true);
-        // Aplicar preferencia de idioma del usuario
-        this.applyUserLanguagePreference(user);
-      },
+      next: () => this.markAuthChecked(),
       error: () => {
         // No hay sesión activa, esto es normal en la primera carga
         this.currentUser.set(null);
         this.isAuthenticated.set(false);
+        this.markAuthChecked();
       }
     });
   }
@@ -51,9 +71,20 @@ export class AuthService {
    */
   private applyUserLanguagePreference(user: User): void {
     if (user.language) {
-      console.log(`🌐 Aplicando preferencia de idioma del usuario: ${user.language}`);
       this.translocoService.setActiveLang(user.language);
     }
+  }
+
+  /**
+   * Establecer sesión tras login/registro exitoso
+   */
+  private setSession(user: User): void {
+    // Sesión nueva: reiniciar el contador de inactividad para no pedir re-auth inmediatamente
+    this.inactivityService.resetTimer();
+    this.currentUser.set(user);
+    this.isAuthenticated.set(true);
+    this.markAuthChecked();
+    this.applyUserLanguagePreference(user);
   }
 
   /**
@@ -65,11 +96,7 @@ export class AuthService {
     }).pipe(
       tap(response => {
         if (response.success) {
-          // La cookie se configura automáticamente desde el backend
-          this.currentUser.set(response.data.user);
-          this.isAuthenticated.set(true);
-          // Aplicar preferencia de idioma del usuario
-          this.applyUserLanguagePreference(response.data.user);
+          this.setSession(response.data.user);
         }
       })
     );
@@ -84,18 +111,7 @@ export class AuthService {
     }).pipe(
       tap(response => {
         if (response.success) {
-          // Limpiar caché del service worker antes de establecer el nuevo usuario
-          if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-            navigator.serviceWorker.controller.postMessage({
-              action: 'clearCache'
-            });
-          }
-
-          // La cookie se configura automáticamente desde el backend
-          this.currentUser.set(response.data.user);
-          this.isAuthenticated.set(true);
-          // Aplicar preferencia de idioma del usuario
-          this.applyUserLanguagePreference(response.data.user);
+          this.setSession(response.data.user);
         }
       })
     );
@@ -125,6 +141,10 @@ export class AuthService {
    * Logout - llama al backend para limpiar la cookie
    */
   logout(): void {
+    // Evitar logouts duplicados (ej: varias requests paralelas que reciben 401)
+    if (this.loggingOut) return;
+    this.loggingOut = true;
+
     this.http.post(`${this.API_URL}/logout`, {}, {
       withCredentials: true // Enviar cookie para que el backend la pueda limpiar
     }).subscribe({
@@ -139,18 +159,13 @@ export class AuthService {
   }
 
   /**
-   * Limpiar datos del usuario y caché del service worker
+   * Limpiar datos del usuario
+   * (el service worker no cachea respuestas de la API, así que no hay datos que purgar)
    */
   private clearUserData(): void {
+    this.loggingOut = false;
     this.currentUser.set(null);
     this.isAuthenticated.set(false);
-
-    // Limpiar caché del service worker si está disponible
-    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-      navigator.serviceWorker.controller.postMessage({
-        action: 'clearCache'
-      });
-    }
 
     this.router.navigate(['/auth/login']);
   }
@@ -176,12 +191,21 @@ export class AuthService {
   }
 
   /**
-   * Actualizar perfil de usuario
+   * Actualizar perfil de usuario.
+   * Si el email cambia, el backend exige la contraseña actual.
    */
-  updateProfile(name: string, email: string): Observable<{ success: boolean; data: { user: User } }> {
+  updateProfile(
+    name: string,
+    email: string,
+    currentPassword?: string
+  ): Observable<{ success: boolean; data: { user: User } }> {
+    const body: { name: string; email: string; currentPassword?: string } = { name, email };
+    if (currentPassword) {
+      body.currentPassword = currentPassword;
+    }
     return this.http.put<{ success: boolean; data: { user: User } }>(
       `${this.API_URL}/profile`,
-      { name, email },
+      body,
       { withCredentials: true }
     ).pipe(
       tap(response => {
@@ -205,20 +229,26 @@ export class AuthService {
 
   /**
    * Re-autenticar usuario después de inactividad
-   * Valida la contraseña sin cerrar la sesión actual
+   * Valida la contraseña sin cerrar la sesión actual.
+   * - Retorna true si la contraseña es correcta.
+   * - Retorna false si la contraseña es incorrecta (401).
+   * - Lanza el error en otros casos (red, rate limit, servidor) para que la UI lo muestre.
    */
   async reAuthenticate(password: string): Promise<boolean> {
     try {
-      const response = await this.http.post<{ success: boolean; message?: string }>(
-        `${this.API_URL}/re-authenticate`,
-        { password },
-        { withCredentials: true }
-      ).toPromise();
-
+      const response = await firstValueFrom(
+        this.http.post<{ success: boolean; message?: string }>(
+          `${this.API_URL}/re-authenticate`,
+          { password },
+          { withCredentials: true }
+        )
+      );
       return response?.success ?? false;
-    } catch (error) {
-      console.error('Error en re-autenticación:', error);
-      return false;
+    } catch (error: any) {
+      if (error?.status === 401) {
+        return false;
+      }
+      throw error;
     }
   }
 }

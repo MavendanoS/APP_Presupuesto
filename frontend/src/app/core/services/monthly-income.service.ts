@@ -63,7 +63,7 @@ export class MonthlyIncomeService {
    */
   create(data: CreateIncomeRequest): Observable<{ income: MonthlyIncome }> {
     return this.api.post<{ income: MonthlyIncome }>(this.endpoint, data).pipe(
-      tap(() => this.dataRefresh.notifyDataChange('payment'))
+      tap(() => this.dataRefresh.notifyDataChange('income'))
     );
   }
 
@@ -72,7 +72,7 @@ export class MonthlyIncomeService {
    */
   update(id: number, data: UpdateIncomeRequest): Observable<{ income: MonthlyIncome }> {
     return this.api.put<{ income: MonthlyIncome }>(`${this.endpoint}/${id}`, data).pipe(
-      tap(() => this.dataRefresh.notifyDataChange('payment'))
+      tap(() => this.dataRefresh.notifyDataChange('income'))
     );
   }
 
@@ -81,7 +81,7 @@ export class MonthlyIncomeService {
    */
   delete(id: number): Observable<{ message: string }> {
     return this.api.delete<{ message: string }>(`${this.endpoint}/${id}`).pipe(
-      tap(() => this.dataRefresh.notifyDataChange('payment'))
+      tap(() => this.dataRefresh.notifyDataChange('income'))
     );
   }
 }

@@ -1,8 +1,8 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { AuthService } from '../../core/services/auth.service';
 import { APP_VERSION } from '../../core/version';
 
@@ -14,6 +14,9 @@ import { APP_VERSION } from '../../core/version';
   styleUrls: ['./login.component.scss']
 })
 export class LoginComponent {
+  private route = inject(ActivatedRoute);
+  private transloco = inject(TranslocoService);
+
   loginForm: FormGroup;
   loading = signal(false);
   errorMessage = signal<string | null>(null);
@@ -39,17 +42,32 @@ export class LoginComponent {
 
       this.authService.login(credentials).subscribe({
         next: () => {
-          this.router.navigate(['/dashboard']);
+          this.loading.set(false);
+          this.router.navigateByUrl(this.getSafeReturnUrl());
         },
         error: (error) => {
-          this.errorMessage.set(error.message || 'Error al iniciar sesión');
-          this.loading.set(false);
-        },
-        complete: () => {
+          this.errorMessage.set(error?.message || this.transloco.translate('errors.loginFailed'));
           this.loading.set(false);
         }
       });
     }
+  }
+
+  /**
+   * Solo permite rutas internas relativas ('/algo'), nunca '//host' ni URLs absolutas.
+   */
+  private getSafeReturnUrl(): string {
+    const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+    if (
+      returnUrl &&
+      returnUrl.startsWith('/') &&
+      !returnUrl.startsWith('//') &&
+      !returnUrl.startsWith('/\\') &&
+      !returnUrl.startsWith('/auth')
+    ) {
+      return returnUrl;
+    }
+    return '/dashboard';
   }
 
   get email() {

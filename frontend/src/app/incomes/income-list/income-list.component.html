@@ -9,7 +9,7 @@
       />
     }
 
-    @if (loading()) {
+    @if (initialLoading()) {
       <app-loading [message]="'incomes.loading' | transloco" />
     } @else {
       <!-- Month Navigation -->
@@ -51,6 +51,9 @@
         </div>
       </div>
 
+      @if (loading()) {
+        <app-loading [message]="'incomes.loading' | transloco" />
+      } @else {
       <!-- Total Card -->
       <div class="row g-3 mb-4">
         <div class="col-12 col-md-6">
@@ -123,6 +126,7 @@
           }
         </div>
       </div>
+      }
     }
   </div>
 </div>

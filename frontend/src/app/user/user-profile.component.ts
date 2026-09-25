@@ -1,7 +1,8 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, inject, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterModule } from '@angular/router';
+import { RouterModule } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { AuthService } from '../core/services/auth.service';
 import { UserPreferencesService } from '../core/services/user-preferences.service';
@@ -25,19 +26,23 @@ export class UserProfileComponent implements OnInit {
   showNewPassword = signal(false);
   showConfirmPassword = signal(false);
 
+  /** true cuando el email del formulario difiere del actual (requiere contraseña actual) */
+  emailChanged = signal(false);
+
   private userPreferencesService = inject(UserPreferencesService);
   private translocoService = inject(TranslocoService);
+  private destroyRef = inject(DestroyRef);
 
   constructor(
     private fb: FormBuilder,
-    private authService: AuthService,
-    private router: Router
+    private authService: AuthService
   ) {
     const currentUser = this.authService.currentUser();
 
     this.profileForm = this.fb.group({
       name: [currentUser?.name || '', [Validators.required, Validators.minLength(3)]],
-      email: [currentUser?.email || '', [Validators.required, Validators.email]]
+      email: [currentUser?.email || '', [Validators.required, Validators.email]],
+      currentPassword: ['']
     });
 
     this.passwordForm = this.fb.group({
@@ -67,6 +72,27 @@ export class UserProfileComponent implements OnInit {
         currency: user.currency || 'CLP'
       });
     }
+
+    // Si el email cambia, el backend exige la contraseña actual
+    this.profileForm.get('email')!.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.updateEmailChangedState());
+  }
+
+  private updateEmailChangedState(): void {
+    const currentEmail = (this.authService.currentUser()?.email || '').trim().toLowerCase();
+    const formEmail = String(this.profileForm.get('email')?.value || '').trim().toLowerCase();
+    const changed = formEmail !== currentEmail;
+    this.emailChanged.set(changed);
+
+    const passwordControl = this.profileForm.get('currentPassword')!;
+    if (changed) {
+      passwordControl.setValidators([Validators.required]);
+    } else {
+      passwordControl.clearValidators();
+      passwordControl.setValue('', { emitEvent: false });
+    }
+    passwordControl.updateValueAndValidity({ emitEvent: false });
   }
 
   passwordMatchValidator(group: FormGroup): { [key: string]: boolean } | null {
@@ -104,17 +130,18 @@ export class UserProfileComponent implements OnInit {
     this.error.set(null);
     this.success.set(null);
 
-    const { name, email } = this.profileForm.value;
+    const { name, email, currentPassword } = this.profileForm.value;
 
-    this.authService.updateProfile(name, email).subscribe({
-      next: (response) => {
+    this.authService.updateProfile(name, email, this.emailChanged() ? currentPassword : undefined).subscribe({
+      next: () => {
         this.loading.set(false);
-        this.success.set('Perfil actualizado correctamente');
-        // El servicio ya actualiza currentUser
+        this.success.set(this.translocoService.translate('profile.profileUpdated'));
+        // El servicio ya actualiza currentUser; el email guardado pasa a ser el actual
+        this.updateEmailChangedState();
       },
       error: (err) => {
         this.loading.set(false);
-        this.error.set(err.error?.message || 'Error al actualizar perfil');
+        this.error.set(err?.message || this.translocoService.translate('messages.updateError'));
       }
     });
   }
@@ -133,7 +160,7 @@ export class UserProfileComponent implements OnInit {
     this.authService.changePassword(currentPassword, newPassword).subscribe({
       next: () => {
         this.loading.set(false);
-        this.success.set('Contraseña actualizada correctamente');
+        this.success.set(this.translocoService.translate('profile.passwordUpdated'));
         this.passwordForm.reset();
         this.showCurrentPassword.set(false);
         this.showNewPassword.set(false);
@@ -141,7 +168,7 @@ export class UserProfileComponent implements OnInit {
       },
       error: (err) => {
         this.loading.set(false);
-        this.error.set(err.error?.message || 'Error al cambiar contraseña');
+        this.error.set(err?.message || this.translocoService.translate('messages.updateError'));
       }
     });
   }
@@ -152,6 +179,10 @@ export class UserProfileComponent implements OnInit {
 
   get email() {
     return this.profileForm.get('email');
+  }
+
+  get profileCurrentPassword() {
+    return this.profileForm.get('currentPassword');
   }
 
   get currentPassword() {
@@ -188,10 +219,10 @@ export class UserProfileComponent implements OnInit {
       this.translocoService.setActiveLang(language);
 
       this.loading.set(false);
-      this.success.set('Preferencias actualizadas correctamente');
+      this.success.set(this.translocoService.translate('profile.preferencesUpdated'));
     } catch (err: any) {
       this.loading.set(false);
-      this.error.set(err?.error?.message || 'Error al actualizar preferencias');
+      this.error.set(err?.message || this.translocoService.translate('messages.updateError'));
     }
   }
 

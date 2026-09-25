@@ -61,7 +61,7 @@
                     {{ 'messages.requiredField' | transloco }}
                   }
                   @if (password?.errors?.['minlength']) {
-                    {{ 'income.sourceRequired' | transloco }}
+                    {{ 'messages.minLength' | transloco: { min: 6 } }}
                   }
                 </div>
               }
@@ -98,7 +98,7 @@
 
             <!-- Version -->
             <div class="text-center mt-4">
-              <small class="text-muted">Versión {{ appVersion }}</small>
+              <small class="text-muted">{{ 'common.version' | transloco }} {{ appVersion }}</small>
             </div>
           </form>
         </div>

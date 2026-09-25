@@ -1,64 +1,38 @@
 {
-  "name": "APP Presupuesto - Gestión de Gastos Personales",
+  "name": "APP Presupuesto - Pagos e Ingresos Mensuales",
   "short_name": "Presupuesto",
-  "version": "3.3.4-dev",
-  "description": "Aplicación PWA para gestión de gastos personales, pagos, compras y gastos hormiga con estadísticas y gráficos.",
+  "version": "4.0.0",
+  "description": "Aplicación PWA para controlar tus pagos mensuales de servicios e ingresos, con saldo proyectado e historial.",
   "theme_color": "#10B981",
   "background_color": "#ffffff",
   "display": "standalone",
   "orientation": "portrait-primary",
   "scope": "./",
   "start_url": "./",
-  "categories": ["finance", "productivity", "utilities"],
+  "categories": [
+    "finance",
+    "productivity",
+    "utilities"
+  ],
   "lang": "es-CL",
   "icons": [
     {
-      "src": "icons/icon-72x72.svg",
-      "sizes": "72x72",
-      "type": "image/svg+xml",
-      "purpose": "maskable any"
-    },
-    {
-      "src": "icons/icon-96x96.svg",
-      "sizes": "96x96",
-      "type": "image/svg+xml",
-      "purpose": "maskable any"
-    },
-    {
-      "src": "icons/icon-128x128.svg",
-      "sizes": "128x128",
-      "type": "image/svg+xml",
-      "purpose": "maskable any"
-    },
-    {
-      "src": "icons/icon-144x144.svg",
-      "sizes": "144x144",
-      "type": "image/svg+xml",
-      "purpose": "maskable any"
-    },
-    {
-      "src": "icons/icon-152x152.svg",
-      "sizes": "152x152",
-      "type": "image/svg+xml",
-      "purpose": "maskable any"
-    },
-    {
-      "src": "icons/icon-192x192.svg",
+      "src": "icons/icon-192x192.png",
       "sizes": "192x192",
-      "type": "image/svg+xml",
-      "purpose": "maskable any"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
-      "src": "icons/icon-384x384.svg",
-      "sizes": "384x384",
-      "type": "image/svg+xml",
-      "purpose": "maskable any"
+      "src": "icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "icons/icon-512x512.svg",
       "sizes": "512x512",
       "type": "image/svg+xml",
-      "purpose": "maskable any"
+      "purpose": "any"
     }
   ]
 }

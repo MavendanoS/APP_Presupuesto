@@ -1,16 +1,25 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslocoPipe } from '@jsverse/transloco';
+import { Subject, catchError, forkJoin, map, of, switchMap } from 'rxjs';
 import { MonthlyPaymentService } from '../../core/services/monthly-payment.service';
 import { PaymentServiceService } from '../../core/services/payment-service.service';
+import { LocaleService } from '../../core/services/locale.service';
 import { PaymentService, PaymentHistoryEntry, ServiceAverage } from '../../core/models';
 import { NavbarComponent } from '../../shared/components/navbar/navbar.component';
 import { LoadingComponent } from '../../shared/components/loading/loading.component';
 import { ErrorMessageComponent } from '../../shared/components/error-message/error-message.component';
 import { ClpCurrencyPipe } from '../../shared/pipes/clp-currency.pipe';
 import { BarChartComponent } from '../../shared/components/bar-chart/bar-chart.component';
+import {
+  currentYearMonth,
+  monthsAgo,
+  parseLocalDate,
+  parseYearMonth
+} from '../../shared/utils/date.utils';
 
 @Component({
   selector: 'app-payment-history',
@@ -24,6 +33,8 @@ import { BarChartComponent } from '../../shared/components/bar-chart/bar-chart.c
   styleUrls: ['./payment-history.component.scss']
 })
 export class PaymentHistoryComponent implements OnInit {
+  private localeService = inject(LocaleService);
+
   services = signal<PaymentService[]>([]);
   selectedServiceIds = signal<number[]>([]);
   history = signal<PaymentHistoryEntry[]>([]);
@@ -31,20 +42,25 @@ export class PaymentHistoryComponent implements OnInit {
   loading = signal(true);
   errorMessage = signal<string | null>(null);
 
-  startMonth = signal(this.getMonthsAgo(6));
-  endMonth = signal(this.getCurrentYearMonth());
+  startMonth = signal(monthsAgo(currentYearMonth(), 6));
+  endMonth = signal(currentYearMonth());
   avgMonths = signal(3);
   viewMode = signal<'chart' | 'table'>('chart');
 
-  // Chart data computed
-  chartLabels = computed(() => {
+  /** Disparador de recargas: switchMap cancela respuestas obsoletas */
+  private reload$ = new Subject<void>();
+
+  // Chart data computed (meses 'YYYY-MM' ordenados)
+  chartMonths = computed(() => {
     const months = new Set<string>();
     this.history().forEach(h => months.add(h.year_month));
     return Array.from(months).sort();
   });
 
+  chartLabels = computed(() => this.chartMonths().map(m => this.formatMonth(m)));
+
   chartDatasets = computed(() => {
-    const labels = this.chartLabels();
+    const labels = this.chartMonths();
     const selectedIds = this.selectedServiceIds();
     const historyData = this.history();
 
@@ -83,7 +99,44 @@ export class PaymentHistoryComponent implements OnInit {
   constructor(
     private paymentService: MonthlyPaymentService,
     private paymentServiceService: PaymentServiceService
-  ) {}
+  ) {
+    this.reload$
+      .pipe(
+        switchMap(() => {
+          this.loading.set(true);
+          this.errorMessage.set(null);
+
+          const serviceIdsParam = this.selectedServiceIds().length > 0
+            ? this.selectedServiceIds().join(',')
+            : undefined;
+
+          return forkJoin({
+            history: this.paymentService.getHistory({
+              start_month: this.startMonth(),
+              end_month: this.endMonth(),
+              service_ids: serviceIdsParam
+            }).pipe(map(data => data.history)),
+            averages: this.paymentService.getAverages(this.avgMonths(), serviceIdsParam).pipe(
+              map(data => data.averages),
+              catchError(() => of([] as ServiceAverage[]))
+            )
+          }).pipe(
+            catchError((error) => {
+              this.errorMessage.set(error?.message || this.localeService.t('messages.loadError'));
+              return of(null);
+            })
+          );
+        }),
+        takeUntilDestroyed()
+      )
+      .subscribe((result) => {
+        if (result) {
+          this.history.set(result.history);
+          this.averages.set(result.averages);
+        }
+        this.loading.set(false);
+      });
+  }
 
   ngOnInit(): void {
     this.loadServices();
@@ -98,33 +151,7 @@ export class PaymentHistoryComponent implements OnInit {
   }
 
   loadData(): void {
-    this.loading.set(true);
-    this.errorMessage.set(null);
-
-    const serviceIdsParam = this.selectedServiceIds().length > 0
-      ? this.selectedServiceIds().join(',')
-      : undefined;
-
-    // Load history and averages
-    this.paymentService.getHistory({
-      start_month: this.startMonth(),
-      end_month: this.endMonth(),
-      service_ids: serviceIdsParam
-    }).subscribe({
-      next: (data) => {
-        this.history.set(data.history);
-        this.loading.set(false);
-      },
-      error: (error) => {
-        this.errorMessage.set(error.message || 'Error al cargar historial');
-        this.loading.set(false);
-      }
-    });
-
-    this.paymentService.getAverages(this.avgMonths(), serviceIdsParam).subscribe({
-      next: (data) => this.averages.set(data.averages),
-      error: () => {}
-    });
+    this.reload$.next();
   }
 
   toggleServiceFilter(serviceId: number): void {
@@ -146,20 +173,25 @@ export class PaymentHistoryComponent implements OnInit {
     this.loadData();
   }
 
+  onAvgMonthsChange(value: number): void {
+    this.avgMonths.set(Number(value));
+    this.loadData();
+  }
+
   formatMonth(yearMonth: string): string {
-    const [year, month] = yearMonth.split('-');
-    const date = new Date(parseInt(year), parseInt(month) - 1);
-    return date.toLocaleDateString('es-CL', { month: 'short', year: 'numeric' });
+    return parseYearMonth(yearMonth).toLocaleDateString(this.localeService.locale(), {
+      month: 'short',
+      year: 'numeric'
+    });
   }
 
-  private getCurrentYearMonth(): string {
-    const now = new Date();
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-  }
-
-  private getMonthsAgo(n: number): string {
-    const d = new Date();
-    d.setMonth(d.getMonth() - n);
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  formatDate(dateStr: string | null): string {
+    const date = parseLocalDate(dateStr);
+    if (!date) return '-';
+    return date.toLocaleDateString(this.localeService.locale(), {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    });
   }
 }
