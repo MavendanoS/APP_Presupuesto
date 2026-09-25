@@ -58,7 +58,13 @@
     "waterfallIncomes": "Income",
     "waterfallPaid": "Paid expenses",
     "waterfallPending": "Pending",
-    "waterfallProjected": "Projected balance"
+    "waterfallProjected": "Projected balance",
+    "filterLabel": "Filter payments by status",
+    "filterAll": "All",
+    "filterPaid": "Paid",
+    "filterPending": "Pending",
+    "filterEmptyPending": "You have no pending payments this month!",
+    "filterEmptyPaid": "You haven't paid any service this month yet."
   },
   "services": {
     "title": "Payment Services",

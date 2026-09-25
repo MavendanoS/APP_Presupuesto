@@ -179,7 +179,42 @@
               </div>
             </div>
           } @else {
-            @for (item of checklist(); track item.service_id) {
+            <!-- Filtro por estado de pago -->
+            <div class="btn-group w-100 mb-3" role="group" [attr.aria-label]="'dashboard.filterLabel' | transloco">
+              <button type="button" class="btn btn-sm"
+                      [class.btn-primary]="statusFilter() === 'all'"
+                      [class.btn-outline-primary]="statusFilter() !== 'all'"
+                      [attr.aria-pressed]="statusFilter() === 'all'"
+                      (click)="setStatusFilter('all')">
+                {{ 'dashboard.filterAll' | transloco }}
+                <span class="badge rounded-pill ms-1" [class.text-bg-light]="statusFilter() === 'all'" [class.text-bg-primary]="statusFilter() !== 'all'">{{ checklist().length }}</span>
+              </button>
+              <button type="button" class="btn btn-sm"
+                      [class.btn-success]="statusFilter() === 'paid'"
+                      [class.btn-outline-success]="statusFilter() !== 'paid'"
+                      [attr.aria-pressed]="statusFilter() === 'paid'"
+                      (click)="setStatusFilter('paid')">
+                <i class="bi bi-check-circle me-1"></i>{{ 'dashboard.filterPaid' | transloco }}
+                <span class="badge rounded-pill ms-1" [class.text-bg-light]="statusFilter() === 'paid'" [class.text-bg-success]="statusFilter() !== 'paid'">{{ paidItems().length }}</span>
+              </button>
+              <button type="button" class="btn btn-sm"
+                      [class.btn-warning]="statusFilter() === 'pending'"
+                      [class.btn-outline-warning]="statusFilter() !== 'pending'"
+                      [attr.aria-pressed]="statusFilter() === 'pending'"
+                      (click)="setStatusFilter('pending')">
+                <i class="bi bi-clock me-1"></i>{{ 'dashboard.filterPending' | transloco }}
+                <span class="badge rounded-pill ms-1" [class.text-bg-light]="statusFilter() === 'pending'" [class.text-bg-warning]="statusFilter() !== 'pending'">{{ pendingItems().length }}</span>
+              </button>
+            </div>
+
+            @if (filteredChecklist().length === 0) {
+              <div class="text-center text-muted py-4">
+                <i class="bi fs-2 d-block mb-2" [class.bi-emoji-smile]="statusFilter() === 'pending'" [class.bi-inbox]="statusFilter() !== 'pending'"></i>
+                {{ (statusFilter() === 'pending' ? 'dashboard.filterEmptyPending' : 'dashboard.filterEmptyPaid') | transloco }}
+              </div>
+            }
+
+            @for (item of filteredChecklist(); track item.service_id) {
               <div class="card shadow-sm border-0 mb-2">
                 <div class="card-body p-3">
                   <div class="d-flex align-items-center gap-3">

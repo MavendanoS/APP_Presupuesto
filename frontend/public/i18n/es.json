@@ -58,7 +58,13 @@
     "waterfallIncomes": "Ingresos",
     "waterfallPaid": "Gastos pagados",
     "waterfallPending": "Pendientes",
-    "waterfallProjected": "Saldo proyectado"
+    "waterfallProjected": "Saldo proyectado",
+    "filterLabel": "Filtrar pagos por estado",
+    "filterAll": "Todos",
+    "filterPaid": "Pagados",
+    "filterPending": "Pendientes",
+    "filterEmptyPending": "¡No tienes pagos pendientes este mes!",
+    "filterEmptyPaid": "Aún no has pagado ningún servicio este mes."
   },
   "services": {
     "title": "Servicios de Pago",

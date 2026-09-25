@@ -21,6 +21,18 @@ import {
   todayLocalISO
 } from '../shared/utils/date.utils';
 
+type PaymentStatusFilter = 'all' | 'paid' | 'pending';
+const STATUS_FILTER_KEY = 'dashboardStatusFilter';
+
+function loadStatusFilter(): PaymentStatusFilter {
+  try {
+    const saved = localStorage.getItem(STATUS_FILTER_KEY);
+    return saved === 'paid' || saved === 'pending' ? saved : 'all';
+  } catch {
+    return 'all';
+  }
+}
+
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -65,6 +77,18 @@ export class DashboardComponent implements OnInit {
   });
 
   checklist = computed(() => this.budgetData()?.checklist || []);
+
+  /** Filtro del checklist por estado de pago (se recuerda entre visitas) */
+  statusFilter = signal<PaymentStatusFilter>(loadStatusFilter());
+  paidItems = computed(() => this.checklist().filter(item => item.is_paid));
+  pendingItems = computed(() => this.checklist().filter(item => !item.is_paid));
+  filteredChecklist = computed(() => {
+    switch (this.statusFilter()) {
+      case 'paid': return this.paidItems();
+      case 'pending': return this.pendingItems();
+      default: return this.checklist();
+    }
+  });
   summary = computed(() => this.budgetData()?.summary || { total_expected: 0, total_paid: 0, remaining: 0, paid_count: 0, total_count: 0, total_incomes: 0, balance: 0, projected_balance: 0 });
   totalIncomes = computed(() => this.summary().total_incomes ?? 0);
   balance = computed(() => this.summary().balance ?? 0);
@@ -119,6 +143,15 @@ export class DashboardComponent implements OnInit {
     const s = this.summary();
     return s.total_count > 0 && s.paid_count === s.total_count;
   });
+
+  setStatusFilter(filter: PaymentStatusFilter): void {
+    this.statusFilter.set(filter);
+    try {
+      localStorage.setItem(STATUS_FILTER_KEY, filter);
+    } catch {
+      // Almacenamiento no disponible: el filtro solo dura esta visita
+    }
+  }
 
   constructor(
     private authService: AuthService,
