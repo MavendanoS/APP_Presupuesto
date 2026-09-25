@@ -1,33 +1,31 @@
 # Testing del Backend
 
-## Configuración
+## Tests unitarios (automáticos)
 
-Estos tests utilizan archivos `.http` que pueden ejecutarse con:
-- VS Code REST Client extension
-- IntelliJ HTTP Client
-- Cualquier herramienta compatible con archivos HTTP
-
-## Variables Globales
-
-Los archivos usan variables que se actualizan durante el testing:
-- `@baseUrl`: URL del Worker (local: http://localhost:8787)
-- `@token`: JWT token obtenido del login
-
-## Orden de Ejecución
-
-1. **auth.test.http**: Autenticación (register, login, me)
-2. **categories.test.http**: Gestión de categorías
-3. **expenses.test.http**: Gestión de gastos
-4. **income.test.http**: Gestión de ingresos
-
-## Ejecutar Worker Localmente
+Usan el runner nativo de Node (`node:test`), sin dependencias extra:
 
 ```bash
 cd backend
-npm run dev
-# Worker disponible en http://localhost:8787
+npm test
 ```
 
-## Resultados
+- `unit/utils.test.js`: fechas (hora de Chile), validadores de montos/IDs, respuestas de error.
+- `unit/auth.test.js`: cambio de contraseña, re-autenticación, cambio de email y revocación de JWT
+  (con un D1 falso en memoria).
 
-Los resultados de las pruebas se documentan en `RESULTS.md`
+## Pruebas manuales contra el Worker local
+
+```bash
+cd backend
+npm run db:schema:local   # crea el esquema v4 en la D1 local
+npm run dev               # Worker en http://localhost:8787
+```
+
+`wrangler dev` necesita `backend/.dev.vars` (no se versiona) con al menos:
+
+```
+JWT_SECRET="un-secreto-local-largo"
+ENVIRONMENT="development"
+```
+
+`api/auth.test.http` contiene requests de ejemplo para VS Code REST Client / IntelliJ HTTP Client.

@@ -8,123 +8,84 @@ import { registerUser, loginUser, getCurrentUser, generatePasswordResetToken, re
 import { requireAuth } from '../middleware/auth.js';
 import { withRateLimit, resetRateLimit } from '../middleware/rateLimit.js';
 import { updateUserPreferences } from '../db/users.js';
+import { createToken } from '../utils/jwt.js';
+import { jsonResponse, errorResponse, readJson } from '../utils/http.js';
 
 const authRouter = Router({ base: '/api/auth' });
+
+const SESSION_MAX_AGE = 7 * 24 * 60 * 60; // 7 días en segundos
+
+/**
+ * Cookie HttpOnly con Partitioned para cookies de terceros (CHIPS)
+ * SameSite=None + Partitioned permite cookies cross-site (frontend pages.dev → backend workers.dev)
+ */
+function sessionCookie(token, maxAge = SESSION_MAX_AGE) {
+  return [
+    `auth_token=${token}`,
+    'HttpOnly',
+    'Secure',
+    'SameSite=None',
+    'Partitioned',
+    'Path=/',
+    `Max-Age=${maxAge}`
+  ].join('; ');
+}
+
+function missingFields(fields) {
+  return jsonResponse({
+    error: 'Faltan datos requeridos',
+    message: `Campos requeridos: ${fields.join(', ')}`
+  }, 400);
+}
 
 /**
  * POST /api/auth/register
  * Registrar un nuevo usuario
  */
-authRouter.post('/register', async (request, env) => {
+authRouter.post('/register', withRateLimit('register', async (request, env) => {
   try {
-    const body = await request.json();
-    const { email, password, name } = body;
+    const { email, password, name } = await readJson(request);
 
     if (!email || !password || !name) {
-      return new Response(JSON.stringify({
-        error: 'Faltan datos requeridos',
-        required: ['email', 'password', 'name']
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return missingFields(['email', 'password', 'name']);
     }
 
     const result = await registerUser(env.DB, { email, password, name }, env.JWT_SECRET);
 
-    // Configurar cookie HttpOnly con Partitioned para cookies de terceros (CHIPS)
-    // SameSite=None + Partitioned permite cookies cross-site (frontend pages.dev → backend workers.dev)
-    const cookieOptions = [
-      `auth_token=${result.token}`,
-      'HttpOnly',
-      'Secure',
-      'SameSite=None',
-      'Partitioned',
-      'Path=/',
-      `Max-Age=${7 * 24 * 60 * 60}`, // 7 días en segundos
-    ].join('; ');
-
-    return new Response(JSON.stringify({
-      success: true,
-      data: {
-        user: result.user
-      }
-    }), {
-      status: 201,
-      headers: {
-        'Content-Type': 'application/json',
-        'Set-Cookie': cookieOptions
-      }
-    });
-
+    return jsonResponse(
+      { success: true, data: { user: result.user } },
+      201,
+      { 'Set-Cookie': sessionCookie(result.token) }
+    );
   } catch (error) {
-    return new Response(JSON.stringify({
-      error: 'Error al registrar usuario',
-      message: error.message
-    }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return errorResponse(error, 'Error al registrar usuario');
   }
-});
+}, { maxAttempts: 5, windowSeconds: 60 * 60 }));
 
 /**
  * POST /api/auth/login
  * Iniciar sesión (con rate limiting)
  */
-authRouter.post('/login', withRateLimit(async (request, env) => {
+authRouter.post('/login', withRateLimit('login', async (request, env) => {
   try {
-    const body = await request.json();
-    const { email, password } = body;
+    const { email, password } = await readJson(request);
 
     if (!email || !password) {
-      return new Response(JSON.stringify({
-        error: 'Faltan datos requeridos',
-        required: ['email', 'password']
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return missingFields(['email', 'password']);
     }
 
     const result = await loginUser(env.DB, { email, password }, env.JWT_SECRET);
 
     // Login exitoso - resetear rate limit para esta IP
-    resetRateLimit(request);
+    await resetRateLimit(env.DB, 'login', request);
 
-    // Configurar cookie HttpOnly con Partitioned para cookies de terceros (CHIPS)
-    // SameSite=None + Partitioned permite cookies cross-site (frontend pages.dev → backend workers.dev)
-    const cookieOptions = [
-      `auth_token=${result.token}`,
-      'HttpOnly',
-      'Secure',
-      'SameSite=None',
-      'Partitioned',
-      'Path=/',
-      `Max-Age=${7 * 24 * 60 * 60}`, // 7 días en segundos
-    ].join('; ');
-
-    return new Response(JSON.stringify({
-      success: true,
-      data: {
-        user: result.user
-      }
-    }), {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/json',
-        'Set-Cookie': cookieOptions
-      }
-    });
-
+    return jsonResponse(
+      { success: true, data: { user: result.user } },
+      200,
+      { 'Set-Cookie': sessionCookie(result.token) }
+    );
   } catch (error) {
-    return new Response(JSON.stringify({
-      error: 'Error al iniciar sesión',
-      message: error.message
-    }), {
-      status: 401,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return errorResponse(error, 'Error al iniciar sesión');
   }
 }));
 
@@ -132,28 +93,12 @@ authRouter.post('/login', withRateLimit(async (request, env) => {
  * POST /api/auth/logout
  * Cerrar sesión (limpiar cookie)
  */
-authRouter.post('/logout', async (request, env) => {
-  // Limpiar cookie configurándola con Max-Age=0
-  const cookieOptions = [
-    'auth_token=',
-    'HttpOnly',
-    'Secure',
-    'SameSite=None',
-    'Partitioned',
-    'Path=/',
-    'Max-Age=0', // Expirar inmediatamente
-  ].join('; ');
-
-  return new Response(JSON.stringify({
-    success: true,
-    message: 'Sesión cerrada correctamente'
-  }), {
-    status: 200,
-    headers: {
-      'Content-Type': 'application/json',
-      'Set-Cookie': cookieOptions
-    }
-  });
+authRouter.post('/logout', async () => {
+  return jsonResponse(
+    { success: true, message: 'Sesión cerrada correctamente' },
+    200,
+    { 'Set-Cookie': sessionCookie('', 0) }
+  );
 });
 
 /**
@@ -162,25 +107,10 @@ authRouter.post('/logout', async (request, env) => {
  */
 authRouter.get('/me', requireAuth(async (request, env) => {
   try {
-    const userId = request.user.userId;
-    const user = await getCurrentUser(env.DB, userId);
-
-    return new Response(JSON.stringify({
-      success: true,
-      data: { user }
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
-    });
-
+    const user = await getCurrentUser(env.DB, request.user.userId);
+    return jsonResponse({ success: true, data: { user } });
   } catch (error) {
-    return new Response(JSON.stringify({
-      error: 'Error al obtener usuario',
-      message: error.message
-    }), {
-      status: 404,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return errorResponse(error, 'Error al obtener usuario');
   }
 }));
 
@@ -188,18 +118,12 @@ authRouter.get('/me', requireAuth(async (request, env) => {
  * POST /api/auth/forgot-password
  * Solicitar recuperación de contraseña
  */
-authRouter.post('/forgot-password', withRateLimit(async (request, env) => {
+authRouter.post('/forgot-password', withRateLimit('forgot-password', async (request, env) => {
   try {
-    const body = await request.json();
-    const { email } = body;
+    const { email } = await readJson(request);
 
     if (!email) {
-      return new Response(JSON.stringify({
-        error: 'Email requerido'
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return missingFields(['email']);
     }
 
     const result = await generatePasswordResetToken(
@@ -209,22 +133,9 @@ authRouter.post('/forgot-password', withRateLimit(async (request, env) => {
       env.FRONTEND_URL
     );
 
-    return new Response(JSON.stringify({
-      success: true,
-      message: result.message
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
-    });
-
+    return jsonResponse({ success: true, message: result.message });
   } catch (error) {
-    return new Response(JSON.stringify({
-      error: 'Error al procesar solicitud',
-      message: error.message
-    }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return errorResponse(error, 'Error al procesar solicitud');
   }
 }));
 
@@ -232,179 +143,110 @@ authRouter.post('/forgot-password', withRateLimit(async (request, env) => {
  * POST /api/auth/reset-password
  * Resetear contraseña con token
  */
-authRouter.post('/reset-password', async (request, env) => {
+authRouter.post('/reset-password', withRateLimit('reset-password', async (request, env) => {
   try {
-    const body = await request.json();
-    const { token, newPassword } = body;
+    const { token, newPassword } = await readJson(request);
 
     if (!token || !newPassword) {
-      return new Response(JSON.stringify({
-        error: 'Token y nueva contraseña requeridos'
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return missingFields(['token', 'newPassword']);
     }
 
     await resetPasswordWithToken(env.DB, token, newPassword, env.RESEND_API_KEY);
 
-    return new Response(JSON.stringify({
-      success: true,
-      message: 'Contraseña actualizada correctamente'
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
-    });
-
+    return jsonResponse({ success: true, message: 'Contraseña actualizada correctamente' });
   } catch (error) {
-    return new Response(JSON.stringify({
-      error: 'Error al resetear contraseña',
-      message: error.message
-    }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return errorResponse(error, 'Error al resetear contraseña');
   }
-});
+}, { maxAttempts: 10 }));
 
 /**
  * PUT /api/auth/profile
- * Actualizar perfil de usuario
+ * Actualizar perfil de usuario (cambiar email requiere currentPassword)
  */
 authRouter.put('/profile', requireAuth(async (request, env) => {
   try {
-    const body = await request.json();
-    const { name, email } = body;
+    const { name, email, currentPassword } = await readJson(request);
 
     if (!name || !email) {
-      return new Response(JSON.stringify({
-        error: 'Nombre y email requeridos'
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return missingFields(['name', 'email']);
     }
 
-    const userId = request.user.userId; // Establecido por requireAuth
+    const user = await updateUserProfile(env.DB, request.user.userId, { name, email, currentPassword });
 
-    const updatedUser = await updateUserProfile(env.DB, userId, { name, email });
+    // El JWT incluye el email: emitir uno nuevo con los datos actualizados
+    const token = await createToken({ userId: user.id, email: user.email }, env.JWT_SECRET);
 
-    // Retornar usuario sin password_hash
-    const { password_hash: _, ...userWithoutPassword } = updatedUser;
-
-    return new Response(JSON.stringify({
-      success: true,
-      data: {
-        user: userWithoutPassword
-      }
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
-    });
-
+    return jsonResponse(
+      { success: true, data: { user } },
+      200,
+      { 'Set-Cookie': sessionCookie(token) }
+    );
   } catch (error) {
-    return new Response(JSON.stringify({
-      error: 'Error al actualizar perfil',
-      message: error.message
-    }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return errorResponse(error, 'Error al actualizar perfil');
   }
 }));
 
 /**
  * PUT /api/auth/change-password
- * Cambiar contraseña de usuario
+ * Cambiar contraseña de usuario. Revoca otras sesiones y renueva la cookie actual.
  */
-authRouter.put('/change-password', requireAuth(async (request, env) => {
+authRouter.put('/change-password', requireAuth(withRateLimit('change-password', async (request, env) => {
   try {
-    const body = await request.json();
-    const { currentPassword, newPassword } = body;
+    const { currentPassword, newPassword } = await readJson(request);
 
     if (!currentPassword || !newPassword) {
-      return new Response(JSON.stringify({
-        error: 'Contraseña actual y nueva contraseña requeridas'
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return missingFields(['currentPassword', 'newPassword']);
     }
 
-    const userId = request.user.userId; // Establecido por requireAuth
+    const user = await changeUserPassword(
+      env.DB,
+      request.user.userId,
+      { currentPassword, newPassword },
+      env.RESEND_API_KEY
+    );
 
-    await changeUserPassword(env.DB, userId, { currentPassword, newPassword });
+    // Emitir un token nuevo (posterior a password_changed_at) para mantener esta sesión
+    const token = await createToken({ userId: user.id, email: user.email }, env.JWT_SECRET);
 
-    return new Response(JSON.stringify({
-      success: true,
-      message: 'Contraseña actualizada correctamente'
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
-    });
-
+    return jsonResponse(
+      { success: true, message: 'Contraseña actualizada correctamente' },
+      200,
+      { 'Set-Cookie': sessionCookie(token) }
+    );
   } catch (error) {
-    return new Response(JSON.stringify({
-      error: 'Error al cambiar contraseña',
-      message: error.message
-    }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return errorResponse(error, 'Error al cambiar contraseña');
   }
-}));
+})));
 
 /**
  * POST /api/auth/re-authenticate
  * Re-autenticar usuario después de inactividad
  * Valida password sin cerrar sesión
  */
-authRouter.post('/re-authenticate', requireAuth(async (request, env) => {
+authRouter.post('/re-authenticate', requireAuth(withRateLimit('re-authenticate', async (request, env) => {
   try {
-    const body = await request.json();
-    const { password } = body;
+    const { password } = await readJson(request);
 
     if (!password) {
-      return new Response(JSON.stringify({
-        error: 'Contraseña requerida'
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return missingFields(['password']);
     }
 
-    const userId = request.user.userId; // Establecido por requireAuth
-
-    const isValid = await reAuthenticateUser(env.DB, userId, password);
+    const isValid = await reAuthenticateUser(env.DB, request.user.userId, password);
 
     if (!isValid) {
-      return new Response(JSON.stringify({
-        success: false,
+      return jsonResponse({
+        error: 'Error al re-autenticar',
         message: 'Contraseña incorrecta'
-      }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      }, 401);
     }
 
-    return new Response(JSON.stringify({
-      success: true,
-      message: 'Re-autenticación exitosa'
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    await resetRateLimit(env.DB, 're-authenticate', request);
 
+    return jsonResponse({ success: true, message: 'Re-autenticación exitosa' });
   } catch (error) {
-    return new Response(JSON.stringify({
-      error: 'Error al re-autenticar',
-      message: error.message
-    }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return errorResponse(error, 'Error al re-autenticar');
   }
-}));
+}, { maxAttempts: 10 })));
 
 /**
  * PUT /api/auth/preferences
@@ -412,69 +254,26 @@ authRouter.post('/re-authenticate', requireAuth(async (request, env) => {
  */
 authRouter.put('/preferences', requireAuth(async (request, env) => {
   try {
-    const body = await request.json();
-    const { language, currency } = body;
+    const { language, currency } = await readJson(request);
 
     // Validar que al menos uno de los campos esté presente
     if (!language && !currency) {
-      return new Response(JSON.stringify({
-        error: 'Debe proporcionar al menos language o currency'
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return jsonResponse({
+        error: 'Error al actualizar preferencias',
+        message: 'Debe proporcionar al menos language o currency'
+      }, 400);
     }
 
-    // Validar idioma si está presente
-    if (language && !['es', 'en'].includes(language)) {
-      return new Response(JSON.stringify({
-        error: 'Idioma inválido. Debe ser "es" o "en"'
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
-
-    // Validar moneda si está presente
-    if (currency && !['CLP', 'USD'].includes(currency)) {
-      return new Response(JSON.stringify({
-        error: 'Moneda inválida. Debe ser "CLP" o "USD"'
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
-
-    const userId = request.user.userId;
-
-    // Actualizar preferencias
+    // Idioma y moneda se validan en updateUserPreferences
     const preferences = {};
     if (language) preferences.language = language;
     if (currency) preferences.currency = currency;
 
-    const updatedUser = await updateUserPreferences(env.DB, userId, preferences);
+    const user = await updateUserPreferences(env.DB, request.user.userId, preferences);
 
-    // Remover password_hash de la respuesta
-    const { password_hash: _, ...userWithoutPassword } = updatedUser;
-
-    return new Response(JSON.stringify({
-      success: true,
-      data: {
-        user: userWithoutPassword
-      }
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
-    });
-
+    return jsonResponse({ success: true, data: { user } });
   } catch (error) {
-    return new Response(JSON.stringify({
-      error: 'Error al actualizar preferencias',
-      message: error.message
-    }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return errorResponse(error, 'Error al actualizar preferencias');
   }
 }));
 

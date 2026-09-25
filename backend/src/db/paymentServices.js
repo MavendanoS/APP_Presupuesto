@@ -5,6 +5,8 @@
  * para prevenir SQL injection
  */
 
+import { notFound } from '../utils/http.js';
+
 /**
  * Crear un nuevo servicio de pago
  * @param {Object} db - D1 database binding
@@ -12,12 +14,19 @@
  * @returns {Promise<Object>} Servicio creado
  */
 export async function createPaymentService(db, data) {
-  const { user_id, name, icon, color, sort_order } = data;
+  const { user_id, name, icon, color, expected_amount } = data;
+
+  // Si no se indica orden, agregar al final de la lista del usuario
+  const sortOrder = data.sort_order ?? (await db.prepare(`
+    SELECT COALESCE(MAX(sort_order) + 1, 0) as next_order
+    FROM payment_services
+    WHERE user_id = ?
+  `).bind(user_id).first())?.next_order ?? 0;
 
   const result = await db.prepare(`
-    INSERT INTO payment_services (user_id, name, icon, color, sort_order)
-    VALUES (?, ?, ?, ?, ?)
-  `).bind(user_id, name, icon || 'bi-credit-card', color || '#3B82F6', sort_order ?? 0).run();
+    INSERT INTO payment_services (user_id, name, icon, color, sort_order, expected_amount)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `).bind(user_id, name, icon || 'bi-credit-card', color || '#3B82F6', sortOrder, expected_amount ?? null).run();
 
   if (!result.success) {
     throw new Error('Error al crear servicio de pago');
@@ -121,7 +130,7 @@ export async function getPaymentServiceById(db, serviceId, userId) {
 export async function updatePaymentService(db, serviceId, userId, updates) {
   const service = await getPaymentServiceById(db, serviceId, userId);
   if (!service) {
-    throw new Error('Servicio de pago no encontrado');
+    throw notFound('Servicio de pago no encontrado');
   }
 
   const fields = [];
@@ -174,7 +183,7 @@ export async function updatePaymentService(db, serviceId, userId, updates) {
   `).bind(...values).run();
 
   if (!result.success || result.meta.changes === 0) {
-    throw new Error('Servicio de pago no encontrado o no autorizado');
+    throw notFound('Servicio de pago no encontrado o no autorizado');
   }
 
   return await getPaymentServiceById(db, serviceId, userId);
@@ -191,7 +200,7 @@ export async function deletePaymentService(db, serviceId, userId) {
   // Verificar propiedad antes de eliminar
   const service = await getPaymentServiceById(db, serviceId, userId);
   if (!service) {
-    throw new Error('Servicio de pago no encontrado');
+    throw notFound('Servicio de pago no encontrado');
   }
 
   const result = await db.prepare(`
@@ -200,7 +209,7 @@ export async function deletePaymentService(db, serviceId, userId) {
   `).bind(serviceId, userId).run();
 
   if (!result.success || result.meta.changes === 0) {
-    throw new Error('Servicio de pago no encontrado o no autorizado');
+    throw notFound('Servicio de pago no encontrado o no autorizado');
   }
 
   return true;
@@ -223,37 +232,17 @@ export async function createDefaultServices(db, userId) {
     { name: 'Transporte', icon: 'bi-bus-front', color: '#10B981', sort_order: 6 },
   ];
 
-  const createdServices = [];
+  // Insertar todos en una sola transacción (todo o nada)
+  const insert = db.prepare(`
+    INSERT INTO payment_services (user_id, name, icon, color, sort_order)
+    VALUES (?, ?, ?, ?, ?)
+  `);
 
-  for (const svc of defaultServices) {
-    const result = await db.prepare(`
-      INSERT INTO payment_services (user_id, name, icon, color, sort_order)
-      VALUES (?, ?, ?, ?, ?)
-    `).bind(userId, svc.name, svc.icon, svc.color, svc.sort_order).run();
+  await db.batch(defaultServices.map(svc =>
+    insert.bind(userId, svc.name, svc.icon, svc.color, svc.sort_order)
+  ));
 
-    if (result.success) {
-      const service = await db.prepare(`
-        SELECT
-          id,
-          user_id,
-          name,
-          icon,
-          color,
-          is_active,
-          sort_order,
-          created_at,
-          updated_at
-        FROM payment_services
-        WHERE id = ?
-      `).bind(result.meta.last_row_id).first();
-
-      if (service) {
-        createdServices.push(service);
-      }
-    }
-  }
-
-  return createdServices;
+  return await getPaymentServices(db, userId);
 }
 
 /**
@@ -278,14 +267,14 @@ export async function reorderServices(db, userId, orderedIds) {
     throw new Error('Uno o mas servicios no pertenecen al usuario');
   }
 
-  // Actualizar sort_order para cada servicio
-  for (let i = 0; i < orderedIds.length; i++) {
-    await db.prepare(`
-      UPDATE payment_services
-      SET sort_order = ?, updated_at = datetime('now')
-      WHERE id = ? AND user_id = ?
-    `).bind(i, orderedIds[i], userId).run();
-  }
+  // Actualizar sort_order de todos los servicios en una sola transacción
+  const update = db.prepare(`
+    UPDATE payment_services
+    SET sort_order = ?, updated_at = datetime('now')
+    WHERE id = ? AND user_id = ?
+  `);
+
+  await db.batch(orderedIds.map((id, index) => update.bind(index, id, userId)));
 
   return true;
 }

@@ -93,7 +93,6 @@ export async function sendPasswordResetEmail(resendApiKey, toEmail, token, front
       throw new Error('Error al enviar el email de recuperación');
     }
 
-    console.log('✅ Email de recuperación enviado:', data?.id);
   } catch (error) {
     console.error('❌ Error en sendPasswordResetEmail:', error);
     throw new Error('Error al enviar el email de recuperación');
@@ -169,8 +168,6 @@ export async function sendPasswordChangedEmail(resendApiKey, toEmail) {
     if (error) {
       console.error('❌ Error al enviar email de confirmación:', error);
       // No lanzar error para no bloquear el proceso
-    } else {
-      console.log('✅ Email de confirmación enviado:', data?.id);
     }
   } catch (error) {
     console.error('❌ Error en sendPasswordChangedEmail:', error);

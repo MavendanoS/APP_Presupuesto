@@ -8,6 +8,8 @@
  * de "fuentes". Cada registro es independiente con descripcion libre.
  */
 
+import { notFound } from '../utils/http.js';
+
 /**
  * Crear un nuevo ingreso mensual
  * @param {Object} db - D1 database binding
@@ -54,7 +56,7 @@ export async function createMonthlyIncome(db, data) {
 export async function updateMonthlyIncome(db, incomeId, userId, updates) {
   const existing = await getMonthlyIncomeById(db, incomeId, userId);
   if (!existing) {
-    throw new Error('Ingreso no encontrado');
+    throw notFound('Ingreso no encontrado');
   }
 
   const fields = [];
@@ -99,7 +101,7 @@ export async function updateMonthlyIncome(db, incomeId, userId, updates) {
   `).bind(...values).run();
 
   if (!result.success || result.meta.changes === 0) {
-    throw new Error('Ingreso no encontrado o no autorizado');
+    throw notFound('Ingreso no encontrado o no autorizado');
   }
 
   return await getMonthlyIncomeById(db, incomeId, userId);
@@ -119,7 +121,7 @@ export async function deleteMonthlyIncome(db, incomeId, userId) {
   `).bind(incomeId, userId).run();
 
   if (!result.success || result.meta.changes === 0) {
-    throw new Error('Ingreso no encontrado o no autorizado');
+    throw notFound('Ingreso no encontrado o no autorizado');
   }
 
   return true;

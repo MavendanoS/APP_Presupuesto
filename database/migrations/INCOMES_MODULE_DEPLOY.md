@@ -26,7 +26,7 @@
 
 ```bash
 cd backend
-npx wrangler d1 execute gastos-db --remote --file=migrations/add-incomes-module.sql
+npx wrangler d1 execute gastos-db --remote --file=../database/migrations/004-incomes-module.sql
 ```
 
 Verifica que la tabla se creó:
@@ -95,7 +95,7 @@ Para el frontend, redespliega el commit anterior desde Pages.
 ## Archivos creados / modificados
 
 ### Creados (nuevos)
-- `backend/migrations/add-incomes-module.sql`
+- `database/migrations/004-incomes-module.sql`
 - `backend/src/db/monthlyIncomes.js`
 - `backend/src/services/monthlyIncomeService.js`
 - `backend/src/routes/incomes.js`

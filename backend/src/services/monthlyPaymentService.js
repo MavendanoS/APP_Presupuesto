@@ -13,6 +13,28 @@ import {
 } from '../db/monthlyPayments.js';
 import { getPaymentServiceById } from '../db/paymentServices.js';
 import { getMonthlyIncomeTotal, getIncomesByMonth } from '../db/monthlyIncomes.js';
+import { notFound } from '../utils/http.js';
+import { isValidYearMonth, isValidDate } from '../utils/dates.js';
+import { parseAmount, sanitizeNotes } from '../utils/validators.js';
+import { parseIdList } from '../utils/ids.js';
+
+const MIN_AVG_MONTHS = 1;
+const MAX_AVG_MONTHS = 24;
+
+function assertYearMonth(value, label = 'mes') {
+  if (!isValidYearMonth(value)) {
+    throw new Error(`Formato de ${label} invalido. Usar YYYY-MM`);
+  }
+}
+
+function parseAvgMonths(value, fallback = 3) {
+  if (value === undefined || value === null || value === '') return fallback;
+  const m = Number(value);
+  if (!Number.isInteger(m) || m < MIN_AVG_MONTHS || m > MAX_AVG_MONTHS) {
+    throw new Error(`Meses debe ser un entero entre ${MIN_AVG_MONTHS} y ${MAX_AVG_MONTHS}`);
+  }
+  return m;
+}
 
 /**
  * Crear o actualizar un pago mensual
@@ -22,34 +44,39 @@ import { getMonthlyIncomeTotal, getIncomesByMonth } from '../db/monthlyIncomes.j
  * @returns {Promise<Object>} Pago creado/actualizado
  */
 export async function upsertPaymentSvc(db, userId, data) {
-  // Validar que el servicio existe y pertenece al usuario
-  const service = await getPaymentServiceById(db, data.service_id, userId);
+  const serviceId = Number(data.service_id);
+  if (!Number.isInteger(serviceId) || serviceId <= 0) {
+    throw new Error('Servicio invalido');
+  }
+
+  // Validar que el servicio existe, pertenece al usuario y está activo
+  const service = await getPaymentServiceById(db, serviceId, userId);
   if (!service) {
-    throw new Error('Servicio no encontrado');
+    throw notFound('Servicio no encontrado');
+  }
+  if (!service.is_active) {
+    throw new Error('No se pueden registrar pagos en un servicio inactivo');
   }
 
-  // Validar monto
-  if (!data.amount || data.amount <= 0) {
-    throw new Error('El monto debe ser mayor a 0');
-  }
+  const amount = parseAmount(data.amount);
+  assertYearMonth(data.year_month);
 
-  // Validar formato year_month
-  const yearMonthRegex = /^\d{4}-(0[1-9]|1[0-2])$/;
-  if (!data.year_month || !yearMonthRegex.test(data.year_month)) {
-    throw new Error('Formato de mes invalido. Usar YYYY-MM');
-  }
-
-  // Validar paid_date si se proporciona
+  // paid_date: fecha estricta YYYY-MM-DD
+  let paidDate = null;
   if (data.paid_date) {
-    const dateObj = new Date(data.paid_date);
-    if (isNaN(dateObj.getTime())) {
-      throw new Error('Fecha de pago invalida');
+    if (!isValidDate(data.paid_date)) {
+      throw new Error('Fecha de pago invalida. Usar YYYY-MM-DD');
     }
+    paidDate = data.paid_date;
   }
 
   return await upsertMonthlyPayment(db, {
-    ...data,
-    user_id: userId
+    user_id: userId,
+    service_id: serviceId,
+    amount,
+    year_month: data.year_month,
+    paid_date: paidDate,
+    notes: sanitizeNotes(data.notes)
   });
 }
 
@@ -72,11 +99,7 @@ export async function deletePaymentSvc(db, paymentId, userId) {
  * @returns {Promise<Array>} Checklist
  */
 export async function getChecklistSvc(db, userId, yearMonth) {
-  const yearMonthRegex = /^\d{4}-(0[1-9]|1[0-2])$/;
-  if (!yearMonth || !yearMonthRegex.test(yearMonth)) {
-    throw new Error('Formato de mes invalido. Usar YYYY-MM');
-  }
-
+  assertYearMonth(yearMonth);
   return await getMonthlyChecklist(db, userId, yearMonth);
 }
 
@@ -88,20 +111,18 @@ export async function getChecklistSvc(db, userId, yearMonth) {
  * @returns {Promise<Array>} Historial
  */
 export async function getHistorySvc(db, userId, filters = {}) {
-  const parsedFilters = { ...filters };
+  if (filters.start_month) assertYearMonth(filters.start_month, 'start_month');
+  if (filters.end_month) assertYearMonth(filters.end_month, 'end_month');
 
-  if (filters.service_ids && typeof filters.service_ids === 'string') {
-    parsedFilters.service_ids = filters.service_ids
-      .split(',')
-      .map(id => parseInt(id))
-      .filter(id => !isNaN(id));
-  }
-
-  return await getPaymentHistory(db, userId, parsedFilters);
+  return await getPaymentHistory(db, userId, {
+    service_ids: parseIdList(filters.service_ids),
+    start_month: filters.start_month || null,
+    end_month: filters.end_month || null
+  });
 }
 
 /**
- * Obtener promedios de servicios
+ * Obtener promedios de servicios (N meses anteriores al mes actual)
  * @param {Object} db - D1 database binding
  * @param {number} userId
  * @param {number} months - Cantidad de meses para promediar
@@ -109,24 +130,13 @@ export async function getHistorySvc(db, userId, filters = {}) {
  * @returns {Promise<Array>} Promedios
  */
 export async function getAveragesSvc(db, userId, months = 3, serviceIds = null) {
-  const m = parseInt(months);
-  if (isNaN(m) || m < 1 || m > 24) {
-    throw new Error('Meses debe ser entre 1 y 24');
-  }
-
-  let parsedServiceIds = null;
-  if (serviceIds && typeof serviceIds === 'string') {
-    parsedServiceIds = serviceIds
-      .split(',')
-      .map(id => parseInt(id))
-      .filter(id => !isNaN(id));
-  }
-
-  return await getServiceAverages(db, userId, m, parsedServiceIds);
+  const m = parseAvgMonths(months);
+  return await getServiceAverages(db, userId, m, parseIdList(serviceIds));
 }
 
 /**
  * Obtener resumen de presupuesto mensual
+ * Los promedios se calculan sobre los N meses anteriores al mes consultado.
  * @param {Object} db - D1 database binding
  * @param {number} userId
  * @param {string} yearMonth - Formato YYYY-MM
@@ -134,17 +144,13 @@ export async function getAveragesSvc(db, userId, months = 3, serviceIds = null) 
  * @returns {Promise<Object>} Resumen con checklist enriquecido
  */
 export async function getBudgetSummarySvc(db, userId, yearMonth, avgMonths = 3) {
-  const yearMonthRegex = /^\d{4}-(0[1-9]|1[0-2])$/;
-  if (!yearMonth || !yearMonthRegex.test(yearMonth)) {
-    throw new Error('Formato de mes invalido. Usar YYYY-MM');
-  }
-
-  const parsedAvgMonths = parseInt(avgMonths) || 3;
+  assertYearMonth(yearMonth);
+  const parsedAvgMonths = parseAvgMonths(avgMonths);
 
   // Obtener checklist, promedios, totales e ingresos en paralelo
   const [checklist, averages, totals, incomes, incomesTotal] = await Promise.all([
     getMonthlyChecklist(db, userId, yearMonth),
-    getServiceAverages(db, userId, parsedAvgMonths),
+    getServiceAverages(db, userId, parsedAvgMonths, null, yearMonth),
     getMonthlyTotals(db, userId, yearMonth),
     getIncomesByMonth(db, userId, yearMonth),
     getMonthlyIncomeTotal(db, userId, yearMonth)
@@ -176,7 +182,7 @@ export async function getBudgetSummarySvc(db, userId, yearMonth, avgMonths = 3) 
   );
   const totalPaid = enrichedChecklist
     .filter(i => i.is_paid)
-    .reduce((sum, item) => sum + item.amount, 0);
+    .reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
   const paidCount = enrichedChecklist.filter(i => i.is_paid).length;
 
   return {

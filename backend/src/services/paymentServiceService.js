@@ -11,39 +11,65 @@ import {
   deletePaymentService,
   reorderServices
 } from '../db/paymentServices.js';
-import { sanitizeInput } from '../utils/validators.js';
+import { sanitizeInput, parseOptionalAmount, parseBoolean } from '../utils/validators.js';
+import { notFound } from '../utils/http.js';
+import { parseIdList } from '../utils/ids.js';
+
+const DEFAULT_ICON = 'bi-credit-card';
+const DEFAULT_COLOR = '#3B82F6';
+const COLOR_REGEX = /^#[0-9A-Fa-f]{6}$/;
+// Clases de Bootstrap Icons: "bi-nombre-del-icono"
+const ICON_REGEX = /^bi-[a-z0-9-]{1,50}$/;
+const NAME_MIN = 2;
+const NAME_MAX = 60;
+
+function validateName(value) {
+  const name = sanitizeInput(value);
+  if (name.length < NAME_MIN) {
+    throw new Error(`El nombre del servicio es requerido (minimo ${NAME_MIN} caracteres)`);
+  }
+  if (name.length > NAME_MAX) {
+    throw new Error(`El nombre del servicio es demasiado largo (maximo ${NAME_MAX} caracteres)`);
+  }
+  return name;
+}
+
+function validateColor(value) {
+  if (!COLOR_REGEX.test(value)) {
+    throw new Error('Color invalido. Usar formato hexadecimal (#RRGGBB)');
+  }
+  return value;
+}
+
+/**
+ * Normaliza el icono al formato "bi-*" (acepta nombres sin prefijo por compatibilidad)
+ */
+function validateIcon(value) {
+  if (typeof value !== 'string') {
+    throw new Error('Icono invalido');
+  }
+  const icon = value.trim().startsWith('bi-') ? value.trim() : `bi-${value.trim()}`;
+  if (!ICON_REGEX.test(icon)) {
+    throw new Error('Icono invalido');
+  }
+  return icon;
+}
 
 /**
  * Crear un nuevo servicio de pago
  * @param {Object} db - D1 database binding
  * @param {number} userId
- * @param {Object} data - { name, icon?, color? }
+ * @param {Object} data - { name, icon?, color?, expected_amount? }
  * @returns {Promise<Object>} Servicio creado
  */
 export async function createPaymentServiceSvc(db, userId, data) {
-  const { name, icon, color } = data;
-
-  // Validar nombre
-  if (!name || sanitizeInput(name).length < 2) {
-    throw new Error('El nombre del servicio es requerido (minimo 2 caracteres)');
-  }
-
-  // Validar formato de color (hex)
-  if (color) {
-    const colorRegex = /^#[0-9A-Fa-f]{6}$/;
-    if (!colorRegex.test(color)) {
-      throw new Error('Color invalido. Usar formato hexadecimal (#RRGGBB)');
-    }
-  }
-
-  const service = await createPaymentService(db, {
+  return await createPaymentService(db, {
     user_id: userId,
-    name: sanitizeInput(name),
-    icon: icon || 'credit-card',
-    color: color || '#3B82F6'
+    name: validateName(data.name),
+    icon: data.icon ? validateIcon(data.icon) : DEFAULT_ICON,
+    color: data.color ? validateColor(data.color) : DEFAULT_COLOR,
+    expected_amount: parseOptionalAmount(data.expected_amount, 'El monto esperado')
   });
-
-  return service;
 }
 
 /**
@@ -57,7 +83,7 @@ export async function getPaymentServicesSvc(db, userId, filters = {}) {
   const parsedFilters = {};
 
   if (filters.is_active !== undefined && filters.is_active !== null) {
-    parsedFilters.is_active = filters.is_active === 'true' || filters.is_active === true;
+    parsedFilters.is_active = parseBoolean(filters.is_active, 'is_active');
   }
 
   return await getPaymentServices(db, userId, parsedFilters);
@@ -74,7 +100,7 @@ export async function getPaymentServiceByIdSvc(db, serviceId, userId) {
   const service = await getPaymentServiceById(db, serviceId, userId);
 
   if (!service) {
-    throw new Error('Servicio no encontrado');
+    throw notFound('Servicio no encontrado');
   }
 
   return service;
@@ -82,26 +108,43 @@ export async function getPaymentServiceByIdSvc(db, serviceId, userId) {
 
 /**
  * Actualizar un servicio de pago
+ * Solo se aceptan campos conocidos; cada uno se valida.
  * @param {Object} db - D1 database binding
  * @param {number} serviceId
  * @param {number} userId
- * @param {Object} updates
+ * @param {Object} updates - { name?, icon?, color?, is_active?, sort_order?, expected_amount? }
  * @returns {Promise<Object>} Servicio actualizado
  */
 export async function updatePaymentServiceSvc(db, serviceId, userId, updates) {
-  // Validar color si se proporciona
-  if (updates.color) {
-    const colorRegex = /^#[0-9A-Fa-f]{6}$/;
-    if (!colorRegex.test(updates.color)) {
-      throw new Error('Color invalido. Usar formato hexadecimal (#RRGGBB)');
-    }
+  const cleanUpdates = {};
+
+  if (updates.name !== undefined) {
+    cleanUpdates.name = validateName(updates.name);
   }
 
-  // Sanitizar nombre si se proporciona
-  const cleanUpdates = {
-    ...updates,
-    name: updates.name ? sanitizeInput(updates.name) : undefined
-  };
+  if (updates.icon !== undefined) {
+    cleanUpdates.icon = validateIcon(updates.icon);
+  }
+
+  if (updates.color !== undefined) {
+    cleanUpdates.color = validateColor(updates.color);
+  }
+
+  if (updates.is_active !== undefined) {
+    cleanUpdates.is_active = parseBoolean(updates.is_active, 'is_active');
+  }
+
+  if (updates.sort_order !== undefined) {
+    const sortOrder = Number(updates.sort_order);
+    if (!Number.isInteger(sortOrder) || sortOrder < 0 || sortOrder > 10000) {
+      throw new Error('Orden invalido');
+    }
+    cleanUpdates.sort_order = sortOrder;
+  }
+
+  if (updates.expected_amount !== undefined) {
+    cleanUpdates.expected_amount = parseOptionalAmount(updates.expected_amount, 'El monto esperado');
+  }
 
   return await updatePaymentService(db, serviceId, userId, cleanUpdates);
 }
@@ -129,5 +172,10 @@ export async function reorderServicesSvc(db, userId, orderedIds) {
     throw new Error('Se requiere un array de IDs');
   }
 
-  return await reorderServices(db, userId, orderedIds);
+  const ids = parseIdList(orderedIds);
+  if (ids.length !== orderedIds.length) {
+    throw new Error('La lista de IDs contiene valores invalidos o repetidos');
+  }
+
+  return await reorderServices(db, userId, ids);
 }

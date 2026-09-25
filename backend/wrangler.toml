@@ -2,23 +2,43 @@ name = "app-presupuesto-api"
 main = "src/index.js"
 compatibility_date = "2024-01-01"
 
-# Variables de entorno públicas (se pueden incluir en git)
+# Secrets (NO incluir aquí): configurar con `wrangler secret put`
+#   JWT_SECRET      - firma de los tokens de sesión (obligatorio)
+#   RESEND_API_KEY  - envío de emails de recuperación de contraseña
+# Para `wrangler dev` crear backend/.dev.vars (gitignored) con:
+#   JWT_SECRET="un-secreto-local-largo"
+
+# ---------------------------------------------------------------------------
+# Configuración por defecto = PRODUCCIÓN (`npm run deploy`)
+# ---------------------------------------------------------------------------
 [vars]
+ENVIRONMENT = "production"
 FRONTEND_URL = "https://app-presupuesto.pages.dev"
 
-# ⚠️ SOLO PARA DESARROLLO LOCAL - Reemplazar con secret en producción
-# Este valor temporal permite desarrollo local, pero DEBE configurarse
-# como Worker Secret en producción usando el dashboard de Cloudflare
-
-
-# Base de datos D1
 [[d1_databases]]
 binding = "DB"
 database_name = "gastos-db"
 database_id = "80c6f652-11b8-4a8e-a8ca-672b0008e6c0"
 
-# CORS headers
-[env.production.vars]
-FRONTEND_URL = "https://app-presupuesto.pages.dev"
+# No usar `--env production`: wrangler lo desplegaría como un worker distinto
+# ("app-presupuesto-api-production") sin los secrets del actual.
 
-# ⚠️ JWT_SECRET configurado como Worker Secret - NO incluir aquí
+# ---------------------------------------------------------------------------
+# Entorno DEV (pendiente): usar una base D1 PROPIA para no tocar datos reales.
+#   1. npx wrangler d1 create gastos-db-dev
+#   2. npx wrangler d1 execute gastos-db-dev --remote --file=../database/schema.sql
+#   3. Descomentar este bloque con el database_id devuelto en el paso 1
+#   4. npx wrangler secret put JWT_SECRET --env dev
+#   5. npm run deploy:dev
+# ---------------------------------------------------------------------------
+# [env.dev]
+# name = "app-presupuesto-api-dev"
+#
+# [env.dev.vars]
+# ENVIRONMENT = "development"
+# FRONTEND_URL = "https://dev.app-presupuesto.pages.dev"
+#
+# [[env.dev.d1_databases]]
+# binding = "DB"
+# database_name = "gastos-db-dev"
+# database_id = "<ID de gastos-db-dev>"

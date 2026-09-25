@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS payment_services (
   id          INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id     INTEGER NOT NULL,
   name        TEXT    NOT NULL,
-  icon        TEXT    DEFAULT 'receipt',
+  icon        TEXT    DEFAULT 'bi-receipt',
   color       TEXT    DEFAULT '#3B82F6',
   is_active   INTEGER DEFAULT 1,
   sort_order  INTEGER DEFAULT 0,

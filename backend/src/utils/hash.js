@@ -36,6 +36,10 @@ export async function hashPassword(password) {
  * @returns {Promise<{isValid: boolean, needsRehash: boolean}>} Resultado de validación
  */
 export async function verifyPassword(password, hash) {
+  if (typeof password !== 'string' || typeof hash !== 'string' || !hash) {
+    return { isValid: false, needsRehash: false };
+  }
+
   try {
     // Intentar verificación con bcrypt primero (formato nuevo)
     const isValidBcrypt = await bcrypt.compare(password, hash);
@@ -44,9 +48,9 @@ export async function verifyPassword(password, hash) {
       return { isValid: true, needsRehash: false };
     }
 
-    // Si falla bcrypt, intentar con SHA-256 legacy (formato antiguo)
+    // Si falla bcrypt, intentar con SHA-256 legacy (formato antiguo: salt$hash)
     // Solo para permitir migración gradual de usuarios existentes
-    if (hash.includes('$')) {
+    if (!hash.startsWith('$2') && hash.includes('$')) {
       const isValidLegacy = await verifyPasswordLegacy(password, hash);
       if (isValidLegacy) {
         // Password correcto pero usa formato inseguro - necesita re-hash

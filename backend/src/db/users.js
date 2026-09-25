@@ -2,6 +2,8 @@
  * Queries de base de datos para usuarios
  */
 
+const PUBLIC_USER_COLUMNS = 'id, email, name, language, currency, created_at';
+
 /**
  * Crear un nuevo usuario
  * @param {Object} db - Binding de D1
@@ -20,25 +22,27 @@ export async function createUser(db, userData) {
     throw new Error('Error al crear usuario');
   }
 
-  // Obtener el usuario creado
-  const user = await db.prepare(`
-    SELECT id, email, name, created_at
-    FROM users
-    WHERE id = ?
-  `).bind(result.meta.last_row_id).first();
-
-  return user;
+  return await findUserById(db, result.meta.last_row_id);
 }
 
 /**
- * Buscar usuario por email (case-insensitive)
+ * Eliminar un usuario (usado para revertir un registro fallido)
+ * @param {Object} db - Binding de D1
+ * @param {number} userId
+ */
+export async function deleteUser(db, userId) {
+  await db.prepare('DELETE FROM users WHERE id = ?').bind(userId).run();
+}
+
+/**
+ * Buscar usuario por email (case-insensitive). Incluye password_hash.
  * @param {Object} db - Binding de D1
  * @param {string} email
  * @returns {Promise<Object|null>} Usuario o null si no existe
  */
 export async function findUserByEmail(db, email) {
   const user = await db.prepare(`
-    SELECT id, email, password_hash, name, language, currency, created_at
+    SELECT ${PUBLIC_USER_COLUMNS}, password_hash
     FROM users
     WHERE LOWER(email) = LOWER(?)
   `).bind(email).first();
@@ -47,14 +51,14 @@ export async function findUserByEmail(db, email) {
 }
 
 /**
- * Buscar usuario por ID
+ * Buscar usuario por ID (sin datos sensibles)
  * @param {Object} db - Binding de D1
  * @param {number} userId
  * @returns {Promise<Object|null>} Usuario o null si no existe
  */
 export async function findUserById(db, userId) {
   const user = await db.prepare(`
-    SELECT id, email, name, language, currency, created_at
+    SELECT ${PUBLIC_USER_COLUMNS}
     FROM users
     WHERE id = ?
   `).bind(userId).first();
@@ -63,41 +67,39 @@ export async function findUserById(db, userId) {
 }
 
 /**
- * Actualizar información del usuario
+ * Buscar usuario por ID incluyendo password_hash (solo para verificar contraseña)
  * @param {Object} db - Binding de D1
  * @param {number} userId
- * @param {Object} updates - { name?, email? }
- * @returns {Promise<Object>} Usuario actualizado
+ * @returns {Promise<Object|null>}
  */
-export async function updateUser(db, userId, updates) {
-  const fields = [];
-  const values = [];
-
-  if (updates.name) {
-    fields.push('name = ?');
-    values.push(updates.name);
-  }
-
-  if (updates.email) {
-    fields.push('email = ?');
-    values.push(updates.email);
-  }
-
-  fields.push('updated_at = CURRENT_TIMESTAMP');
-  values.push(userId);
-
-  if (fields.length === 1) {
-    // Solo updated_at, no hay cambios
-    return await findUserById(db, userId);
-  }
-
-  await db.prepare(`
-    UPDATE users
-    SET ${fields.join(', ')}
+export async function findUserWithPasswordById(db, userId) {
+  const user = await db.prepare(`
+    SELECT ${PUBLIC_USER_COLUMNS}, password_hash
+    FROM users
     WHERE id = ?
-  `).bind(...values).run();
+  `).bind(userId).first();
 
-  return await findUserById(db, userId);
+  return user || null;
+}
+
+/**
+ * Obtener el momento (unix seconds) del último cambio de contraseña.
+ * Los JWT emitidos antes de ese momento se consideran revocados.
+ * @param {Object} db - Binding de D1
+ * @param {number} userId
+ * @returns {Promise<{exists: boolean, passwordChangedAt: number|null}>}
+ */
+export async function getUserSessionInfo(db, userId) {
+  const row = await db.prepare(`
+    SELECT password_changed_at
+    FROM users
+    WHERE id = ?
+  `).bind(userId).first();
+
+  return {
+    exists: !!row,
+    passwordChangedAt: row?.password_changed_at ?? null
+  };
 }
 
 /**
@@ -105,17 +107,45 @@ export async function updateUser(db, userId, updates) {
  * @param {Object} db - Binding de D1
  * @param {number} userId
  * @param {string} newPasswordHash - Nuevo hash del password
+ * @param {Object} options - { revokeSessions?: boolean } marca password_changed_at
  * @returns {Promise<boolean>} True si se actualizó correctamente
  */
-export async function updateUserPasswordHash(db, userId, newPasswordHash) {
-  const result = await db.prepare(`
-    UPDATE users
-    SET password_hash = ?,
-        updated_at = CURRENT_TIMESTAMP
-    WHERE id = ?
-  `).bind(newPasswordHash, userId).run();
+export async function updateUserPasswordHash(db, userId, newPasswordHash, { revokeSessions = false } = {}) {
+  const statement = revokeSessions
+    ? db.prepare(`
+        UPDATE users
+        SET password_hash = ?,
+            password_changed_at = unixepoch(),
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `)
+    : db.prepare(`
+        UPDATE users
+        SET password_hash = ?,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `);
+
+  const result = await statement.bind(newPasswordHash, userId).run();
 
   return result.success;
+}
+
+/**
+ * Actualizar nombre y email del usuario
+ * @param {Object} db - Binding de D1
+ * @param {number} userId
+ * @param {Object} data - { name, email }
+ * @returns {Promise<Object>} Usuario actualizado
+ */
+export async function updateUserProfileData(db, userId, { name, email }) {
+  await db.prepare(`
+    UPDATE users
+    SET name = ?, email = ?, updated_at = CURRENT_TIMESTAMP
+    WHERE id = ?
+  `).bind(name, email, userId).run();
+
+  return await findUserById(db, userId);
 }
 
 /**

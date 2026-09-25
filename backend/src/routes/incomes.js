@@ -5,12 +5,12 @@
 
 import { Router } from 'itty-router';
 import { requireAuth } from '../middleware/auth.js';
+import { errorResponse, readJson } from '../utils/http.js';
 import {
   createIncomeSvc,
   updateIncomeSvc,
   deleteIncomeSvc,
   getIncomeByIdSvc,
-  getIncomesByMonthSvc,
   getIncomeHistorySvc,
   getIncomeMonthlySummarySvc,
   getIncomeTotalsByMonthSvc
@@ -42,13 +42,7 @@ incomesRouter.get('/monthly', requireAuth(async (request, env) => {
       headers: { 'Content-Type': 'application/json' }
     });
   } catch (error) {
-    return new Response(JSON.stringify({
-      error: 'Error al obtener resumen mensual de ingresos',
-      message: error.message
-    }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return errorResponse(error, 'Error al obtener resumen mensual de ingresos');
   }
 }));
 
@@ -75,13 +69,7 @@ incomesRouter.get('/history', requireAuth(async (request, env) => {
       headers: { 'Content-Type': 'application/json' }
     });
   } catch (error) {
-    return new Response(JSON.stringify({
-      error: 'Error al obtener historial de ingresos',
-      message: error.message
-    }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return errorResponse(error, 'Error al obtener historial de ingresos');
   }
 }));
 
@@ -108,13 +96,7 @@ incomesRouter.get('/totals-by-month', requireAuth(async (request, env) => {
       headers: { 'Content-Type': 'application/json' }
     });
   } catch (error) {
-    return new Response(JSON.stringify({
-      error: 'Error al obtener totales por mes',
-      message: error.message
-    }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return errorResponse(error, 'Error al obtener totales por mes');
   }
 }));
 
@@ -125,7 +107,7 @@ incomesRouter.get('/totals-by-month', requireAuth(async (request, env) => {
 incomesRouter.post('/', requireAuth(async (request, env) => {
   try {
     const userId = request.user.userId;
-    const body = await request.json();
+    const body = await readJson(request);
 
     const income = await createIncomeSvc(env.DB, userId, body);
 
@@ -137,13 +119,7 @@ incomesRouter.post('/', requireAuth(async (request, env) => {
       headers: { 'Content-Type': 'application/json' }
     });
   } catch (error) {
-    return new Response(JSON.stringify({
-      error: 'Error al registrar ingreso',
-      message: error.message
-    }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return errorResponse(error, 'Error al registrar ingreso');
   }
 }));
 
@@ -166,13 +142,7 @@ incomesRouter.get('/:id', requireAuth(async (request, env) => {
       headers: { 'Content-Type': 'application/json' }
     });
   } catch (error) {
-    return new Response(JSON.stringify({
-      error: 'Error al obtener ingreso',
-      message: error.message
-    }), {
-      status: 404,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return errorResponse(error, 'Error al obtener ingreso');
   }
 }));
 
@@ -184,7 +154,7 @@ incomesRouter.put('/:id', requireAuth(async (request, env) => {
   try {
     const userId = request.user.userId;
     const incomeId = parseInt(request.params.id);
-    const body = await request.json();
+    const body = await readJson(request);
 
     const income = await updateIncomeSvc(env.DB, incomeId, userId, body);
 
@@ -196,13 +166,7 @@ incomesRouter.put('/:id', requireAuth(async (request, env) => {
       headers: { 'Content-Type': 'application/json' }
     });
   } catch (error) {
-    return new Response(JSON.stringify({
-      error: 'Error al actualizar ingreso',
-      message: error.message
-    }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return errorResponse(error, 'Error al actualizar ingreso');
   }
 }));
 
@@ -225,13 +189,7 @@ incomesRouter.delete('/:id', requireAuth(async (request, env) => {
       headers: { 'Content-Type': 'application/json' }
     });
   } catch (error) {
-    return new Response(JSON.stringify({
-      error: 'Error al eliminar ingreso',
-      message: error.message
-    }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return errorResponse(error, 'Error al eliminar ingreso');
   }
 }));
 

@@ -28,6 +28,10 @@ function base64UrlDecode(str) {
  * @returns {Promise<string>} Token JWT
  */
 export async function createToken(payload, secret, expiresIn = 7 * 24 * 60 * 60) {
+  if (!secret) {
+    throw new Error('JWT_SECRET no configurado');
+  }
+
   const header = {
     alg: 'HS256',
     typ: 'JWT'
@@ -79,6 +83,10 @@ export async function createToken(payload, secret, expiresIn = 7 * 24 * 60 * 60)
  * @throws {Error} Si el token es inválido o expirado
  */
 export async function verifyToken(token, secret) {
+  if (!secret) {
+    throw new Error('JWT_SECRET no configurado');
+  }
+
   const parts = token.split('.');
 
   if (parts.length !== 3) {
@@ -86,6 +94,17 @@ export async function verifyToken(token, secret) {
   }
 
   const [encodedHeader, encodedPayload, encodedSignature] = parts;
+
+  // Solo se aceptan tokens HS256
+  let header;
+  try {
+    header = JSON.parse(base64UrlDecode(encodedHeader));
+  } catch {
+    throw new Error('Token inválido');
+  }
+  if (header.alg !== 'HS256') {
+    throw new Error('Token inválido');
+  }
 
   // Verificar firma
   const message = `${encodedHeader}.${encodedPayload}`;

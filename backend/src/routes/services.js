@@ -5,6 +5,7 @@
 
 import { Router } from 'itty-router';
 import { requireAuth } from '../middleware/auth.js';
+import { errorResponse, readJson } from '../utils/http.js';
 import {
   createPaymentServiceSvc,
   getPaymentServicesSvc,
@@ -39,13 +40,7 @@ servicesRouter.get('/', requireAuth(async (request, env) => {
     });
 
   } catch (error) {
-    return new Response(JSON.stringify({
-      error: 'Error al obtener servicios',
-      message: error.message
-    }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return errorResponse(error, 'Error al obtener servicios');
   }
 }));
 
@@ -56,7 +51,7 @@ servicesRouter.get('/', requireAuth(async (request, env) => {
 servicesRouter.post('/', requireAuth(async (request, env) => {
   try {
     const userId = request.user.userId;
-    const body = await request.json();
+    const body = await readJson(request);
 
     const service = await createPaymentServiceSvc(env.DB, userId, body);
 
@@ -69,13 +64,7 @@ servicesRouter.post('/', requireAuth(async (request, env) => {
     });
 
   } catch (error) {
-    return new Response(JSON.stringify({
-      error: 'Error al crear servicio',
-      message: error.message
-    }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return errorResponse(error, 'Error al crear servicio');
   }
 }));
 
@@ -87,7 +76,7 @@ servicesRouter.post('/', requireAuth(async (request, env) => {
 servicesRouter.put('/reorder', requireAuth(async (request, env) => {
   try {
     const userId = request.user.userId;
-    const body = await request.json();
+    const body = await readJson(request);
 
     await reorderServicesSvc(env.DB, userId, body.orderedIds);
 
@@ -100,13 +89,7 @@ servicesRouter.put('/reorder', requireAuth(async (request, env) => {
     });
 
   } catch (error) {
-    return new Response(JSON.stringify({
-      error: 'Error al reordenar servicios',
-      message: error.message
-    }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return errorResponse(error, 'Error al reordenar servicios');
   }
 }));
 
@@ -134,13 +117,7 @@ servicesRouter.get('/:id', requireAuth(async (request, env) => {
     });
 
   } catch (error) {
-    return new Response(JSON.stringify({
-      error: 'Error al obtener servicio',
-      message: error.message
-    }), {
-      status: 404,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return errorResponse(error, 'Error al obtener servicio');
   }
 }));
 
@@ -152,7 +129,7 @@ servicesRouter.put('/:id', requireAuth(async (request, env) => {
   try {
     const userId = request.user.userId;
     const serviceId = parseInt(request.params.id);
-    const body = await request.json();
+    const body = await readJson(request);
 
     if (isNaN(serviceId)) {
       throw new Error('ID de servicio invalido');
@@ -169,13 +146,7 @@ servicesRouter.put('/:id', requireAuth(async (request, env) => {
     });
 
   } catch (error) {
-    return new Response(JSON.stringify({
-      error: 'Error al actualizar servicio',
-      message: error.message
-    }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return errorResponse(error, 'Error al actualizar servicio');
   }
 }));
 
@@ -203,13 +174,7 @@ servicesRouter.delete('/:id', requireAuth(async (request, env) => {
     });
 
   } catch (error) {
-    return new Response(JSON.stringify({
-      error: 'Error al eliminar servicio',
-      message: error.message
-    }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return errorResponse(error, 'Error al eliminar servicio');
   }
 }));
 

@@ -4,6 +4,7 @@
  */
 
 import { verifyToken } from '../utils/jwt.js';
+import { getUserSessionInfo } from '../db/users.js';
 
 /**
  * Extraer token de cookies
@@ -46,6 +47,16 @@ export async function authMiddleware(request, env) {
 
   try {
     const payload = await verifyToken(token, env.JWT_SECRET);
+
+    // Verificar que el usuario siga existiendo y que el token no haya sido
+    // revocado por un cambio/reset de contraseña posterior a su emisión
+    const session = await getUserSessionInfo(env.DB, payload.userId);
+    if (!session.exists) {
+      return { isAuthenticated: false, error: 'Usuario no encontrado' };
+    }
+    if (session.passwordChangedAt && (!payload.iat || payload.iat < session.passwordChangedAt)) {
+      return { isAuthenticated: false, error: 'Sesión expirada. Inicia sesión nuevamente' };
+    }
 
     return {
       isAuthenticated: true,

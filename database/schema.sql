@@ -1,115 +1,116 @@
--- Schema para Cloudflare D1
--- PWA de Gestión de Gastos Personales
+-- ============================================================================
+-- Esquema completo v4 para Cloudflare D1 (SQLite)
+-- PWA de seguimiento de pagos e ingresos mensuales
+--
+-- Usar SOLO para crear una base de datos nueva (local o un entorno nuevo).
+-- Es equivalente a aplicar database/migrations/001..006 sobre una base vacía,
+-- sin las tablas del modelo anterior (expenses, income, expense_categories,
+-- budget_limits, savings_*), que v4 ya no usa.
+--
+-- Para una base existente, aplicar las migraciones pendientes en orden
+-- (ver database/migrations/README.md).
+-- ============================================================================
 
--- Tabla de usuarios
+-- Usuarios
 CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    email TEXT UNIQUE NOT NULL,
-    password_hash TEXT NOT NULL,
-    name TEXT NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  id                   INTEGER PRIMARY KEY AUTOINCREMENT,
+  email                TEXT    UNIQUE NOT NULL,
+  password_hash        TEXT    NOT NULL,
+  name                 TEXT    NOT NULL,
+  language             TEXT    DEFAULT 'es'  CHECK(language IN ('es', 'en')),
+  currency             TEXT    DEFAULT 'CLP' CHECK(currency IN ('CLP', 'USD')),
+  password_changed_at  INTEGER DEFAULT NULL,   -- unix seconds; JWT anteriores quedan revocados
+  created_at           DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at           DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 
--- Tabla de categorías de gastos
--- user_id NULL = categoría transversal (para todos los usuarios)
--- user_id NOT NULL = categoría personalizada del usuario
-CREATE TABLE IF NOT EXISTS expense_categories (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER DEFAULT NULL,
-    name TEXT NOT NULL,
-    type TEXT NOT NULL CHECK(type IN ('payment', 'purchase', 'small_expense')),
-    color TEXT DEFAULT '#3B82F6',
-    icon TEXT DEFAULT 'shopping-cart',
-    is_standard INTEGER DEFAULT 0,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+-- Tokens de recuperación de contraseña (token = SHA-256 hex)
+CREATE TABLE IF NOT EXISTS password_reset_tokens (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id     INTEGER NOT NULL,
+  token       TEXT    NOT NULL UNIQUE,
+  expires_at  INTEGER NOT NULL,
+  used        INTEGER NOT NULL DEFAULT 0,
+  created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-CREATE INDEX IF NOT EXISTS idx_categories_user ON expense_categories(user_id);
-CREATE INDEX IF NOT EXISTS idx_categories_type ON expense_categories(type);
+CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_user ON password_reset_tokens(user_id);
 
--- Tabla de gastos
-CREATE TABLE IF NOT EXISTS expenses (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL,
-    category_id INTEGER,
-    type TEXT NOT NULL CHECK(type IN ('payment', 'purchase', 'small_expense')),
-    amount REAL NOT NULL,
-    description TEXT NOT NULL,
-    date DATE NOT NULL,
-    notes TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (category_id) REFERENCES expense_categories(id) ON DELETE SET NULL
+-- Servicios de pago del usuario (catálogo)
+CREATE TABLE IF NOT EXISTS payment_services (
+  id               INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id          INTEGER NOT NULL,
+  name             TEXT    NOT NULL,
+  icon             TEXT    DEFAULT 'bi-receipt',
+  color            TEXT    DEFAULT '#3B82F6',
+  is_active        INTEGER DEFAULT 1,
+  sort_order       INTEGER DEFAULT 0,
+  expected_amount  REAL    DEFAULT NULL,
+  created_at       TEXT    DEFAULT (datetime('now')),
+  updated_at       TEXT    DEFAULT (datetime('now')),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-CREATE INDEX IF NOT EXISTS idx_expenses_user ON expenses(user_id);
-CREATE INDEX IF NOT EXISTS idx_expenses_date ON expenses(date);
-CREATE INDEX IF NOT EXISTS idx_expenses_type ON expenses(type);
-CREATE INDEX IF NOT EXISTS idx_expenses_category ON expenses(category_id);
+CREATE INDEX IF NOT EXISTS idx_payment_services_user_id     ON payment_services(user_id);
+CREATE INDEX IF NOT EXISTS idx_payment_services_user_active ON payment_services(user_id, is_active);
 
--- Tabla de ingresos
-CREATE TABLE IF NOT EXISTS income (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL,
-    source TEXT NOT NULL,
-    amount REAL NOT NULL,
-    date DATE NOT NULL,
-    is_recurring BOOLEAN DEFAULT 0,
-    frequency TEXT CHECK(frequency IN ('monthly', 'weekly', 'biweekly', 'annual', 'once')),
-    notes TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+-- Pagos mensuales (uno por servicio y mes)
+CREATE TABLE IF NOT EXISTS monthly_payments (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id     INTEGER NOT NULL,
+  service_id  INTEGER NOT NULL,
+  amount      REAL    NOT NULL CHECK(amount > 0),
+  year_month  TEXT    NOT NULL,   -- 'YYYY-MM'
+  paid_date   TEXT,               -- 'YYYY-MM-DD'
+  notes       TEXT,
+  created_at  TEXT    DEFAULT (datetime('now')),
+  updated_at  TEXT    DEFAULT (datetime('now')),
+  FOREIGN KEY (user_id)    REFERENCES users(id)            ON DELETE CASCADE,
+  FOREIGN KEY (service_id) REFERENCES payment_services(id) ON DELETE CASCADE,
+  UNIQUE(user_id, service_id, year_month)
 );
 
-CREATE INDEX IF NOT EXISTS idx_income_user ON income(user_id);
-CREATE INDEX IF NOT EXISTS idx_income_date ON income(date);
+CREATE INDEX IF NOT EXISTS idx_monthly_payments_user_id         ON monthly_payments(user_id);
+CREATE INDEX IF NOT EXISTS idx_monthly_payments_service_id      ON monthly_payments(service_id);
+CREATE INDEX IF NOT EXISTS idx_monthly_payments_year_month      ON monthly_payments(year_month);
+CREATE INDEX IF NOT EXISTS idx_monthly_payments_user_year_month ON monthly_payments(user_id, year_month);
 
--- Tabla de límites de presupuesto
-CREATE TABLE IF NOT EXISTS budget_limits (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL,
-    category_id INTEGER,
-    type TEXT CHECK(type IN ('payment', 'purchase', 'small_expense', 'total')),
-    limit_amount REAL NOT NULL,
-    period TEXT NOT NULL CHECK(period IN ('daily', 'weekly', 'monthly', 'annual')),
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (category_id) REFERENCES expense_categories(id) ON DELETE CASCADE
+-- Ingresos mensuales (descripción libre + monto + mes)
+CREATE TABLE IF NOT EXISTS monthly_incomes (
+  id             INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id        INTEGER NOT NULL,
+  description    TEXT    NOT NULL,
+  amount         REAL    NOT NULL CHECK(amount > 0),
+  year_month     TEXT    NOT NULL,   -- 'YYYY-MM'
+  received_date  DATE,               -- 'YYYY-MM-DD'
+  notes          TEXT,
+  created_at     DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at     DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-CREATE INDEX IF NOT EXISTS idx_budget_user ON budget_limits(user_id);
+CREATE INDEX IF NOT EXISTS idx_monthly_incomes_user       ON monthly_incomes(user_id);
+CREATE INDEX IF NOT EXISTS idx_monthly_incomes_user_month ON monthly_incomes(user_id, year_month);
+CREATE INDEX IF NOT EXISTS idx_monthly_incomes_year_month ON monthly_incomes(year_month);
 
--- Datos iniciales: Categorías predeterminadas transversales
--- Estas categorías están disponibles para todos los usuarios (user_id = NULL, is_standard = 1)
+-- Caché de indicadores económicos (dólar y UF)
+CREATE TABLE IF NOT EXISTS indicators_cache (
+  id              INTEGER PRIMARY KEY AUTOINCREMENT,
+  indicator_name  TEXT    NOT NULL UNIQUE,
+  value           INTEGER NOT NULL,
+  fecha           TEXT    NOT NULL,
+  updated_at      INTEGER NOT NULL DEFAULT (unixepoch()),
+  CONSTRAINT valid_indicator CHECK (indicator_name IN ('dolar', 'uf'))
+);
 
--- Pagos (payments)
-INSERT OR IGNORE INTO expense_categories (user_id, name, type, color, icon, is_standard)
-VALUES
-  (NULL, 'Arriendo', 'payment', '#EF4444', 'home', 1),
-  (NULL, 'Luz', 'payment', '#F59E0B', 'lightbulb', 1),
-  (NULL, 'Agua', 'payment', '#06B6D4', 'droplet', 1),
-  (NULL, 'Gas', 'payment', '#DC2626', 'fire', 1),
-  (NULL, 'Internet/Teléfono', 'payment', '#3B82F6', 'wifi', 1),
-  (NULL, 'Transporte', 'payment', '#8B5CF6', 'car', 1);
+-- Rate limiting compartido entre instancias del Worker
+CREATE TABLE IF NOT EXISTS rate_limits (
+  key           TEXT    PRIMARY KEY,
+  window_start  INTEGER NOT NULL,
+  count         INTEGER NOT NULL DEFAULT 0
+);
 
--- Compras (purchases)
-INSERT OR IGNORE INTO expense_categories (user_id, name, type, color, icon, is_standard)
-VALUES
-  (NULL, 'Supermercado', 'purchase', '#10B981', 'shopping-cart', 1),
-  (NULL, 'Farmacia', 'purchase', '#EC4899', 'heart', 1),
-  (NULL, 'Ropa', 'purchase', '#6366F1', 'shirt', 1),
-  (NULL, 'Electrónica', 'purchase', '#14B8A6', 'laptop', 1);
-
--- Gastos hormiga (small_expense)
-INSERT OR IGNORE INTO expense_categories (user_id, name, type, color, icon, is_standard)
-VALUES
-  (NULL, 'Café', 'small_expense', '#92400E', 'coffee', 1),
-  (NULL, 'Snacks', 'small_expense', '#F97316', 'cookie', 1),
-  (NULL, 'Transporte público', 'small_expense', '#06B6D4', 'bus', 1),
-  (NULL, 'Otros gastos menores', 'small_expense', '#64748B', 'dots', 1);
+CREATE INDEX IF NOT EXISTS idx_rate_limits_window_start ON rate_limits(window_start);

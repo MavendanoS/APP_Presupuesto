@@ -5,6 +5,7 @@
 
 import { Router } from 'itty-router';
 import { requireAuth } from '../middleware/auth.js';
+import { errorResponse, readJson } from '../utils/http.js';
 import {
   upsertPaymentSvc,
   deletePaymentSvc,
@@ -37,13 +38,7 @@ paymentsRouter.get('/checklist', requireAuth(async (request, env) => {
     });
 
   } catch (error) {
-    return new Response(JSON.stringify({
-      error: 'Error al obtener checklist',
-      message: error.message
-    }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return errorResponse(error, 'Error al obtener checklist');
   }
 }));
 
@@ -72,13 +67,7 @@ paymentsRouter.get('/history', requireAuth(async (request, env) => {
     });
 
   } catch (error) {
-    return new Response(JSON.stringify({
-      error: 'Error al obtener historial',
-      message: error.message
-    }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return errorResponse(error, 'Error al obtener historial');
   }
 }));
 
@@ -104,13 +93,7 @@ paymentsRouter.get('/averages', requireAuth(async (request, env) => {
     });
 
   } catch (error) {
-    return new Response(JSON.stringify({
-      error: 'Error al obtener promedios',
-      message: error.message
-    }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return errorResponse(error, 'Error al obtener promedios');
   }
 }));
 
@@ -140,13 +123,7 @@ paymentsRouter.get('/budget', requireAuth(async (request, env) => {
     });
 
   } catch (error) {
-    return new Response(JSON.stringify({
-      error: 'Error al obtener resumen de presupuesto',
-      message: error.message
-    }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return errorResponse(error, 'Error al obtener resumen de presupuesto');
   }
 }));
 
@@ -157,7 +134,7 @@ paymentsRouter.get('/budget', requireAuth(async (request, env) => {
 paymentsRouter.post('/', requireAuth(async (request, env) => {
   try {
     const userId = request.user.userId;
-    const body = await request.json();
+    const body = await readJson(request);
 
     const payment = await upsertPaymentSvc(env.DB, userId, body);
 
@@ -170,13 +147,7 @@ paymentsRouter.post('/', requireAuth(async (request, env) => {
     });
 
   } catch (error) {
-    return new Response(JSON.stringify({
-      error: 'Error al registrar pago',
-      message: error.message
-    }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return errorResponse(error, 'Error al registrar pago');
   }
 }));
 
@@ -204,13 +175,7 @@ paymentsRouter.delete('/:id', requireAuth(async (request, env) => {
     });
 
   } catch (error) {
-    return new Response(JSON.stringify({
-      error: 'Error al eliminar pago',
-      message: error.message
-    }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return errorResponse(error, 'Error al eliminar pago');
   }
 }));
 

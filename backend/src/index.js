@@ -1,6 +1,6 @@
 /**
  * Cloudflare Worker - API Backend
- * PWA de Gestión de Gastos Personales
+ * PWA de seguimiento de pagos e ingresos mensuales
  */
 
 import { Router } from 'itty-router';
@@ -9,6 +9,10 @@ import servicesRouter from './routes/services.js';
 import paymentsRouter from './routes/payments.js';
 import incomesRouter from './routes/incomes.js';
 import indicatorsRouter from './routes/indicators.js';
+import { jsonResponse } from './utils/http.js';
+import { cleanupRateLimits } from './middleware/rateLimit.js';
+
+const API_VERSION = '4.0.0';
 
 const router = Router();
 
@@ -28,85 +32,52 @@ function isAllowedOrigin(origin) {
   if (allowedOrigins.includes(origin)) return true;
 
   // Permitir preview deployments de Cloudflare Pages (*.app-presupuesto.pages.dev)
-  if (origin.match(/^https:\/\/[a-zA-Z0-9-]+\.app-presupuesto\.pages\.dev$/)) {
-    return true;
-  }
-
-  return false;
+  return /^https:\/\/[a-zA-Z0-9-]+\.app-presupuesto\.pages\.dev$/.test(origin);
 }
 
-// Middleware para agregar CORS a todas las respuestas
+// Middleware para agregar CORS y cabeceras de seguridad a todas las respuestas
 function addCorsHeaders(response, request) {
   const origin = request.headers.get('Origin');
   const newResponse = new Response(response.body, response);
 
-  // Si el origin es válido, usarlo
-  // Esto permite cookies cross-domain para orígenes específicos
+  // Solo orígenes permitidos reciben Access-Control-Allow-Origin
+  // (cookies cross-domain solo para orígenes específicos)
   if (isAllowedOrigin(origin)) {
     newResponse.headers.set('Access-Control-Allow-Origin', origin);
-  } else {
-    // Fallback al primero de la lista
-    newResponse.headers.set('Access-Control-Allow-Origin', allowedOrigins[0]);
+    newResponse.headers.set('Access-Control-Allow-Credentials', 'true');
   }
 
   newResponse.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   newResponse.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  newResponse.headers.set('Access-Control-Allow-Credentials', 'true');
-  newResponse.headers.set('Access-Control-Expose-Headers', 'Content-Disposition');
+  newResponse.headers.set('Access-Control-Expose-Headers', 'Content-Disposition, Retry-After');
+  newResponse.headers.set('Access-Control-Max-Age', '86400');
+  newResponse.headers.append('Vary', 'Origin');
+  newResponse.headers.set('X-Content-Type-Options', 'nosniff');
 
   return newResponse;
 }
 
-// Manejador de OPTIONS para CORS
-router.options('*', (request) => {
-  const origin = request.headers.get('Origin');
-  const headers = {
-    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    'Access-Control-Allow-Credentials': 'true',
-    'Access-Control-Expose-Headers': 'Content-Disposition',
-  };
-
-  if (isAllowedOrigin(origin)) {
-    headers['Access-Control-Allow-Origin'] = origin;
-  } else {
-    headers['Access-Control-Allow-Origin'] = allowedOrigins[0];
-  }
-
-  return new Response(null, { headers });
-});
+// Manejador de OPTIONS para CORS (las cabeceras se agregan en addCorsHeaders)
+router.options('*', () => new Response(null, { status: 204 }));
 
 // Health check
-router.get('/api/health', (request) => {
-  const origin = request.headers.get('Origin');
-  const headers = {
-    'Content-Type': 'application/json',
-    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    'Access-Control-Allow-Credentials': 'true',
-  };
-
-  if (isAllowedOrigin(origin)) {
-    headers['Access-Control-Allow-Origin'] = origin;
-  } else {
-    headers['Access-Control-Allow-Origin'] = allowedOrigins[0];
-  }
-
-  return new Response(JSON.stringify({
-    status: 'ok',
-    message: 'API funcionando correctamente',
-    timestamp: new Date().toISOString(),
-    version: '1.0.0'
-  }), { headers });
-});
+router.get('/api/health', (request, env) => jsonResponse({
+  status: 'ok',
+  message: 'API funcionando correctamente',
+  environment: env.ENVIRONMENT || 'production',
+  timestamp: new Date().toISOString(),
+  version: API_VERSION
+}));
 
 // Rutas de autenticación
 router.all('/api/auth/*', authRouter.handle);
 
 // Rutas de servicios de pago
+router.all('/api/services', servicesRouter.handle);
 router.all('/api/services/*', servicesRouter.handle);
 
 // Rutas de pagos mensuales
+router.all('/api/payments', paymentsRouter.handle);
 router.all('/api/payments/*', paymentsRouter.handle);
 
 // Rutas de ingresos mensuales
@@ -117,72 +88,30 @@ router.all('/api/incomes', incomesRouter.handle);
 router.all('/api/indicators*', indicatorsRouter.handle);
 
 // Ruta por defecto
-router.all('*', (request) => {
-  const origin = request.headers.get('Origin');
-  const headers = {
-    'Content-Type': 'application/json',
-    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    'Access-Control-Allow-Credentials': 'true',
-  };
-
-  if (allowedOrigins.includes(origin)) {
-    headers['Access-Control-Allow-Origin'] = origin;
-  } else {
-    headers['Access-Control-Allow-Origin'] = allowedOrigins[0];
-  }
-
-  return new Response(JSON.stringify({
-    error: 'Ruta no encontrada',
-    availableRoutes: [
-      'GET /api/health',
-      'POST /api/auth/register',
-      'POST /api/auth/login',
-      'GET /api/auth/me',
-      'GET /api/services',
-      'POST /api/services',
-      'PUT /api/services/reorder',
-      'GET /api/services/:id',
-      'PUT /api/services/:id',
-      'DELETE /api/services/:id',
-      'GET /api/payments/checklist',
-      'GET /api/payments/history',
-      'GET /api/payments/averages',
-      'GET /api/payments/budget',
-      'POST /api/payments',
-      'DELETE /api/payments/:id',
-      'GET /api/incomes/monthly',
-      'GET /api/incomes/history',
-      'GET /api/incomes/totals-by-month',
-      'GET /api/incomes/:id',
-      'POST /api/incomes',
-      'PUT /api/incomes/:id',
-      'DELETE /api/incomes/:id',
-      'GET /api/indicators'
-    ]
-  }), {
-    status: 404,
-    headers
-  });
-});
+router.all('*', () => jsonResponse({
+  error: 'Ruta no encontrada',
+  message: 'El recurso solicitado no existe'
+}, 404));
 
 // Export del Worker
 export default {
   async fetch(request, env, ctx) {
+    // Limpieza ocasional de registros de rate limit expirados (~1% de requests)
+    if (Math.random() < 0.01 && ctx?.waitUntil) {
+      ctx.waitUntil(cleanupRateLimits(env.DB).catch(error =>
+        console.error('Error al limpiar rate limits:', error)
+      ));
+    }
+
     try {
       const response = await router.handle(request, env, ctx);
       return addCorsHeaders(response, request);
     } catch (error) {
-      const errorResponse = new Response(JSON.stringify({
+      console.error('Error no controlado:', error);
+      const errorResponse = jsonResponse({
         error: 'Error interno del servidor',
-        message: error.message,
-        stack: env.ENVIRONMENT === 'development' ? error.stack : undefined
-      }), {
-        status: 500,
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
+        message: env.ENVIRONMENT === 'development' ? error.message : 'Ocurrió un error inesperado'
+      }, 500);
       return addCorsHeaders(errorResponse, request);
     }
   }

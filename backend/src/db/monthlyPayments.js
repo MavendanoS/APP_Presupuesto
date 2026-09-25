@@ -5,6 +5,9 @@
  * para prevenir SQL injection
  */
 
+import { addMonths, currentYearMonth } from '../utils/dates.js';
+import { notFound } from '../utils/http.js';
+
 /**
  * Crear o actualizar un pago mensual (upsert)
  * @param {Object} db - D1 database binding
@@ -72,7 +75,7 @@ export async function deleteMonthlyPayment(db, paymentId, userId) {
   `).bind(paymentId, userId).run();
 
   if (!result.success || result.meta.changes === 0) {
-    throw new Error('Pago mensual no encontrado o no autorizado');
+    throw notFound('Pago mensual no encontrado o no autorizado');
   }
 
   return true;
@@ -172,22 +175,20 @@ export async function getPaymentHistory(db, userId, filters = {}) {
 }
 
 /**
- * Obtener promedios de servicios en los ultimos N meses
+ * Obtener promedios de servicios en los N meses anteriores a un mes de referencia
  * @param {Object} db - D1 database binding
  * @param {number} userId
  * @param {number} months - Cantidad de meses hacia atras (default 3)
  * @param {Array<number>|null} serviceIds - IDs de servicios a filtrar (null = todos)
+ * @param {string} referenceMonth - YYYY-MM (default: mes actual en Chile)
  * @returns {Promise<Array>} Promedios por servicio
  */
-export async function getServiceAverages(db, userId, months = 3, serviceIds = null) {
-  // Calcular mes de inicio y mes actual
-  const now = new Date();
-  const startDate = new Date(now.getFullYear(), now.getMonth() - months, 1);
-  const startMonth = startDate.getFullYear() + '-' + String(startDate.getMonth() + 1).padStart(2, '0');
-  const currentMonth = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+export async function getServiceAverages(db, userId, months = 3, serviceIds = null, referenceMonth = currentYearMonth()) {
+  // Ventana: los N meses anteriores a referenceMonth (excluyéndolo)
+  const startMonth = addMonths(referenceMonth, -months);
 
   let whereConditions = ['mp.user_id = ?', 'mp.year_month >= ?', 'mp.year_month < ?'];
-  let params = [userId, startMonth, currentMonth];
+  let params = [userId, startMonth, referenceMonth];
 
   if (serviceIds && serviceIds.length > 0) {
     const placeholders = serviceIds.map(() => '?').join(', ');
@@ -218,7 +219,7 @@ export async function getServiceAverages(db, userId, months = 3, serviceIds = nu
 }
 
 /**
- * Obtener totales de un mes (suma de todos los pagos en un mes)
+ * Obtener totales de un mes (suma de los pagos de servicios activos, igual que el checklist)
  * @param {Object} db - D1 database binding
  * @param {number} userId
  * @param {string} yearMonth - Formato 'YYYY-MM'
@@ -227,10 +228,11 @@ export async function getServiceAverages(db, userId, months = 3, serviceIds = nu
 export async function getMonthlyTotals(db, userId, yearMonth) {
   const totals = await db.prepare(`
     SELECT
-      COALESCE(SUM(amount), 0) as total,
+      COALESCE(SUM(mp.amount), 0) as total,
       COUNT(*) as count
-    FROM monthly_payments
-    WHERE user_id = ? AND year_month = ?
+    FROM monthly_payments mp
+    JOIN payment_services ps ON ps.id = mp.service_id
+    WHERE mp.user_id = ? AND mp.year_month = ? AND ps.is_active = 1
   `).bind(userId, yearMonth).first();
 
   return totals || { total: 0, count: 0 };

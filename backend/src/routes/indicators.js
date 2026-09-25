@@ -4,31 +4,61 @@
  */
 
 import { Router } from 'itty-router';
+import { jsonResponse } from '../utils/http.js';
 
 const indicatorsRouter = Router({ base: '/api/indicators' });
 
-/**
- * GET /api/indicators
- * Obtener indicadores económicos (Dólar y UF) desde mindicador.cl
- * Proxy para evitar problemas de CORS en el frontend
- * Usa caché en D1 para mostrar valores del día anterior si la API falla
- */
-indicatorsRouter.get('/', async (request, env) => {
+const API_URL = 'https://mindicador.cl/api';
+const FETCH_TIMEOUT_MS = 10000;
+// Si el caché tiene menos de 30 minutos, se sirve sin consultar la API externa
+const CACHE_FRESH_SECONDS = 30 * 60;
+
+async function readCache(db) {
+  const { results } = await db.prepare(`
+    SELECT indicator_name, value, fecha, updated_at
+    FROM indicators_cache
+    WHERE indicator_name IN ('dolar', 'uf')
+  `).all();
+
+  const byName = Object.fromEntries((results || []).map(row => [row.indicator_name, row]));
+  const toIndicator = row => row ? { valor: row.value, fecha: row.fecha } : null;
+  const updatedAt = Math.min(...(results || []).map(row => row.updated_at || 0), Infinity);
+
+  return {
+    data: { dolar: toIndicator(byName.dolar), uf: toIndicator(byName.uf) },
+    updatedAt: Number.isFinite(updatedAt) ? updatedAt : 0,
+    hasData: !!(byName.dolar || byName.uf)
+  };
+}
+
+async function writeCache(db, indicators) {
+  const upsert = db.prepare(`
+    INSERT INTO indicators_cache (indicator_name, value, fecha, updated_at)
+    VALUES (?, ?, ?, unixepoch())
+    ON CONFLICT(indicator_name) DO UPDATE SET
+      value = excluded.value,
+      fecha = excluded.fecha,
+      updated_at = excluded.updated_at
+  `);
+
+  const statements = ['dolar', 'uf']
+    .filter(name => indicators[name])
+    .map(name => upsert.bind(name, indicators[name].valor, indicators[name].fecha));
+
+  if (statements.length > 0) {
+    await db.batch(statements);
+  }
+}
+
+async function fetchIndicators() {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+
   try {
-    const API_URL = 'https://mindicador.cl/api';
-
-    // Hacer request a la API externa con timeout de 10 segundos
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000);
-
     const response = await fetch(API_URL, {
-      headers: {
-        'User-Agent': 'APP-Presupuesto/1.0',
-      },
+      headers: { 'User-Agent': 'APP-Presupuesto/4.0' },
       signal: controller.signal
     });
-
-    clearTimeout(timeoutId);
 
     if (!response.ok) {
       throw new Error(`API externa respondió con status ${response.status}`);
@@ -37,96 +67,69 @@ indicatorsRouter.get('/', async (request, env) => {
     const data = await response.json();
 
     // Extraer solo dólar y UF con redondeo
-    const indicators = {
-      dolar: data.dolar ? {
-        valor: Math.round(data.dolar.valor),
-        fecha: data.dolar.fecha
-      } : null,
-      uf: data.uf ? {
-        valor: Math.round(data.uf.valor),
-        fecha: data.uf.fecha
-      } : null
+    return {
+      dolar: data.dolar ? { valor: Math.round(data.dolar.valor), fecha: data.dolar.fecha } : null,
+      uf: data.uf ? { valor: Math.round(data.uf.valor), fecha: data.uf.fecha } : null
     };
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
 
-    // Guardar en caché para uso futuro
-    if (indicators.dolar) {
-      await env.DB.prepare(`
-        INSERT INTO indicators_cache (indicator_name, value, fecha, updated_at)
-        VALUES (?, ?, ?, unixepoch())
-        ON CONFLICT(indicator_name) DO UPDATE SET
-          value = excluded.value,
-          fecha = excluded.fecha,
-          updated_at = excluded.updated_at
-      `).bind('dolar', indicators.dolar.valor, indicators.dolar.fecha).run();
+/**
+ * GET /api/indicators
+ * Obtener indicadores económicos (Dólar y UF) desde mindicador.cl
+ * Proxy para evitar problemas de CORS en el frontend.
+ * Sirve desde caché D1 si está fresco; si la API externa falla por cualquier
+ * motivo, devuelve el último valor cacheado.
+ */
+indicatorsRouter.get('/', async (request, env, ctx) => {
+  let cache = null;
+
+  try {
+    cache = await readCache(env.DB);
+    const ageSeconds = Math.floor(Date.now() / 1000) - cache.updatedAt;
+
+    if (cache.hasData && ageSeconds < CACHE_FRESH_SECONDS) {
+      return jsonResponse(
+        { success: true, data: cache.data },
+        200,
+        { 'Cache-Control': `public, max-age=${CACHE_FRESH_SECONDS - ageSeconds}` }
+      );
     }
-
-    if (indicators.uf) {
-      await env.DB.prepare(`
-        INSERT INTO indicators_cache (indicator_name, value, fecha, updated_at)
-        VALUES (?, ?, ?, unixepoch())
-        ON CONFLICT(indicator_name) DO UPDATE SET
-          value = excluded.value,
-          fecha = excluded.fecha,
-          updated_at = excluded.updated_at
-      `).bind('uf', indicators.uf.valor, indicators.uf.fecha).run();
-    }
-
-    return new Response(JSON.stringify({
-      success: true,
-      data: indicators
-    }), {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/json',
-        'Cache-Control': 'public, max-age=1800' // Cache 30 minutos
-      }
-    });
-
   } catch (error) {
-    console.error('❌ Error al obtener indicadores económicos:', error);
+    console.error('Error al leer caché de indicadores:', error);
+  }
 
-    // Si es timeout o error de red, usar valores cacheados del día anterior
-    if (error.name === 'AbortError' || error.message.includes('fetch')) {
-      console.log('⚠️ Timeout o error de red - usando valores cacheados');
+  try {
+    const indicators = await fetchIndicators();
 
-      try {
-        // Obtener valores del caché
-        const cachedDolar = await env.DB.prepare(`
-          SELECT value, fecha FROM indicators_cache WHERE indicator_name = ?
-        `).bind('dolar').first();
+    const writing = writeCache(env.DB, indicators).catch(error =>
+      console.error('Error al guardar caché de indicadores:', error)
+    );
+    if (ctx?.waitUntil) ctx.waitUntil(writing); else await writing;
 
-        const cachedUF = await env.DB.prepare(`
-          SELECT value, fecha FROM indicators_cache WHERE indicator_name = ?
-        `).bind('uf').first();
+    return jsonResponse(
+      { success: true, data: indicators },
+      200,
+      { 'Cache-Control': 'public, max-age=1800' } // Cache 30 minutos
+    );
+  } catch (error) {
+    console.error('Error al obtener indicadores económicos:', error);
 
-        if (cachedDolar || cachedUF) {
-          return new Response(JSON.stringify({
-            success: true,
-            data: {
-              dolar: cachedDolar ? { valor: cachedDolar.value, fecha: cachedDolar.fecha } : null,
-              uf: cachedUF ? { valor: cachedUF.value, fecha: cachedUF.fecha } : null
-            },
-            cached: true // Indica que son valores cacheados
-          }), {
-            status: 200,
-            headers: {
-              'Content-Type': 'application/json',
-              'Cache-Control': 'public, max-age=300' // Cache solo 5 minutos
-            }
-          });
-        }
-      } catch (cacheError) {
-        console.error('❌ Error al obtener valores del caché:', cacheError);
-      }
+    // Cualquier fallo externo: usar valores cacheados si existen
+    if (cache?.hasData) {
+      return jsonResponse(
+        { success: true, data: cache.data, cached: true },
+        200,
+        { 'Cache-Control': 'public, max-age=300' } // Cache solo 5 minutos
+      );
     }
 
-    return new Response(JSON.stringify({
+    return jsonResponse({
       error: 'Error al obtener indicadores económicos',
-      message: error.message
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+      message: 'Indicadores no disponibles en este momento'
+    }, 503);
   }
 });
 

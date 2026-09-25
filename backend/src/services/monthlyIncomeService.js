@@ -13,9 +13,23 @@ import {
   getMonthlyIncomeTotal,
   getIncomeTotalsByMonth
 } from '../db/monthlyIncomes.js';
-import { sanitizeInput } from '../utils/validators.js';
+import { sanitizeInput, parseAmount, sanitizeNotes } from '../utils/validators.js';
+import { isValidYearMonth, isValidDate } from '../utils/dates.js';
+import { notFound } from '../utils/http.js';
 
-const YEAR_MONTH_REGEX = /^\d{4}-(0[1-9]|1[0-2])$/;
+function assertYearMonth(value, label = 'mes') {
+  if (!isValidYearMonth(value)) {
+    throw new Error(`Formato de ${label} invalido. Usar YYYY-MM`);
+  }
+}
+
+function parseReceivedDate(value) {
+  if (!value) return null;
+  if (!isValidDate(value)) {
+    throw new Error('Fecha de recepcion invalida. Usar YYYY-MM-DD');
+  }
+  return value;
+}
 
 /**
  * Crear un ingreso mensual
@@ -35,31 +49,19 @@ export async function createIncomeSvc(db, userId, data) {
   }
 
   // Validar monto
-  const amount = Number(data.amount);
-  if (!amount || isNaN(amount) || amount <= 0) {
-    throw new Error('El monto debe ser un numero mayor a 0');
-  }
+  const amount = parseAmount(data.amount);
 
   // Validar formato year_month
-  if (!data.year_month || !YEAR_MONTH_REGEX.test(data.year_month)) {
-    throw new Error('Formato de mes invalido. Usar YYYY-MM');
-  }
-
-  // Validar received_date si se proporciona
-  if (data.received_date) {
-    const dateObj = new Date(data.received_date);
-    if (isNaN(dateObj.getTime())) {
-      throw new Error('Fecha de recepcion invalida');
-    }
-  }
+  assertYearMonth(data.year_month);
+  const receivedDate = parseReceivedDate(data.received_date);
 
   return await createMonthlyIncome(db, {
     user_id: userId,
     description,
     amount,
     year_month: data.year_month,
-    received_date: data.received_date || null,
-    notes: data.notes ? sanitizeInput(data.notes) : null
+    received_date: receivedDate,
+    notes: sanitizeNotes(data.notes)
   });
 }
 
@@ -90,32 +92,20 @@ export async function updateIncomeSvc(db, incomeId, userId, updates) {
   }
 
   if (updates.amount !== undefined) {
-    const amount = Number(updates.amount);
-    if (!amount || isNaN(amount) || amount <= 0) {
-      throw new Error('El monto debe ser un numero mayor a 0');
-    }
-    cleanUpdates.amount = amount;
+    cleanUpdates.amount = parseAmount(updates.amount);
   }
 
   if (updates.year_month !== undefined) {
-    if (!YEAR_MONTH_REGEX.test(updates.year_month)) {
-      throw new Error('Formato de mes invalido. Usar YYYY-MM');
-    }
+    assertYearMonth(updates.year_month);
     cleanUpdates.year_month = updates.year_month;
   }
 
   if (updates.received_date !== undefined) {
-    if (updates.received_date) {
-      const dateObj = new Date(updates.received_date);
-      if (isNaN(dateObj.getTime())) {
-        throw new Error('Fecha de recepcion invalida');
-      }
-    }
-    cleanUpdates.received_date = updates.received_date || null;
+    cleanUpdates.received_date = parseReceivedDate(updates.received_date);
   }
 
   if (updates.notes !== undefined) {
-    cleanUpdates.notes = updates.notes ? sanitizeInput(updates.notes) : null;
+    cleanUpdates.notes = sanitizeNotes(updates.notes);
   }
 
   return await updateMonthlyIncome(db, incomeId, userId, cleanUpdates);
@@ -140,31 +130,17 @@ export async function getIncomeByIdSvc(db, incomeId, userId) {
   }
   const income = await getMonthlyIncomeById(db, incomeId, userId);
   if (!income) {
-    throw new Error('Ingreso no encontrado');
+    throw notFound('Ingreso no encontrado');
   }
   return income;
-}
-
-/**
- * Obtener ingresos de un mes especifico
- */
-export async function getIncomesByMonthSvc(db, userId, yearMonth) {
-  if (!yearMonth || !YEAR_MONTH_REGEX.test(yearMonth)) {
-    throw new Error('Formato de mes invalido. Usar YYYY-MM');
-  }
-  return await getIncomesByMonth(db, userId, yearMonth);
 }
 
 /**
  * Obtener historial de ingresos
  */
 export async function getIncomeHistorySvc(db, userId, filters = {}) {
-  if (filters.start_month && !YEAR_MONTH_REGEX.test(filters.start_month)) {
-    throw new Error('Formato de start_month invalido. Usar YYYY-MM');
-  }
-  if (filters.end_month && !YEAR_MONTH_REGEX.test(filters.end_month)) {
-    throw new Error('Formato de end_month invalido. Usar YYYY-MM');
-  }
+  if (filters.start_month) assertYearMonth(filters.start_month, 'start_month');
+  if (filters.end_month) assertYearMonth(filters.end_month, 'end_month');
   return await getIncomeHistory(db, userId, filters);
 }
 
@@ -173,9 +149,7 @@ export async function getIncomeHistorySvc(db, userId, filters = {}) {
  * Retorna lista de ingresos + total + count
  */
 export async function getIncomeMonthlySummarySvc(db, userId, yearMonth) {
-  if (!yearMonth || !YEAR_MONTH_REGEX.test(yearMonth)) {
-    throw new Error('Formato de mes invalido. Usar YYYY-MM');
-  }
+  assertYearMonth(yearMonth);
 
   const [incomes, totals] = await Promise.all([
     getIncomesByMonth(db, userId, yearMonth),
@@ -194,11 +168,7 @@ export async function getIncomeMonthlySummarySvc(db, userId, yearMonth) {
  * Obtener evolucion de totales por mes (para graficos)
  */
 export async function getIncomeTotalsByMonthSvc(db, userId, filters = {}) {
-  if (filters.start_month && !YEAR_MONTH_REGEX.test(filters.start_month)) {
-    throw new Error('Formato de start_month invalido. Usar YYYY-MM');
-  }
-  if (filters.end_month && !YEAR_MONTH_REGEX.test(filters.end_month)) {
-    throw new Error('Formato de end_month invalido. Usar YYYY-MM');
-  }
+  if (filters.start_month) assertYearMonth(filters.start_month, 'start_month');
+  if (filters.end_month) assertYearMonth(filters.end_month, 'end_month');
   return await getIncomeTotalsByMonth(db, userId, filters);
 }
