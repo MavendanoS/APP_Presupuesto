@@ -10,8 +10,8 @@ en que cada una se ejecutó en producción.
 | 002 | `002-indicators-cache.sql` | Tabla `indicators_cache` | Sí | Aplicada (2025-11) |
 | 003 | `003-payment-tracking.sql` | `payment_services`, `monthly_payments` | Sí | Aplicada (2026-04) |
 | 004 | `004-incomes-module.sql` | `monthly_incomes` | Sí | Aplicada (2026-04) |
-| 005 | `005-expected-amount.sql` | `payment_services.expected_amount` | No (ALTER) | Probablemente aplicada a mano: **verificar** |
-| 006 | `006-security-hardening.sql` | `password_reset_tokens`, `rate_limits`, `users.password_changed_at` | Parcial (ALTER al final) | **Pendiente** |
+| 005 | `005-expected-amount.sql` | `payment_services.expected_amount` | No (ALTER) | Aplicada (verificado 2026-09-25) |
+| 006 | `006-security-hardening.sql` | `password_reset_tokens`, `rate_limits`, `users.password_changed_at` | Parcial (ALTER al final) | Aplicada (2026-09-25) |
 
 ## Base nueva
 
