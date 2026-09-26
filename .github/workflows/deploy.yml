@@ -1,0 +1,94 @@
+# Despliegue a producción
+# Cada push a `main` corre los tests y despliega backend (Worker) y frontend (Pages).
+# También se puede lanzar a mano desde GitHub → Actions → Deploy → Run workflow.
+#
+# Secrets requeridos (GitHub → Settings → Secrets and variables → Actions):
+#   CLOUDFLARE_API_TOKEN   token con permisos Workers Scripts:Edit, Cloudflare Pages:Edit, D1:Edit
+#   CLOUDFLARE_ACCOUNT_ID  6e60efc13c5991890716d7a22046d358
+#
+# Las migraciones de base de datos NO se aplican aquí: usar el workflow "DB migration"
+# ANTES de hacer push a main cuando un cambio las necesite.
+
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+env:
+  CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+  CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+jobs:
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Backend - instalar
+        working-directory: backend
+        run: npm install --no-audit --no-fund
+      - name: Backend - tests unitarios
+        working-directory: backend
+        run: npm test
+
+      - name: Frontend - instalar
+        working-directory: frontend
+        run: npm install --no-audit --no-fund
+      - name: Frontend - tests
+        working-directory: frontend
+        run: npx ng test --watch=false --browsers=ChromeHeadless
+      - name: Frontend - build de producción
+        working-directory: frontend
+        run: npx ng build --configuration production
+      - uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist/frontend/browser
+          retention-days: 3
+
+  deploy:
+    name: Desplegar
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Verificar secrets
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "::error::Faltan los secrets CLOUDFLARE_API_TOKEN / CLOUDFLARE_ACCOUNT_ID"
+            exit 1
+          fi
+
+      - name: Backend - instalar
+        working-directory: backend
+        run: npm install --no-audit --no-fund
+      - name: Backend - desplegar Worker
+        working-directory: backend
+        run: npx wrangler deploy
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend-dist
+      - name: Frontend - desplegar Pages
+        working-directory: backend   # usa el wrangler instalado en backend
+        run: npx wrangler pages deploy ../frontend-dist --project-name=app-presupuesto --branch=main --commit-hash=${{ github.sha }} --commit-dirty=true
+
+      - name: Verificar API
+        run: |
+          sleep 5
+          curl -fsS https://app-presupuesto-api.mavendanosuazo.workers.dev/api/health
