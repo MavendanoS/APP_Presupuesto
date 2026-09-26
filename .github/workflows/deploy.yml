@@ -33,17 +33,23 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
 
       - name: Backend - instalar
         working-directory: backend
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
       - name: Backend - tests unitarios
         working-directory: backend
         run: npm test
 
       - name: Frontend - instalar
         working-directory: frontend
-        run: npm install --no-audit --no-fund
+        # --legacy-peer-deps: ng2-charts declara @angular/cdk como peer aunque no lo usa;
+        # sin esto npm intenta instalar cdk 22, incompatible con Angular 20
+        run: npm ci --legacy-peer-deps --no-audit --no-fund
       - name: Frontend - tests
         working-directory: frontend
         run: npx ng test --watch=false --browsers=ChromeHeadless
@@ -65,6 +71,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
 
       - name: Verificar secrets
         run: |
@@ -75,7 +85,7 @@ jobs:
 
       - name: Backend - instalar
         working-directory: backend
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
       - name: Backend - desplegar Worker
         working-directory: backend
         run: npx wrangler deploy
